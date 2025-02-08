@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
+import 'home_page.dart';  // นำเข้าไฟล์ HomePage
+import 'forgotPassword_page.dart'; // นำเข้าไฟล์ ForgotPasswordPage
 
 class LoginPage extends StatefulWidget {
   @override
@@ -10,6 +12,9 @@ class _LoginPageState extends State<LoginPage> {
   FocusNode _usernameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   bool _isSkipButtonVisible = true;
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -31,6 +36,26 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isSkipButtonVisible = !(_usernameFocusNode.hasFocus || _passwordFocusNode.hasFocus);
     });
+  }
+
+  void _login() {
+    String username = _usernameController.text;
+    String password = _passwordController.text;
+
+    if (username == 'admin' && password == '1239') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()), // เปลี่ยนไปยังหน้า HomePage
+      );
+    } else {
+      // แสดงข้อความผิดพลาด
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Username หรือ Password ไม่ถูกต้อง'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -79,6 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // ช่องกรอก Username
                   TextField(
+                    controller: _usernameController,
                     focusNode: _usernameFocusNode,
                     decoration: InputDecoration(
                       labelText: "Username",
@@ -92,6 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 15),
                   // ช่องกรอก Password
                   TextField(
+                    controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     obscureText: true,
                     decoration: InputDecoration(
@@ -108,7 +135,12 @@ class _LoginPageState extends State<LoginPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()), // ไปที่หน้า ForgotPasswordPage
+                        );
+                      },
                       child: Text(
                         "Forgot password?",
                         style: TextStyle(
@@ -121,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // ปุ่ม Sign In
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _login, // เรียกใช้ฟังก์ชัน _login
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF00377E),
                       padding: EdgeInsets.symmetric(vertical: 15),
@@ -196,10 +228,10 @@ class _LoginPageState extends State<LoginPage> {
             left: 20,
             right: 20,
             child: Text(
-              "ฉันยอมรับ ข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
+              "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.indigoAccent,
                 fontSize: 12,
               ),
             ),
