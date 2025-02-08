@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
 
 class LoginPage extends StatefulWidget {
   @override
@@ -27,15 +28,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onFocusChange() {
-    if (_usernameFocusNode.hasFocus || _passwordFocusNode.hasFocus) {
-      setState(() {
-        _isSkipButtonVisible = false;
-      });
-    } else {
-      setState(() {
-        _isSkipButtonVisible = true;
-      });
-    }
+    setState(() {
+      _isSkipButtonVisible = !(_usernameFocusNode.hasFocus || _passwordFocusNode.hasFocus);
+    });
   }
 
   @override
@@ -152,7 +147,13 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Text("Don’t have an account? "),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SignUpPage()),
+                          );
+                        },
                         child: Text(
                           "Sign up",
                           style: TextStyle(color: Colors.red),
@@ -195,10 +196,10 @@ class _LoginPageState extends State<LoginPage> {
             left: 20,
             right: 20,
             child: Text(
-              "ฉันยอมรับ ข้อกำหนดการใช้งาน  และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
+              "ฉันยอมรับ ข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: const Color.fromARGB(255, 245, 245, 245),
+                color: Colors.white,
                 fontSize: 12,
               ),
             ),
