@@ -73,11 +73,17 @@ class _SignUpPageState extends State<SignUpPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                         IconButton(
-                              icon: Icon(Icons.arrow_back,
+                          Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                           
+                            IconButton(
+                              icon: Icon(Icons.close,
                                   size: 30, color: Colors.black),
                               onPressed: () => Navigator.pop(context),
                             ),
+                          ],
+                        ),
                         Center(
                           child: Text(
                             "สร้างบัญชี",
