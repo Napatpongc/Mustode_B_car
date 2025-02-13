@@ -1,0 +1,29 @@
+{
+    "project_info": {
+      "project_number": "773381728190",
+      "project_id": "mustodebcar-ac28a",
+      "storage_bucket": "mustodebcar-ac28a.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:773381728190:android:207f6ff18138590035fbef",
+          "android_client_info": {
+            "package_name": "com.example.myproject"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "AIzaSyArjg8YOon1nOmUboXE8K0X3w7t4S0fPxk"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
