@@ -1,3 +1,4 @@
+// After resolving conflict manually
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -85,6 +86,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.teal,
+        title: const Text('Map Detail'),
       ),
       body: Stack(
         children: [
@@ -103,20 +105,11 @@ class _MapDetailPageState extends State<MapDetailPage> {
                     ),
                     MarkerLayer(
                       markers: [
-                        // Main User Location Marker
                         Marker(
                           point: LatLng(_locationData!.latitude!, _locationData!.longitude!),
                           width: 80,
                           height: 80,
                           child: const Icon(Icons.location_on, size: 50, color: Colors.red),
-                        ),
-
-                        // Additional Marker Nearby
-                        Marker(
-                          point: LatLng(_locationData!.latitude! + 0.02, _locationData!.longitude! ),
-                          width: 80,
-                          height: 80,
-                          child: const Icon(Icons.location_on, size: 50, color: Colors.blue),
                         ),
                       ],
                     ),
