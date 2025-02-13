@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart'; // นำเข้าไฟล์ login_page.dart
 
 class HomePage extends StatelessWidget {
   @override
@@ -6,7 +7,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Home Page'),
-        backgroundColor: Color(0xFF00377E),  // สีเดียวกับปุ่ม Sign In
+        backgroundColor: Color(0xFF00377E),
       ),
       body: Center(
         child: Column(
@@ -25,10 +26,14 @@ class HomePage extends StatelessWidget {
             // ปุ่ม Logout
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // กลับไปยังหน้าล็อกอิน
+                // นำทางกลับไปยังหน้า LoginPage โดยแทนที่หน้าปัจจุบัน
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF00377E),  // สีเดียวกับปุ่ม Sign In
+                backgroundColor: Color(0xFF00377E),
                 padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),

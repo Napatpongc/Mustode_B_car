@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
 import 'home_page.dart';  // นำเข้าไฟล์ HomePage
 import 'forgotPassword_page.dart'; // นำเข้าไฟล์ ForgotPasswordPage
@@ -9,49 +10,69 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  FocusNode _usernameFocusNode = FocusNode();
+  FocusNode _emailFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
   bool _isSkipButtonVisible = true;
 
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _usernameFocusNode.addListener(_onFocusChange);
+    _emailFocusNode.addListener(_onFocusChange);
     _passwordFocusNode.addListener(_onFocusChange);
   }
 
   @override
   void dispose() {
-    _usernameFocusNode.removeListener(_onFocusChange);
+    _emailFocusNode.removeListener(_onFocusChange);
     _passwordFocusNode.removeListener(_onFocusChange);
-    _usernameFocusNode.dispose();
+    _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   void _onFocusChange() {
     setState(() {
-      _isSkipButtonVisible = !(_usernameFocusNode.hasFocus || _passwordFocusNode.hasFocus);
+      _isSkipButtonVisible = !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
     });
   }
 
-  void _login() {
-    String username = _usernameController.text;
+  // ฟังก์ชันสำหรับล็อกอินด้วย Firebase Authentication
+  void _login() async {
+    String email = _emailController.text;
     String password = _passwordController.text;
 
-    if (username == 'admin' && password == '1239') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()), // เปลี่ยนไปยังหน้า HomePage
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-    } else {
-      // แสดงข้อความผิดพลาด
+      // เมื่อเข้าสู่ระบบสำเร็จ ให้เปลี่ยนไปยังหน้า HomePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "เกิดข้อผิดพลาด";
+      if (e.code == 'user-not-found') {
+        errorMessage = "ไม่พบผู้ใช้งาน";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "รหัสผ่านไม่ถูกต้อง";
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Username หรือ Password ไม่ถูกต้อง'),
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("เกิดข้อผิดพลาด"),
           backgroundColor: Colors.red,
         ),
       );
@@ -102,18 +123,19 @@ class _LoginPageState extends State<LoginPage> {
                     height: screenHeight * 0.15,
                   ),
                   SizedBox(height: 20),
-                  // ช่องกรอก Username
+                  // ช่องกรอก Email
                   TextField(
-                    controller: _usernameController,
-                    focusNode: _usernameFocusNode,
+                    controller: _emailController,
+                    focusNode: _emailFocusNode,
                     decoration: InputDecoration(
-                      labelText: "Username",
+                      labelText: "Email",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                       filled: true,
                       fillColor: Colors.white,
                     ),
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   SizedBox(height: 15),
                   // ช่องกรอก Password
@@ -138,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()), // ไปที่หน้า ForgotPasswordPage
+                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
                         );
                       },
                       child: Text(
@@ -153,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // ปุ่ม Sign In
                   ElevatedButton(
-                    onPressed: _login, // เรียกใช้ฟังก์ชัน _login
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF00377E),
                       padding: EdgeInsets.symmetric(vertical: 15),
@@ -182,8 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => SignUpPage()),
+                            MaterialPageRoute(builder: (context) => SignUpPage()),
                           );
                         },
                         child: Text(
