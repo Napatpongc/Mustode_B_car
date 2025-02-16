@@ -8,6 +8,8 @@ class RegisterData {
     this.confirmEmail = '',
     this.province = '',
     this.district = '',
+    this.subdistrict = '',
+    this.postCode = '',
     this.moreInfo = '',
   });
 
@@ -19,5 +21,7 @@ class RegisterData {
   String confirmEmail;
   String province;
   String district;
+  String subdistrict;
+  String postCode;
   String moreInfo;
 }
