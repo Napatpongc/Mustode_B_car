@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'map.dart';
 import 'into_app.dart';  // นำเข้าไฟล์ IntoApp.dart
 import 'home_page.dart';
 import 'calendar_page.dart';
+import 'calendar_page.dart';
+import 'select_filter.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // เรียกใช้การ initialize Firebase
   runApp(MyApp());
 }
 
@@ -19,4 +26,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-//hello world
