@@ -4,7 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   cloud_firestore
+<<<<<<< HEAD
   file_selector_windows
+=======
+>>>>>>> 7f4978a (Prototype DB)
   firebase_auth
   firebase_core
 )
