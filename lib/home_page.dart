@@ -12,6 +12,7 @@ class _HomePageState extends State<HomePage> {
   TimeOfDay _pickupTime = TimeOfDay(hour: 12, minute: 0);
   TimeOfDay _returnTime = TimeOfDay(hour: 12, minute: 0);
   OverlayEntry? _overlayEntry;
+  bool _showResults = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +43,15 @@ class _HomePageState extends State<HomePage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text('Home Page', textAlign: TextAlign.center),
+      title: Text('เลือกวัน-เวลา รับรถ/คืนรถ', 
+        textAlign: TextAlign.center,
+        style: _textStyle(20, color: Colors.white)),
       backgroundColor: Color(0xFF00377E),
       leading: IconButton(
         icon: Icon(Icons.menu),
         onPressed: () => _showBurgerBar(),
       ),
+      centerTitle: true, // Center the title
     );
   }
 
@@ -89,39 +93,94 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      height: 120,
+      height: 60,
       color: Color(0xFF00377E),
       alignment: Alignment.center,
-      child: Text(
+      /*child: Text(
         "เลือกวัน-เวลา รับรถ/คืนรถ",
         style: _textStyle(20, color: Colors.white),
-      ),
+      ),*/
     );
   }
 
-  Widget _buildSearchBox() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: _boxDecoration(),
-      child: Column(
-        children: [
-          _dateTimeField(
-            label: 'วันเวลาที่รับรถ',
-            date: _pickupDate != null ? _formatDate(_pickupDate!) : 'เลือกวันที่',
-            time: _pickupTime.format(context),
-            onTap: () => _showDateTimePicker(context, true),
-          ),
-          SizedBox(height: 15),
-          _dateTimeField(
-            label: 'วันเวลาที่คืนรถ',
-            date: _returnDate != null ? _formatDate(_returnDate!) : 'เลือกวันที่',
-            time: _returnTime.format(context),
-            onTap: () => _showDateTimePicker(context, false),
-          ),
-        ],
+Widget _buildSearchBox() {
+  return Column(
+    children: [
+      Container(
+        padding: EdgeInsets.all(16),
+        decoration: _boxDecoration(),
+        child: Column(
+          children: [
+            _dateTimeField(
+              label: 'วันเวลาที่รับรถ',
+              date: _pickupDate != null ? _formatDate(_pickupDate!) : 'เลือกวันที่',
+              time: _pickupTime.format(context),
+              onTap: () => _showDateTimePicker(context, true),
+            ),
+            SizedBox(height: 15),
+            _dateTimeField(
+              label: 'วันเวลาที่คืนรถ',
+              date: _returnDate != null ? _formatDate(_returnDate!) : 'เลือกวันที่',
+              time: _returnTime.format(context),
+              onTap: () => _showDateTimePicker(context, false),
+            ),
+          ],
+        ),
       ),
-    );
-  }
+      SizedBox(height: 20), // Space between the search box and buttons
+      _buildButtons(), // Add buttons here
+    ],
+  );
+}
+
+Widget _buildButtons() {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _showResults = true; // Show results when this button is pressed
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFF00377E),
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text("ค้นหารถว่าง", style: TextStyle(color: Colors.white)),
+      ),
+      ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _showResults = true; // Show results when this button is pressed
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFF00377E),
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text("ค้นหาบนแผนที่", style: TextStyle(color: Colors.white)),
+      ),
+      ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _showResults = true; // Show results when this button is pressed
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFF00377E),
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text("กรองผล", style: TextStyle(color: Colors.white)),
+      ),
+    ],
+  );
+}
+
+
 
   void _showDateTimePicker(BuildContext context, bool isPickup) {
     DateTime tempDate = isPickup ? (_pickupDate ?? DateTime.now()) : (_returnDate ?? DateTime.now());
@@ -195,21 +254,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildResultsSection() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(0xFFD6EFFF),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Text('ผลการค้นหา : รถว่างทั้งหมด', style: _textStyle(24)),
-          SizedBox(height: 10),
-          Text('พบรถว่าง 3 คัน', style: _textStyle(15, color: Color(0xFF09C000))),
-        ],
-      ),
-    );
+  if (!_showResults) {
+    return SizedBox.shrink(); // Return an empty widget if results shouldn't be shown
   }
+
+  return Container(
+    padding: EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Color(0xFFD6EFFF),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Column(
+      children: [
+        Text('ผลการค้นหา : รถว่างทั้งหมด', style: _textStyle(24)),
+        SizedBox(height: 10),
+        Text('พบรถว่าง 3 คัน', style: _textStyle(15, color: Color(0xFF09C000))),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildFooter(BuildContext context) {
     return Padding(
@@ -221,7 +285,7 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: Text("Logout", style: TextStyle(color: Colors.white, fontSize: 16)),
+        child: Text("ตกลง", style: TextStyle(color: Colors.white, fontSize: 16)),
       ),
     );
   }
