@@ -1,6 +1,7 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
+    id 'org.jetbrains.kotlin.android'
+    //id "kotlin-android"
     id 'com.google.gms.google-services'
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
@@ -8,9 +9,9 @@ plugins {
 
 android {
     namespace = "com.example.myproject"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 // flutter.compileSdkVersion
     //ndkVersion = "27.0.12077973"
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
    compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -18,8 +19,6 @@ android {
     }
 
     kotlinOptions {
-        //jvmTarget = "21" 
-        //jvmTarget = JavaVersion.VERSION_1_8
         jvmTarget = '1.8'
     }
 
@@ -28,17 +27,19 @@ android {
         applicationId = "com.example.myproject"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23 // แก้ไขค่า minSdkVersion ที่นี่
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = 23 // ของฟริ้นคือ 21
+        targetSdk = 34 //flutter.targetSdkVersion
+        versionCode = 1 //flutter.versionCode
+        versionName = 1.0 //flutter.versionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+        minifyEnabled true // เปิดใช้ minify (ProGuard)
+        shrinkResources true // เปิดลบ Resource ที่ไม่ใช้
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+           
+            //signingConfig = signingConfigs.debug
         }
     }
 }
@@ -47,15 +48,13 @@ flutter {
     source = "../.."
 }
 dependencies {
-  // Import the Firebase BoM
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22" 
+
+  // firebase
   implementation platform('com.google.firebase:firebase-bom:33.9.0')
-
-
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
   implementation 'com.google.firebase:firebase-analytics'
 
-
-  // Add the dependencies for any other desired Firebase products
-  // https://firebase.google.com/docs/android/setup#available-libraries
+   // other
+  implementation 'androidx.core:core-ktx:1.12.0'
+  implementation 'androidx.appcompat:appcompat:1.6.1'
 }
