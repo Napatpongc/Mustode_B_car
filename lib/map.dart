@@ -1,9 +1,9 @@
-// After resolving conflict manually
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
-//Work at on branch
+import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
+
 class MapDetailPage extends StatefulWidget {
   const MapDetailPage({Key? key}) : super(key: key);
 
@@ -18,6 +18,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
   LocationData? _locationData;
   late final MapController _mapController;
   double _currentZoom = 18.0;
+  bool _isManualLocation = false; // Flag to stop GPS updates when manually set
 
   @override
   void initState() {
@@ -46,28 +47,30 @@ class _MapDetailPageState extends State<MapDetailPage> {
 
   void _startTracking() {
     location.onLocationChanged.listen((LocationData newLocation) {
-      setState(() {
-        _locationData = newLocation;
-      });
+      if (!_isManualLocation) { // Only update if not manually overridden
+        setState(() {
+          _locationData = newLocation;
+        });
 
-      _mapController.move(
-        LatLng(newLocation.latitude!, newLocation.longitude!),
-        _currentZoom,
-      );
+        _mapController.move(
+          LatLng(newLocation.latitude!, newLocation.longitude!),
+          _currentZoom,
+        );
+      }
     });
   }
 
   void _zoomIn() {
     setState(() {
       _currentZoom += 1;
-      _mapController.move(_mapController.camera.center, _currentZoom);
+      _mapController.move(_mapController.center, _currentZoom);
     });
   }
 
   void _zoomOut() {
     setState(() {
       _currentZoom -= 1;
-      _mapController.move(_mapController.camera.center, _currentZoom);
+      _mapController.move(_mapController.center, _currentZoom);
     });
   }
 
@@ -81,12 +84,58 @@ class _MapDetailPageState extends State<MapDetailPage> {
     );
   }
 
+  void _openLocationPicker() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Pick a Location'),
+          ),
+          body: FlutterLocationPicker(
+            initZoom: 11,
+            minZoomLevel: 5,
+            maxZoomLevel: 16,
+            trackMyPosition: true,
+            searchBarBackgroundColor: Colors.white,
+            mapLanguage: 'th',
+            onError: (e) => print(e),
+            onPicked: (pickedData) {
+              print('Picked location: ${pickedData.latLong.latitude}, ${pickedData.latLong.longitude}');
+              Navigator.pop(context, pickedData.latLong); // Pass the picked LatLng back
+            },
+          ),
+        ),
+      ),
+    ).then((pickedLatLng) {
+      if (pickedLatLng != null) {
+        setState(() {
+          _isManualLocation = true; // Stop real-time updates
+          _locationData = LocationData.fromMap({
+            'latitude': pickedLatLng.latitude,
+            'longitude': pickedLatLng.longitude,
+          });
+          _mapController.move(
+            LatLng(pickedLatLng.latitude, pickedLatLng.longitude),
+            _currentZoom,
+          );
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.teal,
         title: const Text('Map Detail'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: _openLocationPicker,
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -95,8 +144,8 @@ class _MapDetailPageState extends State<MapDetailPage> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: LatLng(_locationData!.latitude!, _locationData!.longitude!),
-                    initialZoom: _currentZoom,
+                    center: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                    zoom: _currentZoom,
                   ),
                   children: [
                     TileLayer(
@@ -115,8 +164,6 @@ class _MapDetailPageState extends State<MapDetailPage> {
                     ),
                   ],
                 ),
-
-          // Floating Action Buttons
           Positioned(
             bottom: 50,
             right: 10,
@@ -137,9 +184,13 @@ class _MapDetailPageState extends State<MapDetailPage> {
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
-                  heroTag: "reload",
-                  onPressed: _reloadLocation,
-                  child: const Icon(Icons.refresh),
+                  heroTag: "resumeTracking",
+                  onPressed: () {
+                    setState(() {
+                      _isManualLocation = false; // Resume GPS tracking
+                    });
+                  },
+                  child: const Icon(Icons.gps_fixed),
                   mini: true,
                 ),
               ],
