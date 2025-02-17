@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: IntoApp(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
+      home: TarHomePage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
     );
   }
 }
