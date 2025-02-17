@@ -5,7 +5,6 @@ class TarHomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
-
 class _HomePageState extends State<TarHomePage> {
   DateTime? _pickupDate;
   DateTime? _returnDate;
@@ -13,7 +12,6 @@ class _HomePageState extends State<TarHomePage> {
   TimeOfDay _returnTime = TimeOfDay(hour: 12, minute: 0);
   OverlayEntry? _overlayEntry;
   bool _showResults = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +38,6 @@ class _HomePageState extends State<TarHomePage> {
       ),
     );
   }
-
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: Text('เลือกวัน-เวลา รับรถ/คืนรถ', 
@@ -54,7 +51,6 @@ class _HomePageState extends State<TarHomePage> {
       centerTitle: true, // Center the title
     );
   }
-
   // Burger bar show/hide logic
   void _showBurgerBar() {
     if (_overlayEntry != null) {
@@ -65,7 +61,6 @@ class _HomePageState extends State<TarHomePage> {
       Overlay.of(context)?.insert(_overlayEntry!);
     }
   }
-
   OverlayEntry _createOverlay() {
     return OverlayEntry(
       builder: (context) => Positioned(
@@ -89,7 +84,6 @@ class _HomePageState extends State<TarHomePage> {
       ),
     );
   }
-
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -102,7 +96,6 @@ class _HomePageState extends State<TarHomePage> {
       ),*/
     );
   }
-
 Widget _buildSearchBox() {
   return Column(
     children: [
@@ -132,7 +125,6 @@ Widget _buildSearchBox() {
     ],
   );
 }
-
 Widget _buildButtons() {
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -252,12 +244,10 @@ Widget _buildButtons() {
       },
     );
   }
-
   Widget _buildResultsSection() {
   if (!_showResults) {
     return SizedBox.shrink(); // Return an empty widget if results shouldn't be shown
   }
-
   return Container(
     padding: EdgeInsets.all(16),
     decoration: BoxDecoration(
@@ -289,7 +279,6 @@ Widget _buildButtons() {
       ),
     );
   }
-
   Widget _dateTimeField({required String label, required String date, required String time, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -326,7 +315,6 @@ Widget _buildButtons() {
     return TextStyle(fontSize: size, color: color, fontWeight: fontWeight);
   }
 }
-
 class Frame3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
