@@ -1,8 +1,8 @@
-import 'dart:io';
+//import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-//import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:myproject/RegisterData.dart';
 
@@ -102,6 +102,21 @@ class _SignUpPageState extends State<SignUpPage> {
                       email: _emailController.text,
                       password: _passwordController.text,
                     );
+
+                    // เพิ่มข้อมูลลงใน Firestore ใน collection "renter"
+                    await FirebaseFirestore.instance.collection("renter").add({
+                      'username': _usernameController.text,
+                      'password': _passwordController.text,
+                      'confirmPassword': _confirmPasswordController.text,
+                      'phone': _phoneController.text,
+                      'email': _emailController.text,
+                      'confirmEmail': _confirmEmailController.text,
+                      'province': _provinceController.text,
+                      'district': _districtController.text,
+                      'subdistrict': _subDistrictController.text,
+                      'postCode': _postalCodeController.text,
+                      'moreInfo': _additionalAddressController.text,
+                    });
 
                     // ล้างข้อมูลในฟอร์มหลังสมัครเสร็จ
                     formkey.currentState!.reset();
