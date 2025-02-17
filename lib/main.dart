@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'TarHomePage.dart';
 
 // 1+1=2
+// 2+2=4
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
