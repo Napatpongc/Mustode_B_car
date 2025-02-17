@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-//import 'calendar_page.dart';
+import 'calendar_page.dart';
+
 class TarHomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -170,9 +171,13 @@ Widget _buildButtons() {
     ],
   );
 }
+
+
+
   void _showDateTimePicker(BuildContext context, bool isPickup) {
     DateTime tempDate = isPickup ? (_pickupDate ?? DateTime.now()) : (_returnDate ?? DateTime.now());
     TimeOfDay tempTime = isPickup ? _pickupTime : _returnTime;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -258,6 +263,8 @@ Widget _buildButtons() {
     ),
   );
 }
+
+
   Widget _buildFooter(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -295,12 +302,15 @@ Widget _buildButtons() {
       ),
     );
   }
+
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
+
   BoxDecoration _boxDecoration() {
     return BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9), boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)]);
   }
+
   TextStyle _textStyle(double size, {Color color = Colors.black, FontWeight fontWeight = FontWeight.normal}) {
     return TextStyle(fontSize: size, color: color, fontWeight: fontWeight);
   }

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-//import 'package:myproject/ProfileRenter.dart';
 import 'package:firebase_core/firebase_core.dart';
 //import 'map.dart';
-import 'into_app.dart'; // นำเข้าไฟล์ IntoApp.dart
+//import 'into_app.dart';  // นำเข้าไฟล์ IntoApp.dart
 //import 'home_page.dart';
 //import 'calendar_page.dart';
 //import 'calendar_page.dart';
 //import 'select_filter.dart';
-//import 'TarHomePage.dart';
-
+import 'TarHomePage.dart';
 
 // 1+1=2
 
@@ -26,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: IntoApp(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
+      home: TarHomePage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
     );
   }
 }
