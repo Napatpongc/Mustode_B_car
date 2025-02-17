@@ -4,7 +4,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0" // แก้จาก 1.8.22 เป็น 1.9.22
         classpath "com.google.gms:google-services:4.4.2"
     }
-}
+
 
 plugins {
     id 'com.android.application' version '8.2.0' apply false
@@ -22,4 +22,5 @@ allprojects {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
 }
