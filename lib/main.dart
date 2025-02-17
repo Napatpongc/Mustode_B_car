@@ -7,6 +7,7 @@ import 'home_page.dart';
 import 'calendar_page.dart';
 import 'calendar_page.dart';
 import 'select_filter.dart';
+import 'TarHomePage.dart';
 
 // 1+1=2
 
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
+      home: TarHomePage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
     );
   }
 }
