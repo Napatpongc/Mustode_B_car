@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:myproject/ProfileRenter.dart';
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
 import 'home_page.dart';  // นำเข้าไฟล์ HomePage
@@ -55,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
       // เมื่อเข้าสู่ระบบสำเร็จ ให้เปลี่ยนไปยังหน้า HomePage
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => ProfileRenter()),          //////////
       );
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
