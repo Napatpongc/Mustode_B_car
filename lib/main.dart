@@ -12,6 +12,7 @@ import 'TarHomePage.dart';
 import 'Rentaldetails.dart';
 
 // 1+1=2
+// 2+2=4
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
