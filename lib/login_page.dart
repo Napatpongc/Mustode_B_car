@@ -269,10 +269,10 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // หากมี asset โลโก้ google ให้ใช้ path ที่ถูกต้อง (หากไม่มีสามารถลบ Image.asset ได้)
-                          Image.asset(
-                            "assets/icon/google_logo.png",
-                            height: 24,
-                          ),
+                         // Image.asset(
+                          //  "assets/icon/google_logo.png",
+                          //  height: 24,
+                         // ),
                           SizedBox(width: 10),
                           Text(
                             "Login with Google",
