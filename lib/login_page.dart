@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
 import 'signup_page.dart';
@@ -39,7 +40,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onFocusChange() {
     setState(() {
-      _isSkipButtonVisible = !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
+      _isSkipButtonVisible =
+          !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
     });
   }
 
@@ -86,17 +88,48 @@ class _LoginPageState extends State<LoginPage> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return; // ผู้ใช้ยกเลิกการล็อกอิน
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),
-      );
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      if (user != null) {
+        // ตรวจสอบว่าใน Firestore มี document สำหรับผู้ใช้นี้หรือยัง
+        final DocumentReference userDoc =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+        final docSnapshot = await userDoc.get();
+        if (!docSnapshot.exists) {
+          // ถ้ายังไม่มี ให้สร้าง document ด้วยข้อมูลเริ่มต้น
+          await userDoc.set({
+            "username": googleUser.displayName ?? "",
+            "email": googleUser.email,
+            "phone": null,
+            "address": {
+              "province": null,
+              "district": null,
+              "subdistrict": null,
+              "postalCode": null,
+              "moreinfo": null,
+            },
+            "image": {
+              "imagesidcard": [],
+              "imagesidcar": [],
+            },
+            "rentedCars": [],
+            "ownedCars": [],
+          });
+        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfileRenter()),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 10),
                     // ช่องกรอก Password
                     TextField(
                       controller: _passwordController,
@@ -181,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                         fillColor: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 8),
                     // ลิงก์ Forgot Password
                     Align(
                       alignment: Alignment.centerRight,
@@ -189,7 +222,8 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                            MaterialPageRoute(
+                                builder: (context) => ForgotPasswordPage()),
                           );
                         },
                         child: Text(
@@ -201,7 +235,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 8),
                     // ปุ่ม Sign In
                     ElevatedButton(
                       onPressed: _login,
@@ -223,36 +257,17 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
-                    // ลิงก์ Sign Up
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Don’t have an account? "),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => SignUpPage()),
-                            );
-                          },
-                          child: Text(
-                            "Sign up",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
+
+                    SizedBox(height: 15),
                     // ข้อความ "or continue with"
                     Text(
                       "or continue with",
                       style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
+                        color: Colors.black,
+                        fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 15),
                     // ปุ่ม Login ด้วย Google
                     ElevatedButton(
                       onPressed: _signInWithGoogle,
@@ -268,11 +283,10 @@ class _LoginPageState extends State<LoginPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // หากมี asset โลโก้ google ให้ใช้ path ที่ถูกต้อง (หากไม่มีสามารถลบ Image.asset ได้)
-                         // Image.asset(
-                          //  "assets/icon/google_logo.png",
-                          //  height: 24,
-                         // ),
+                          Image.asset(
+                            "assets/icon/google_logo.png",
+                            height: 24,
+                          ),
                           SizedBox(width: 10),
                           Text(
                             "Login with Google",
@@ -285,24 +299,61 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                     ),
+                    SizedBox(height: 30),
+                    // ลิงก์ Sign Up
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Don’t have an account? "),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignUpPage()),
+                            );
+                          },
+                          child: Text(
+                            "Sign up",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
           ),
-          // ปุ่มข้าม
+          // ปุ่ม "ข้าม" - Guest Sign-In
           Visibility(
             visible: _isSkipButtonVisible,
             child: Positioned(
               bottom: 50,
               right: 20,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  try {
+                    // ล็อกอินแบบ Anonymous
+                    UserCredential guestUser =
+                        await FirebaseAuth.instance.signInAnonymously();
+                    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileRenter()),
+      );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Guest Sign-In error: ${e.toString()}"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                      borderRadius: BorderRadius.circular(20)),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 child: Text(
