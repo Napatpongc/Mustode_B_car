@@ -9,6 +9,128 @@ class ProfileRenter extends StatefulWidget {
 }
 
 class _ProfileRenterState extends State<ProfileRenter> {
+  bool _initializedAddress = false;
+
+  // ตัวแปร state สำหรับข้อมูลที่อยู่
+  String province = "";
+  String district = "";
+  String subdistrict = "";
+  String postCode = "";
+  String moreInfo = "";
+
+  // ตัวแปร state สำหรับข้อมูลอื่น ๆ
+  String phone = "";
+  String email = "";
+  String username = "Name";
+
+  // เก็บ docId ของ Firestore เพื่อใช้ตอน update
+  String docId = "";
+
+  // ------------------ ฟังก์ชันแก้ไขข้อมูลที่อยู่ ------------------
+  void _editAddressField(String fieldLabel, String currentValue) async {
+    final TextEditingController controller =
+        TextEditingController(text: currentValue);
+
+    final newValue = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("แก้ไข$fieldLabel"),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("ยกเลิก"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text("บันทึก"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newValue != null) {
+      setState(() {
+        switch (fieldLabel) {
+          case "จังหวัด":
+            province = newValue;
+            break;
+          case "อำเภอ":
+            district = newValue;
+            break;
+          case "ตำบล":
+            subdistrict = newValue;
+            break;
+          case "รหัสไปรษณีย์":
+            postCode = newValue;
+            break;
+          case "เพิ่มเติม":
+            moreInfo = newValue;
+            break;
+        }
+      });
+    }
+  }
+
+  // ------------------ ฟังก์ชันแก้ไขข้อมูลทั่วไป (เบอร์โทร, อีเมล, ชื่อผู้ใช้) ------------------
+  void _editField(String fieldLabel, String currentValue) async {
+    final TextEditingController controller =
+        TextEditingController(text: currentValue);
+
+    final newValue = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("แก้ไข$fieldLabel"),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("ยกเลิก"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text("บันทึก"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newValue != null) {
+      setState(() {
+        if (fieldLabel == "เบอร์โทรศัพท์") {
+          phone = newValue;
+        } else if (fieldLabel == "อีเมล") {
+          email = newValue;
+        } else if (fieldLabel == "ชื่อผู้ใช้") {
+          username = newValue;
+        }
+      });
+    }
+  }
+
+  // ------------------ Widget สำหรับกรอบสีขาวแต่ละหมวด ------------------
+  Widget _buildWhiteBox(Widget child) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? userEmail = FirebaseAuth.instance.currentUser?.email;
@@ -42,23 +164,27 @@ class _ProfileRenterState extends State<ProfileRenter> {
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
             return Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน"));
 
-          var renterData =
-              snapshot.data!.docs.first.data() as Map<String, dynamic>;
+          var docSnapshot = snapshot.data!.docs.first;
+          docId = docSnapshot.id; // เก็บ docId ไว้สำหรับอัปเดต
+          var renterData = docSnapshot.data() as Map<String, dynamic>;
 
-          // รวมข้อมูลที่อยู่
-          String address =
-              "${renterData['province'] ?? ''} ${renterData['district'] ?? ''}\n"
-              "${renterData['subdistrict'] ?? ''} ${renterData['postCode'] ?? ''}\n"
-              "${renterData['moreInfo'] ?? ''}";
-
-          String phone = renterData['phone'] ?? '';
-          String email = renterData['email'] ?? '';
-          String username = renterData['username'] ?? 'Name';
+          // กำหนดค่าเริ่มต้นเฉพาะครั้งแรก
+          if (!_initializedAddress) {
+            province = renterData['province'] ?? "";
+            district = renterData['district'] ?? "";
+            subdistrict = renterData['subdistrict'] ?? "";
+            postCode = renterData['postCode'] ?? "";
+            moreInfo = renterData['moreInfo'] ?? "";
+            phone = renterData['phone'] ?? '';
+            email = renterData['email'] ?? '';
+            username = renterData['username'] ?? 'Name';
+            _initializedAddress = true;
+          }
 
           return SingleChildScrollView(
             child: Column(
               children: [
-                // ส่วนหัวแสดง Avatar และชื่อผู้ใช้
+                // ส่วนหัว (Avatar + ชื่อ)
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16),
@@ -71,31 +197,37 @@ class _ProfileRenterState extends State<ProfileRenter> {
                         child: Icon(Icons.person, size: 40, color: Colors.blue),
                       ),
                       SizedBox(width: 16),
-                      Text(username,
-                          style: TextStyle(fontSize: 24, color: Colors.black)),
-                      Spacer(),
-                      Icon(Icons.edit, color: Colors.blue),
+                      // ชื่อผู้ใช้ + ปุ่มแก้ไข
+                      Expanded(
+                        child: Text(
+                          username,
+                          style: TextStyle(fontSize: 24, color: Colors.black),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _editField("ชื่อผู้ใช้", username),
+                      ),
                     ],
                   ),
                 ),
 
-                // Switch สำหรับสลับไปหน้าผู้ปล่อยเช่า
+                // Switch สลับไป ProfileLessor
                 SwitchListTile(
                   title: Text('ผู้เช่า / ผู้ปล่อยเช่า (ผู้เช่า)'),
                   value: true,
                   onChanged: (value) {
                     if (!value) {
-                      // เมื่อสวิตช์ถูกเปลี่ยนเป็น false ให้ navigate ไปที่ ProfileLessor
                       Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => ProfileLessor()));
+                        context,
+                        MaterialPageRoute(builder: (_) => ProfileLessor()),
+                      );
                     }
                   },
                   secondary: Icon(Icons.swap_horiz),
                 ),
 
-                // ส่วนข้อมูลหลัก
+                // กรอบสีฟ้าใหญ่ ครอบข้อมูลส่วนตัวทั้งหมด
                 Container(
                   margin: EdgeInsets.all(16),
                   padding: EdgeInsets.all(16),
@@ -107,26 +239,200 @@ class _ProfileRenterState extends State<ProfileRenter> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoField('ที่อยู่:', address),
-                      _buildInfoField('เบอร์โทรศัพท์:', phone),
-                      _buildInfoField('อีเมล:', email),
+                      // หัวข้อหลัก
+                      Text(
+                        "ข้อมูลส่วนตัว",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
+
+                      // หมวด: ที่อยู่
+                      _buildWhiteBox(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "ที่อยู่:",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.edit, color: Colors.blue),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            // บรรทัดที่ 1
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(child: Text("จังหวัด : $province")),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () => _editAddressField("จังหวัด", province),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(child: Text("อำเภอ : $district")),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () => _editAddressField("อำเภอ", district),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // บรรทัดที่ 2
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(child: Text("ตำบล : $subdistrict")),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () => _editAddressField("ตำบล", subdistrict),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(child: Text("รหัสไปรษณีย์ : $postCode")),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () => _editAddressField("รหัสไปรษณีย์", postCode),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // บรรทัดที่ 3
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(child: Text("เพิ่มเติม : $moreInfo")),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        onPressed: () => _editAddressField("เพิ่มเติม", moreInfo),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // หมวด: เบอร์โทรศัพท์
+                      _buildWhiteBox(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text("เบอร์โทรศัพท์: $phone", style: TextStyle(fontSize: 16)),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _editField("เบอร์โทรศัพท์", phone),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // หมวด: อีเมล
+                      _buildWhiteBox(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text("อีเมล: $email", style: TextStyle(fontSize: 16)),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _editField("อีเมล", email),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // หมวด: รูปใบขับขี่
+                      _buildWhiteBox(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('รูปใบขับขี่', style: TextStyle(fontSize: 18)),
+                            SizedBox(height: 5),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                // ฟังก์ชันอัปโหลดไฟล์รูปใบขับขี่
+                              },
+                              icon: Icon(Icons.upload),
+                              label: Text('เลือกรูป'),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'หมายเหตุ:\nเพื่อให้หลักฐานยืนยันว่าผู้เช่ามีความสามารถในการขับรถยนต์ได้ถูกต้องตามกฎหมาย',
+                              style: TextStyle(fontSize: 12, color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ปุ่มบันทึกข้อมูล
                       SizedBox(height: 20),
-                      Text(
-                        'รูปใบขับขี่',
-                        style: TextStyle(fontSize: 20, color: Colors.black),
-                      ),
-                      SizedBox(height: 5),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // ฟังก์ชันอัปโหลดไฟล์รูปใบขับขี่
-                        },
-                        icon: Icon(Icons.upload),
-                        label: Text('เลือกรูป'),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'หมายเหตุ:\nเพื่อให้หลักฐานยืนยันว่าผู้เช่ามีความสามารถในการขับรถยนต์ได้ถูกต้องตามกฎหมาย',
-                        style: TextStyle(fontSize: 12, color: Colors.red),
+                      Align(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (docId.isNotEmpty) {
+                              await FirebaseFirestore.instance
+                                  .collection('renter')
+                                  .doc(docId)
+                                  .update({
+                                'province': province,
+                                'district': district,
+                                'subdistrict': subdistrict,
+                                'postCode': postCode,
+                                'moreInfo': moreInfo,
+                                'phone': phone,
+                                'email': email,
+                                'username': username,
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('บันทึกข้อมูลเรียบร้อย')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                            child: Text(
+                              "บันทึก",
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -135,39 +441,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  /// ฟังก์ชันสร้าง widget สำหรับแสดงข้อมูลแต่ละฟิลด์
-  Widget _buildInfoField(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black.withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4,
-              offset: Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                "$title\n$value",
-                style: TextStyle(fontSize: 16, color: Colors.black),
-              ),
-            ),
-            Icon(Icons.edit, color: Colors.blue),
-          ],
-        ),
       ),
     );
   }

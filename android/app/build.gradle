@@ -1,23 +1,25 @@
 plugins {
-    id "com.android.application"
+    id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    //id "kotlin-android"
     id 'com.google.gms.google-services'
+<<<<<<< HEAD
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
     
 
+=======
+    id 'dev.flutter.flutter-gradle-plugin' // Flutter Plugin ต้องอยู่ล่างสุด
+>>>>>>> 3651f0ff8e13bfc2c65988ebc07303952dfcfe7a
 }
 
 android {
-    namespace = "com.example.myproject"
-    compileSdk = 34 // flutter.compileSdkVersion
-    //ndkVersion = "27.0.12077973"
-    ndkVersion = "27.0.12077973"
+    namespace "com.example.myproject"
+    compileSdk 34  // เปลี่ยนเป็นเลขเต็มแทน flutter.compileSdkVersion
+    ndkVersion "27.0.12077973"
 
-   compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
@@ -25,38 +27,39 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.myproject"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23 // ของฟริ้นคือ 21
-        targetSdk = 34 //flutter.targetSdkVersion
-        versionCode = 1 //flutter.versionCode
-        versionName = 1.0 //flutter.versionName
+        applicationId "com.example.myproject"
+        minSdk 23
+        targetSdk 34 // เปลี่ยนเป็นเลขเต็มแทน flutter.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
     }
 
-    buildTypes {
-        release {
+   buildTypes {
+    release {
         minifyEnabled true // เปิดใช้ minify (ProGuard)
         shrinkResources true // เปิดลบ Resource ที่ไม่ใช้
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-           
-            //signingConfig = signingConfigs.debug
-        }
     }
 }
 
-flutter {
-    source = "../.."
 }
+
+flutter {
+    source "../.."
+}
+
 dependencies {
+<<<<<<< HEAD
   implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0" 
+=======
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+>>>>>>> 3651f0ff8e13bfc2c65988ebc07303952dfcfe7a
 
-  // firebase
-  implementation platform('com.google.firebase:firebase-bom:33.9.0')
-  implementation 'com.google.firebase:firebase-analytics'
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.9.0')
+    implementation 'com.google.firebase:firebase-analytics'
 
-   // other
-  implementation 'androidx.core:core-ktx:1.12.0'
-  implementation 'androidx.appcompat:appcompat:1.6.1'
+    // อื่น ๆ
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 }

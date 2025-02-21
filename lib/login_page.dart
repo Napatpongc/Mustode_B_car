@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:myproject/ProfileRenter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
 //import 'home_page.dart';  // นำเข้าไฟล์ HomePage
 import 'forgotPassword_page.dart'; // นำเข้าไฟล์ ForgotPasswordPage
