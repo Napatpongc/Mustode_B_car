@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'ProfileRenter.dart'; // นำเข้า ProfileRenter
+import 'ProfileRenter.dart';
 
 class ProfileLessor extends StatefulWidget {
   @override
@@ -9,119 +9,29 @@ class ProfileLessor extends StatefulWidget {
 }
 
 class _ProfileLessorState extends State<ProfileLessor> {
-  bool _initializedAddress = false;
-
-  // ตัวแปร state สำหรับข้อมูลที่อยู่
-  String province = "";
-  String district = "";
-  String subdistrict = "";
-  String postCode = "";
-  String moreInfo = "";
-
-  // ตัวแปร state สำหรับข้อมูลอื่น ๆ
-  String phone = "";
-  String email = "";
-  String username = "Name";
-
-  // เก็บ docId ของ Firestore เพื่อใช้ตอน update
-  String docId = "";
-
-  // ------------------ ฟังก์ชันแก้ไขข้อมูลที่อยู่ ------------------
-  void _editAddressField(String fieldLabel, String currentValue) async {
-    final TextEditingController controller =
-        TextEditingController(text: currentValue);
-
-    final newValue = await showDialog<String>(
+  // ฟังก์ชันสำหรับแก้ไขข้อมูลผ่าน dialog
+  Future<String?> _editDialog(String fieldLabel, String? currentValue) {
+    final controller = TextEditingController(text: currentValue ?? "");
+    return showDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("แก้ไข$fieldLabel"),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("ยกเลิก"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, controller.text),
-              child: Text("บันทึก"),
-            ),
-          ],
-        );
-      },
+      builder: (context) => AlertDialog(
+        title: Text("แก้ไข$fieldLabel"),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("ยกเลิก")),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: Text("บันทึก")),
+        ],
+      ),
     );
-
-    if (newValue != null) {
-      setState(() {
-        switch (fieldLabel) {
-          case "จังหวัด":
-            province = newValue;
-            break;
-          case "อำเภอ":
-            district = newValue;
-            break;
-          case "ตำบล":
-            subdistrict = newValue;
-            break;
-          case "รหัสไปรษณีย์":
-            postCode = newValue;
-            break;
-          case "เพิ่มเติม":
-            moreInfo = newValue;
-            break;
-        }
-      });
-    }
   }
 
-  // ------------------ ฟังก์ชันแก้ไขข้อมูลทั่วไป (เบอร์โทร, อีเมล, ชื่อผู้ใช้) ------------------
-  void _editField(String fieldLabel, String currentValue) async {
-    final TextEditingController controller =
-        TextEditingController(text: currentValue);
-
-    final newValue = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("แก้ไข$fieldLabel"),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("ยกเลิก"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, controller.text),
-              child: Text("บันทึก"),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (newValue != null) {
-      setState(() {
-        if (fieldLabel == "เบอร์โทรศัพท์") {
-          phone = newValue;
-        } else if (fieldLabel == "อีเมล") {
-          email = newValue;
-        } else if (fieldLabel == "ชื่อผู้ใช้") {
-          username = newValue;
-        }
-      });
-    }
-  }
-
-  // ------------------ Widget สำหรับกรอบสีขาวแต่ละหมวด ------------------
+  // Widget สำหรับกรอบสีขาว
   Widget _buildWhiteBox(Widget child) {
     return Container(
-       width: MediaQuery.of(context).size.width * 0.9, // 80% ของหน้าจอ
+      width: MediaQuery.of(context).size.width * 0.9,
       margin: EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -134,17 +44,13 @@ class _ProfileLessorState extends State<ProfileLessor> {
 
   @override
   Widget build(BuildContext context) {
-    final String? userEmail = FirebaseAuth.instance.currentUser?.email;
-    if (userEmail == null) {
-      return Scaffold(
-        body: Center(child: Text("ไม่พบผู้ใช้ที่ login")),
-      );
-    }
-
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return Scaffold(body: Center(child: Text("ไม่พบผู้ใช้ที่ login")));
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF00377E),
-        title: Text('บัญชี (ผู้ปล่อยเช่า)'),
+        title: Text("บัญชี (ผู้ปล่อยเช่า)"),
         leading: IconButton(
           icon: Icon(Icons.menu, color: Colors.white),
           onPressed: () {
@@ -152,40 +58,30 @@ class _ProfileLessorState extends State<ProfileLessor> {
           },
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('renter')
-            .where('email', isEqualTo: userEmail)
-            .snapshots(),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
-            return Center(child: Text("เกิดข้อผิดพลาด"));
-          if (snapshot.connectionState == ConnectionState.waiting)
-            return Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+          if (snapshot.hasError) return Center(child: Text("เกิดข้อผิดพลาด"));
+          if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData || !snapshot.data!.exists)
             return Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน"));
-
-          var docSnapshot = snapshot.data!.docs.first;
-          docId = docSnapshot.id; // เก็บ docId สำหรับอัปเดตข้อมูล
-          var lessorData = docSnapshot.data() as Map<String, dynamic>;
-
-          // กำหนดค่าเริ่มต้นเฉพาะครั้งแรก
-          if (!_initializedAddress) {
-            province = lessorData['province'] ?? "";
-            district = lessorData['district'] ?? "";
-            subdistrict = lessorData['subdistrict'] ?? "";
-            postCode = lessorData['postCode'] ?? "";
-            moreInfo = lessorData['moreInfo'] ?? "";
-            phone = lessorData['phone'] ?? '';
-            email = lessorData['email'] ?? '';
-            username = lessorData['username'] ?? 'Name';
-            _initializedAddress = true;
-          }
+          
+          // ดึงข้อมูลจาก document
+          var data = snapshot.data!.data() as Map<String, dynamic>;
+          String? username = data['username'] as String?;
+          String? email = data['email'] as String?;
+          String? phone = data['phone'] as String?;
+          var address = data['address'] as Map<String, dynamic>?;
+          String? province = address?['province'] as String?;
+          String? district = address?['district'] as String?;
+          String? subdistrict = address?['subdistrict'] as String?;
+          String? postalCode = address?['postalCode'] as String?;
+          String? moreinfo = address?['moreinfo'] as String?;
 
           return SingleChildScrollView(
             child: Column(
               children: [
-                // ส่วนหัว (Avatar + ชื่อ)
+                // Header: Avatar, Username และ Edit button
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16),
@@ -198,27 +94,33 @@ class _ProfileLessorState extends State<ProfileLessor> {
                         child: Icon(Icons.person, size: 40, color: Colors.blue),
                       ),
                       SizedBox(width: 16),
-                      // ชื่อผู้ใช้ + ปุ่มแก้ไข
                       Expanded(
                         child: Text(
-                          username,
+                          username ?? "ไม่มีชื่อ",
                           style: TextStyle(fontSize: 24, color: Colors.black),
                         ),
                       ),
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _editField("ชื่อผู้ใช้", username),
+                        onPressed: () async {
+                          String? newVal = await _editDialog("ชื่อผู้ใช้", username);
+                          if (newVal != null) {
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(currentUser.uid)
+                                .update({'username': newVal});
+                          }
+                        },
                       ),
                     ],
                   ),
                 ),
-
-                // Switch สลับไป ProfileRenter
+                // SwitchListTile สำหรับสลับไปหน้า ProfileRenter
                 SwitchListTile(
-                  title: Text('ผู้เช่า / ผู้ปล่อยเช่า (ผู้ปล่อยเช่า)'),
+                  title: Text("ผู้เช่า / ผู้ปล่อยเช่า (ผู้ปล่อยเช่า)"),
                   value: false,
-                  onChanged: (value) {
-                    if (value) {
+                  onChanged: (val) {
+                    if (val) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (_) => ProfileRenter()),
@@ -227,8 +129,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                   },
                   secondary: Icon(Icons.swap_horiz),
                 ),
-
-                // กรอบสีฟ้าใหญ่ ครอบข้อมูลส่วนตัวทั้งหมด
+                // Container หลักสำหรับข้อมูลส่วนตัว
                 Container(
                   margin: EdgeInsets.all(16),
                   padding: EdgeInsets.all(16),
@@ -240,43 +141,33 @@ class _ProfileLessorState extends State<ProfileLessor> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // หัวข้อหลัก
-                      Text(
-                        "ข้อมูลส่วนตัว",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       SizedBox(height: 16),
-
                       // หมวด: ที่อยู่
                       _buildWhiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  "ที่อยู่:",
-                                  style: TextStyle(
-                                    fontSize: 18
-                                  ),
-                                ),
-                                
-                              ],
-                            ),
+                            Text("ที่อยู่:", style: TextStyle(fontSize: 18)),
                             SizedBox(height: 8),
-                            // บรรทัดที่ 1
+                            // บรรทัดที่ 1: จังหวัด & อำเภอ
                             Row(
                               children: [
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("จังหวัด : $province")),
+                                      Flexible(child: Text("จังหวัด : ${province ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
                                         icon: Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () => _editAddressField("จังหวัด", province),
+                                        onPressed: () async {
+                                          String? newVal = await _editDialog("จังหวัด", province);
+                                          if (newVal != null) {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(currentUser.uid)
+                                                .update({'address.province': newVal});
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
@@ -285,26 +176,42 @@ class _ProfileLessorState extends State<ProfileLessor> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("อำเภอ : $district")),
+                                      Flexible(child: Text("อำเภอ : ${district ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
                                         icon: Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () => _editAddressField("อำเภอ", district),
+                                        onPressed: () async {
+                                          String? newVal = await _editDialog("อำเภอ", district);
+                                          if (newVal != null) {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(currentUser.uid)
+                                                .update({'address.district': newVal});
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            // บรรทัดที่ 2
+                            // บรรทัดที่ 2: ตำบล & รหัสไปรษณีย์
                             Row(
                               children: [
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("ตำบล : $subdistrict")),
+                                      Flexible(child: Text("ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
                                         icon: Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () => _editAddressField("ตำบล", subdistrict),
+                                        onPressed: () async {
+                                          String? newVal = await _editDialog("ตำบล", subdistrict);
+                                          if (newVal != null) {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(currentUser.uid)
+                                                .update({'address.subdistrict': newVal});
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
@@ -313,27 +220,42 @@ class _ProfileLessorState extends State<ProfileLessor> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("รหัสไปรษณีย์ : $postCode")),
+                                      Flexible(child: Text("รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
                                         icon: Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () => _editAddressField("รหัสไปรษณีย์", postCode),
+                                        onPressed: () async {
+                                          String? newVal = await _editDialog("รหัสไปรษณีย์", postalCode);
+                                          if (newVal != null) {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(currentUser.uid)
+                                                .update({'address.postalCode': newVal});
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            // บรรทัดที่ 3
+                            // บรรทัดที่ 3: เพิ่มเติม
                             Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("เพิ่มเติม : $moreInfo")),
+                                      Flexible(child: Text("เพิ่มเติม : ${moreinfo ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
                                         icon: Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () => _editAddressField("เพิ่มเติม", moreInfo),
+                                        onPressed: () async {
+                                          String? newVal = await _editDialog("เพิ่มเติม", moreinfo);
+                                          if (newVal != null) {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(currentUser.uid)
+                                                .update({'address.moreinfo': newVal});
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
@@ -343,39 +265,35 @@ class _ProfileLessorState extends State<ProfileLessor> {
                           ],
                         ),
                       ),
-
                       // หมวด: เบอร์โทรศัพท์
                       _buildWhiteBox(
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text("เบอร์โทรศัพท์: $phone", style: TextStyle(fontSize: 16)),
-                            ),
+                            Expanded(child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}", style: TextStyle(fontSize: 16))),
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editField("เบอร์โทรศัพท์", phone),
+                              onPressed: () async {
+                                String? newVal = await _editDialog("เบอร์โทรศัพท์", phone);
+                                if (newVal != null) {
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(currentUser.uid)
+                                      .update({'phone': newVal});
+                                }
+                              },
                             ),
                           ],
                         ),
                       ),
-
                       // หมวด: อีเมล
                       _buildWhiteBox(
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text("อีเมล: $email", style: TextStyle(fontSize: 16)),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editField("อีเมล", email),
-                            ),
+                            Expanded(child: Text("อีเมล: ${email}", style: TextStyle(fontSize: 16))),
+                      
                           ],
                         ),
                       ),
-
                       // หมวด: รูปใบขับขี่, รูปใบประชาชน, สัญญาปล่อยเช่า
                       _buildWhiteBox(
                         Column(
@@ -385,7 +303,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                             SizedBox(height: 5),
                             ElevatedButton.icon(
                               onPressed: () {
-                                // ฟังก์ชันอัปโหลดไฟล์รูปใบขับขี่
+                                // ฟังก์ชันอัปโหลดไฟล์รูปใบขับขี่ (ยังไม่ implement)
                               },
                               icon: Icon(Icons.upload),
                               label: Text('เลือกรูป'),
@@ -395,7 +313,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                             SizedBox(height: 5),
                             ElevatedButton.icon(
                               onPressed: () {
-                                // ฟังก์ชันอัปโหลดไฟล์รูปใบประชาชน
+                                // ฟังก์ชันอัปโหลดไฟล์รูปใบประชาชน (ยังไม่ implement)
                               },
                               icon: Icon(Icons.upload),
                               label: Text('เลือกรูป'),
@@ -405,7 +323,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                             SizedBox(height: 5),
                             ElevatedButton.icon(
                               onPressed: () {
-                                // ฟังก์ชันอัปโหลดไฟล์สัญญาปล่อยเช่า
+                                // ฟังก์ชันอัปโหลดไฟล์สัญญาปล่อยเช่า (ยังไม่ implement)
                               },
                               icon: Icon(Icons.upload),
                               label: Text('เลือกรูป'),
@@ -413,45 +331,22 @@ class _ProfileLessorState extends State<ProfileLessor> {
                           ],
                         ),
                       ),
-
-                      // ปุ่มบันทึกข้อมูล
                       SizedBox(height: 20),
                       Align(
                         alignment: Alignment.center,
                         child: ElevatedButton(
                           onPressed: () async {
-                            if (docId.isNotEmpty) {
-                              await FirebaseFirestore.instance
-                                  .collection('renter')
-                                  .doc(docId)
-                                  .update({
-                                'province': province,
-                                'district': district,
-                                'subdistrict': subdistrict,
-                                'postCode': postCode,
-                                'moreInfo': moreInfo,
-                                'phone': phone,
-                                'email': email,
-                                'username': username,
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('บันทึกข้อมูลเรียบร้อย')),
-                              );
-                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 24),
-                            child: Text(
-                              "บันทึก",
-                              style: TextStyle(fontSize: 16, color: Colors.white),
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                            child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
                           ),
                         ),
                       ),
