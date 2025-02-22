@@ -255,10 +255,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
                               children: [
                                 Text(
                                   "ที่อยู่:",
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: 18),
                                 ),
-                                SizedBox(width: 8),
-                                Icon(Icons.edit, color: Colors.blue),
+                          
                               ],
                             ),
                             SizedBox(height: 8),

@@ -2,14 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.gms.google-services'
-<<<<<<< HEAD
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id "dev.flutter.flutter-gradle-plugin"
-    
-
-=======
     id 'dev.flutter.flutter-gradle-plugin' // Flutter Plugin ต้องอยู่ล่างสุด
->>>>>>> 3651f0ff8e13bfc2c65988ebc07303952dfcfe7a
 }
 
 android {
@@ -49,11 +42,7 @@ flutter {
 }
 
 dependencies {
-<<<<<<< HEAD
   implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0" 
-=======
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
->>>>>>> 3651f0ff8e13bfc2c65988ebc07303952dfcfe7a
 
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:33.9.0')

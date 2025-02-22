@@ -121,6 +121,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
   // ------------------ Widget สำหรับกรอบสีขาวแต่ละหมวด ------------------
   Widget _buildWhiteBox(Widget child) {
     return Container(
+       width: MediaQuery.of(context).size.width * 0.9, // 80% ของหน้าจอ
       margin: EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -259,12 +260,10 @@ class _ProfileLessorState extends State<ProfileLessor> {
                                 Text(
                                   "ที่อยู่:",
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Icon(Icons.edit, color: Colors.blue),
+                                
                               ],
                             ),
                             SizedBox(height: 8),

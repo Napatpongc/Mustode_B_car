@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
-import 'signup_page.dart'; // นำเข้าไฟล์ SignUpPage
-//import 'home_page.dart';  // นำเข้าไฟล์ HomePage
-import 'forgotPassword_page.dart'; // นำเข้าไฟล์ ForgotPasswordPage
+import 'signup_page.dart';
+import 'home_page.dart';
+import 'forgotPassword_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -43,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  // ฟังก์ชันสำหรับล็อกอินด้วย Firebase Authentication
+  // ฟังก์ชันสำหรับล็อกอินด้วย Email/Password
   void _login() async {
     String email = _emailController.text;
     String password = _passwordController.text;
@@ -53,10 +53,9 @@ class _LoginPageState extends State<LoginPage> {
         email: email,
         password: password,
       );
-      // เมื่อเข้าสู่ระบบสำเร็จ ให้เปลี่ยนไปยังหน้า HomePage
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),          //////////
+        MaterialPageRoute(builder: (context) => ProfileRenter()),
       );
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
@@ -75,6 +74,33 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("เกิดข้อผิดพลาด"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ฟังก์ชันสำหรับล็อกอินด้วย Google
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // ผู้ใช้ยกเลิกการล็อกอิน
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileRenter()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Google Sign-In error: ${e.toString()}"),
           backgroundColor: Colors.red,
         ),
       );
@@ -100,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // กล่องข้อมูลล็อกอินตรงกลาง
+          // กล่องข้อมูลล็อกอินตรงกลาง (ปรับขนาดกล่องให้รองรับเนื้อหาเพิ่มเติม)
           Center(
             child: Container(
               width: screenWidth * 0.85,
@@ -116,107 +142,151 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // โลโก้ด้านบน
-                  Image.asset(
-                    "assets/icon/app_icon.png",
-                    height: screenHeight * 0.15,
-                  ),
-                  SizedBox(height: 20),
-                  // ช่องกรอก Email
-                  TextField(
-                    controller: _emailController,
-                    focusNode: _emailFocusNode,
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // โลโก้ด้านบน
+                    Image.asset(
+                      "assets/icon/app_icon.png",
+                      height: screenHeight * 0.15,
                     ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  SizedBox(height: 15),
-                  // ช่องกรอก Password
-                  TextField(
-                    controller: _passwordController,
-                    focusNode: _passwordFocusNode,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  // ลิงก์ Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-                        );
-                      },
-                      child: Text(
-                        "Forgot password?",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 12,
+                    SizedBox(height: 20),
+                    // ช่องกรอก Email
+                    TextField(
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      decoration: InputDecoration(
+                        labelText: "Email",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        filled: true,
+                        fillColor: Colors.white,
                       ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  // ปุ่ม Sign In
-                  ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF00377E),
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Sign in",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    SizedBox(height: 15),
+                    // ช่องกรอก Password
+                    TextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "Password",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        filled: true,
+                        fillColor: Colors.white,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  // ลิงก์ Sign Up
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Don’t have an account? "),
-                      TextButton(
+                    SizedBox(height: 10),
+                    // ลิงก์ Forgot Password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignUpPage()),
+                            MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
                           );
                         },
                         child: Text(
-                          "Sign up",
-                          style: TextStyle(color: Colors.red),
+                          "Forgot password?",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    SizedBox(height: 20),
+                    // ปุ่ม Sign In
+                    ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF00377E),
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Sign in",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    // ลิงก์ Sign Up
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Don’t have an account? "),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignUpPage()),
+                            );
+                          },
+                          child: Text(
+                            "Sign up",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    // ข้อความ "or continue with"
+                    Text(
+                      "or continue with",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    // ปุ่ม Login ด้วย Google
+                    ElevatedButton(
+                      onPressed: _signInWithGoogle,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: Colors.grey),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // หากมี asset โลโก้ google ให้ใช้ path ที่ถูกต้อง (หากไม่มีสามารถลบ Image.asset ได้)
+                          Image.asset(
+                            "assets/icon/google_logo.png",
+                            height: 24,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            "Login with Google",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
