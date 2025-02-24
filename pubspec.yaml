@@ -44,6 +44,8 @@ dependencies:
   location: ^5.0.3
   material: ^1.0.0+2
   firebase_core_web: ^2.10.1 # (Ensure this is the correct version)
+  cloud_firestore: ^5.6.3
+  google_sign_in: ^6.2.2
 
  
 
@@ -72,6 +74,7 @@ flutter:
   assets:
     - assets/icon/
     - assets/image/
+    
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
