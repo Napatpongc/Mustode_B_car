@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'ProfileLessor.dart';
+import 'ProfileLessor.dart'; // เพื่อใช้ MyDrawer ที่เราได้สร้างไว้ใน ProfileLessor.dart
+
 
 class ProfileRenter extends StatefulWidget {
   @override
@@ -73,12 +74,22 @@ class _ProfileRenterState extends State<ProfileRenter> {
     if (currentUser == null) {
       return Scaffold(body: Center(child: Text("ไม่พบผู้ใช้ที่ login")));
     }
+    // ตรวจสอบว่า Login ด้วย Google หรือไม่
+    bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF00377E),
         title: Text("บัญชี (ผู้เช่า)"),
-        leading: IconButton(icon: Icon(Icons.menu, color: Colors.white), onPressed: () {}),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
       ),
+      // เพิ่ม Drawer โดยใช้ MyDrawer จาก ProfileLessor
+      drawer: MyDrawer(username: username ?? "ไม่มีชื่อ", isGoogleLogin: isGoogleLogin),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
         builder: (context, snapshot) {
@@ -150,14 +161,12 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     children: [
                       Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       SizedBox(height: 16),
-                      // Address group
                       _buildWhiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("ที่อยู่:", style: TextStyle(fontSize: 18)),
                             SizedBox(height: 8),
-                            // Row 1: Province & District
                             Row(
                               children: [
                                 Expanded(
@@ -199,7 +208,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 ),
                               ],
                             ),
-                            // Row 2: Subdistrict & Postal Code
                             Row(
                               children: [
                                 Expanded(
@@ -241,7 +249,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 ),
                               ],
                             ),
-                            // Row 3: More Info
                             Row(
                               children: [
                                 Expanded(
@@ -267,7 +274,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                           ],
                         ),
                       ),
-                      // Phone group
                       _buildWhiteBox(
                         Row(
                           children: [
@@ -286,17 +292,14 @@ class _ProfileRenterState extends State<ProfileRenter> {
                           ],
                         ),
                       ),
-                      // Email group
                       _buildWhiteBox(
                         Row(
                           children: [
                             Expanded(child: Text("อีเมล: ${email}", style: TextStyle(fontSize: 16))),
-                            
                           ],
                         ),
                       ),
                       SizedBox(height: 20),
-                      // Upload button (dummy)
                       _buildWhiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +308,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                             SizedBox(height: 5),
                             ElevatedButton.icon(
                               onPressed: () {
-                                // ยังไม่ได้ implement
+                                // implement upload action
                               },
                               icon: Icon(Icons.upload),
                               label: Text('เลือกรูป'),
@@ -314,7 +317,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      // Save button: update Firestore with all local state values
                       Align(
                         alignment: Alignment.center,
                         child: ElevatedButton(
