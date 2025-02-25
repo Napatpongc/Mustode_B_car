@@ -124,6 +124,10 @@ class _LoginPageState extends State<LoginPage> {
             "rentedCars": [],
             "ownedCars": [],
           });
+          // สร้างเอกสารใน collection "payments" โดยใช้ uid ของผู้ใช้เป็น payment_id
+          await FirebaseFirestore.instance.collection("payments").doc(user.uid).set({
+            "mypayment": 0, // กำหนดค่าเริ่มต้นของ mypayment เป็น 0
+          });
         }
         Navigator.pushReplacement(
           context,
@@ -257,7 +261,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 15),
                     // ข้อความ "or continue with"
                     Text(
@@ -338,9 +341,9 @@ class _LoginPageState extends State<LoginPage> {
                     UserCredential guestUser =
                         await FirebaseAuth.instance.signInAnonymously();
                     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),
-      );
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileRenter()),
+                    );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

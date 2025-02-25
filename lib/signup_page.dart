@@ -9,14 +9,13 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  // เพิ่มตัวแปร _firebaseInitialization สำหรับ initialize Firebase base
   final Future<FirebaseApp> _firebaseInitialization = Firebase.initializeApp();
 
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(),
-      _emailController = TextEditingController(),
-      _passwordController = TextEditingController(),
-      _confirmPasswordController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   Widget _buildTextField(String label, TextEditingController ctrl,
       {bool obscure = false, TextInputType keyboard = TextInputType.text}) {
@@ -48,10 +47,16 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
     try {
-      UserCredential cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(), password: _passwordController.text);
+      UserCredential cred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text);
       if (cred.user != null) {
-        await FirebaseFirestore.instance.collection("users").doc(cred.user!.uid).set({
+        // สร้างเอกสารใน collection "users"
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(cred.user!.uid)
+            .set({
           "username": _usernameController.text.trim(),
           "email": _emailController.text.trim(),
           "phone": null,
@@ -66,6 +71,13 @@ class _SignUpPageState extends State<SignUpPage> {
           "rentedCars": [],
           "ownedCars": [],
         });
+        // เพิ่มเอกสารใน collection "payments" โดยใช้ uid ของผู้ใช้เป็น payment_id
+        await FirebaseFirestore.instance
+            .collection("payments")
+            .doc(cred.user!.uid)
+            .set({
+          "mypayment": 0, // กำหนดค่าเริ่มต้นของ mypayment เป็น 0
+        });
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("สมัครสมาชิกสำเร็จ!")));
         Navigator.pop(context);
@@ -77,8 +89,7 @@ class _SignUpPageState extends State<SignUpPage> {
       else if (e.code == 'weak-password')
         msg = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
       else if (e.code == 'invalid-email') msg = "อีเมลไม่ถูกต้อง";
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -134,8 +145,8 @@ class _SignUpPageState extends State<SignUpPage> {
                               keyboard: TextInputType.emailAddress),
                           _buildTextField("Password", _passwordController,
                               obscure: true),
-                          _buildTextField("Confirm Password",
-                              _confirmPasswordController,
+                          _buildTextField(
+                              "Confirm Password", _confirmPasswordController,
                               obscure: true),
                           SizedBox(height: 20),
                           Center(
