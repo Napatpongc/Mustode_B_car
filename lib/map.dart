@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
+import 'calendar_page.dart';
 
 class MapDetailPage extends StatefulWidget {
   const MapDetailPage({Key? key}) : super(key: key);
@@ -47,7 +48,8 @@ class _MapDetailPageState extends State<MapDetailPage> {
 
   void _startTracking() {
     location.onLocationChanged.listen((LocationData newLocation) {
-      if (!_isManualLocation) { // Only update if not manually overridden
+      if (!_isManualLocation) {
+        // Only update if not manually overridden
         setState(() {
           _locationData = newLocation;
         });
@@ -101,8 +103,10 @@ class _MapDetailPageState extends State<MapDetailPage> {
             mapLanguage: 'th',
             onError: (e) => print(e),
             onPicked: (pickedData) {
-              print('Picked location: ${pickedData.latLong.latitude}, ${pickedData.latLong.longitude}');
-              Navigator.pop(context, pickedData.latLong); // Pass the picked LatLng back
+              print(
+                  'Picked location: ${pickedData.latLong.latitude}, ${pickedData.latLong.longitude}');
+              Navigator.pop(
+                  context, pickedData.latLong); // Pass the picked LatLng back
             },
           ),
         ),
@@ -144,21 +148,39 @@ class _MapDetailPageState extends State<MapDetailPage> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    center: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                    center: LatLng(
+                        _locationData!.latitude!, _locationData!.longitude!),
                     zoom: _currentZoom,
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                          point: LatLng(_locationData!.latitude!,
+                              _locationData!.longitude!),
                           width: 80,
                           height: 80,
-                          child: const Icon(Icons.location_on, size: 50, color: Colors.red),
+                            child: const Icon(Icons.location_on,size: 50, color: Colors.red),
+                        ),
+                        Marker(
+                          point: LatLng(13.119408, 100.920170),
+                          width: 80,
+                          height: 80,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => CalendarPage()),
+                              );
+                            },
+                            child: const Icon(Icons.location_on,size: 50, color: Colors.blue),
+                          ),
                         ),
                       ],
                     ),
