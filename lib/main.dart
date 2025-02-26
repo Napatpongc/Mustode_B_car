@@ -9,7 +9,7 @@ import 'calendar_page.dart';
 import 'calendar_page.dart';
 import 'select_filter.dart';
 import 'TarHomePage.dart';
-
+import 'Rentaldetails.dart';
 
 // 1+1=2
 
