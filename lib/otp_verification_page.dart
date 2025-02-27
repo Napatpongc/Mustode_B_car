@@ -1,13 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
+import 'reset_password_page.dart';
 
 class OtpVerificationPage extends StatefulWidget {
-  final String email;
-  final String generatedOtp;
+  final String phoneNumber;
+  final String verificationId;
 
-  OtpVerificationPage({
-    required this.email,
-    required this.generatedOtp,
-  });
+  const OtpVerificationPage({
+    Key? key,
+    required this.phoneNumber,
+    required this.verificationId,
+  }) : super(key: key);
 
   @override
   _OtpVerificationPageState createState() => _OtpVerificationPageState();
@@ -15,41 +20,74 @@ class OtpVerificationPage extends StatefulWidget {
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final TextEditingController _otpController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isVerifying = false;
+  bool isVerifying = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  void _verifyOtp() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isVerifying = true;
-      });
+  // Timer variables for countdown (5 minutes)
+  static const int otpValiditySeconds = 300; // 5 minutes = 300 seconds
+  late Timer _timer;
+  int _remainingSeconds = otpValiditySeconds;
 
-      // ตรวจสอบว่า OTP ที่ผู้ใช้กรอก ตรงกับที่ส่งไปหรือไม่
-      if (_otpController.text.trim() == widget.generatedOtp) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ยืนยัน OTP สำเร็จ'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // นำทางไปยังหน้าตั้งรหัสผ่านใหม่
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChangePasswordPage(email: widget.email),
-          ),
-        );
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    _remainingSeconds = otpValiditySeconds;
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_remainingSeconds == 0) {
+        timer.cancel();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('OTP ไม่ถูกต้อง'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _remainingSeconds--;
+        });
       }
+    });
+  }
 
+  // ฟังก์ชันแสดงเวลานับถอยหลังในรูปแบบ mm:ss
+  String get _formattedTime {
+    int minutes = _remainingSeconds ~/ 60;
+    int seconds = _remainingSeconds % 60;
+    String mStr = minutes.toString().padLeft(2, '0');
+    String sStr = seconds.toString().padLeft(2, '0');
+    return "$mStr:$sStr";
+  }
+
+  // ฟังก์ชัน Resend OTP
+  void _resendOTP() async {
+    // หากเวลานับถอยหลังหมดแล้ว สามารถ Resend OTP ได้
+    if (_remainingSeconds > 0) {
+      Get.snackbar("Wait", "Please wait until OTP expires ($_formattedTime remaining)");
+      return;
+    }
+    // นำกลับไปที่หน้า PhoneAuthPageเพื่อส่ง OTP ใหม่
+    Get.back(); // กลับไปยังหน้า PhoneAuthPage
+  }
+
+  void _verifyOTP() async {
+    setState(() {
+      isVerifying = true;
+    });
+
+    String smsCode = _otpController.text.trim();
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: widget.verificationId,
+        smsCode: smsCode,
+      );
+      await _auth.signInWithCredential(credential);
+      Get.snackbar("Success", "OTP verified successfully!");
+      // นำทางไปยังหน้าต่อไป เช่น ResetPasswordPage
+      Get.off(() => ResetPasswordPage(phoneNumber: widget.phoneNumber));
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar("Error", e.message ?? "OTP verification failed");
+    } finally {
       setState(() {
-        _isVerifying = false;
+        isVerifying = false;
       });
     }
   }
@@ -57,95 +95,44 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   @override
   void dispose() {
     _otpController.dispose();
+    _timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('ยืนยัน OTP'),
-        backgroundColor: Color(0xFF00377E),
-      ),
+      appBar: AppBar(title: const Text("Verify OTP")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'กรุณากรอก OTP ที่ส่งไปที่ ${widget.email}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
-                ),
-                SizedBox(height: 20),
-                TextFormField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: "รหัส OTP",
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'กรุณากรอกรหัส OTP';
-                    } else if (value.trim().length != 6) {
-                      return 'กรุณากรอกรหัส OTP 6 หลัก';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 20),
-                _isVerifying
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _verifyOtp,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                          backgroundColor: Color(0xFF00377E),
-                        ),
-                        child: Text(
-                          'ยืนยัน OTP',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement resend OTP functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('ฟังก์ชันส่ง OTP ใหม่ยังไม่พร้อมใช้งาน'),
-                      ),
-                    );
-                  },
-                  child: Text('ส่ง OTP ใหม่'),
-                ),
-              ],
+        child: Column(
+          children: [
+            Text("Enter the OTP sent to ${widget.phoneNumber}"),
+            SizedBox(height: 16),
+            TextField(
+              controller: _otpController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: "OTP",
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
+            SizedBox(height: 16),
+            Text("Time remaining: $_formattedTime", style: TextStyle(fontSize: 16, color: Colors.red)),
+            SizedBox(height: 16),
+            isVerifying
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _verifyOTP,
+                    child: Text("Verify OTP"),
+                  ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _resendOTP,
+              child: Text("Resend OTP"),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-// Stub สำหรับ ChangePasswordPage (หน้าตั้งรหัสผ่านใหม่)
-class ChangePasswordPage extends StatelessWidget {
-  final String email;
-  ChangePasswordPage({required this.email});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('เปลี่ยนรหัสผ่าน'),
-        backgroundColor: Color(0xFF00377E),
-      ),
-      body: Center(
-        child: Text('หน้าตั้งรหัสผ่านใหม่สำหรับ $email'),
       ),
     );
   }

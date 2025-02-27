@@ -1,171 +1,89 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:get/get.dart';
 import 'otp_verification_page.dart';
+import 'thaibulksms_service.dart';
+
 
 class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({Key? key}) : super(key: key);
+
   @override
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isProcessing = false;
+  final TextEditingController _phoneController = TextEditingController();
+  final ThaiBulkSMSService smsService = ThaiBulkSMSService();
+  final RxBool isProcessing = false.obs;
 
-  // ฟังก์ชันสร้าง OTP แบบสุ่ม 6 หลัก
-  String generateOTP() {
-    final random = Random();
-    int otp = random.nextInt(900000) + 100000; // สุ่ม 6 หลัก
-    return otp.toString();
-  }
+  // ฟังก์ชันสุ่ม OTP 6 หลัก
+  String generateOTP() => (Random().nextInt(900000) + 100000).toString();
 
-  // ฟังก์ชันส่ง OTP ผ่าน Cloud Function ที่เรา deploy ไป
-  Future<bool> sendOtpViaCloudFunction(String email, String otp) async {
-    // เปลี่ยน URL ให้ตรงกับ URL ของ Cloud Function ที่ deploy แล้ว
-    final url = Uri.parse('http://10.0.2.2:5001/mustodebcar-ac28a/us-central1/sendOtpEmail');
-    
+  Future<void> _sendOTP() async {
+    isProcessing.value = true;
+    // แปลงเบอร์ที่ผู้ใช้กรอก เช่น "0812345678" ให้เป็น "+66812345678"
+    String phoneNumber = "66" + _phoneController.text.substring(1);
+    String otp = generateOTP();
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'email': email, 'otp': otp}),
-      );
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        print('Cloud Function error: ${response.body}');
-        return false;
+      // ส่ง SMS ผ่าน ThaiBulkSMS
+      bool sent = await smsService.sendSms(phoneNumber, "Your OTP code is: $otp");
+      if (!sent) {
+        Get.snackbar("Error", "Failed to send OTP via ThaiBulkSMS");
+        isProcessing.value = false;
+        return;
       }
+      // บันทึก OTP ลง Firestore พร้อม expireTime 5 นาที
+      DateTime now = DateTime.now();
+      DateTime expireTime = now.add(Duration(minutes: 5));
+      await FirebaseFirestore.instance.collection('otp_codes').doc(phoneNumber).set({
+        'otp': otp,
+        'createdAt': FieldValue.serverTimestamp(),
+        'expireAt': expireTime,
+        'isUsed': false,
+      });
+      Get.to(() => OtpVerificationPage(phoneNumber: phoneNumber));
     } catch (e) {
-      print('Exception in Cloud Function call: $e');
-      return false;
-    }
-  }
-
-  void _resetPassword() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isProcessing = true;
-      });
-
-      String email = _emailController.text;
-      String otp = generateOTP();
-
-      // ส่ง OTP ผ่าน Cloud Function
-      bool emailSent = await sendOtpViaCloudFunction(email, otp);
-
-      setState(() {
-        _isProcessing = false;
-      });
-
-      if (emailSent) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ส่ง OTP ไปที่ $email แล้ว'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // นำทางไปหน้ายืนยัน OTP พร้อมส่งค่า email และ otp
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpVerificationPage(
-              email: email,
-              generatedOtp: otp,
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ไม่สามารถส่ง OTP ได้ในขณะนี้'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Get.snackbar("Error", "Failed to send OTP: $e");
+    } finally {
+      isProcessing.value = false;
     }
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('ลืมรหัสผ่าน'),
-        backgroundColor: Color(0xFF00377E),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'กรุณากรอกอีเมลของคุณเพื่อรับ OTP สำหรับรีเซ็ตรหัสผ่าน',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
-                      hintText: "example@mail.com",
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'กรุณากรอกอีเมล';
-                      } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                          .hasMatch(value)) {
-                        return 'อีเมลไม่ถูกต้อง';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  _isProcessing
-                      ? CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: _resetPassword,
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                            backgroundColor: Color(0xFF00377E),
-                          ),
-                          child: Text(
-                            'รีเซ็ตรหัสผ่าน',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                  SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      'ย้อนกลับไปหน้าล็อกอิน',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
+      appBar: AppBar(title: const Text('Forgot Password')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: "Enter Phone Number",
+                border: OutlineInputBorder(),
+                hintText: "08XXXXXXXX",
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Obx(() => isProcessing.value
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _sendOTP,
+                    child: const Text("Send OTP"),
+                  )),
+          ],
         ),
       ),
     );
   }
-}
+}*/
