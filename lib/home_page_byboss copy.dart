@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-  //คือให้รองทดรองสร้างหน้ามาอีกหน้านึงแล้วให้ปิงข้ามหน้า
-  //แบบอีกหน้าที่เป็นหน้าเปล่าใส่ค่าในหน้านั้นแล้วให้มันขึ้นshowในหน้านี้
-  void main() {
+import 'calendar_page.dart';
+
+void main() {
   runApp(const HomePage());
 }
 
@@ -23,7 +23,33 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class Search extends StatelessWidget {
+class Search extends StatefulWidget {
+  @override
+  _SearchState createState() => _SearchState();
+}
+
+class _SearchState extends State<Search> {
+  DateTime? pickupDate;
+  TimeOfDay? pickupTime;
+  DateTime? returnDate;
+  TimeOfDay? returnTime;
+
+  Future<void> _navigateToCalendar() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CalendarPage()),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        pickupDate = result['pickupDate'];
+        pickupTime = result['pickupTime'];
+        returnDate = result['returnDate'];
+        returnTime = result['returnTime'];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -32,21 +58,24 @@ class Search extends StatelessWidget {
           width: 440,
           height: 956,
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(color: Colors.white),
           child: Stack(
             children: [
-              Positioned(
+              // Original UI remains completely unchanged
+              const Positioned(
                 left: 0,
                 top: 0,
-                child: Container(
+                child: SizedBox(
                   width: 440,
                   height: 153,
-                  decoration: BoxDecoration(color: Color(0xFF00377E)),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(color: Color(0xFF00377E)),
+                  ),
                 ),
               ),
-              Positioned(//mustodebcarmain.png
-                left: (MediaQuery.of(context).size.width - 95) / 2, // กึ่งกลางหน้าจอแนวนอน
-                top: 53, // สามารถเปลี่ยนค่าตามต้องการเพื่อขยับขึ้น-ลง
+              Positioned(
+                left: (MediaQuery.of(context).size.width - 95) / 2,
+                top: 53,
                 child: Container(
                   width: 103,
                   height: 84,
@@ -56,9 +85,9 @@ class Search extends StatelessWidget {
                       fit: BoxFit.fill,
                     ),
                   ),
-                  ),
+                ),
               ),
-              Positioned(//burger bar
+              Positioned(
                 left: 20,
                 top: 19,
                 child: Container(
@@ -68,23 +97,24 @@ class Search extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(3, (index) => 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3), // เพิ่มช่องไฟแนวตั้ง
+                      children: List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
                           child: Row(
                             children: [
                               Container(
-                                width: 4, // ลดขนาดของจุดให้เล็กลง
+                                width: 4,
                                 height: 4,
                                 decoration: const BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 6), // ปรับระยะห่างระหว่างจุดกับเส้น
+                              const SizedBox(width: 6),
                               Container(
-                                width: 29, // ลดความยาวของขีดให้เหมาะสม
-                                height: 4, // คงความหนาเท่าเดิม
+                                width: 29,
+                                height: 4,
                                 color: Colors.white,
                               ),
                             ],
@@ -102,7 +132,7 @@ class Search extends StatelessWidget {
                   width: 456,
                   height: 321,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFD6EFFF),
+                    color: const Color(0xFFD6EFFF),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(40),
                     ),
@@ -120,15 +150,15 @@ class Search extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
-                        color: Colors.black.withOpacity(0.20000000298023224),
+                        color: Colors.black.withOpacity(0.2),
                       ),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -142,19 +172,19 @@ class Search extends StatelessWidget {
                   width: 167,
                   height: 58,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFC5FF92),
+                    color: const Color(0xFFC5FF92),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
-                        color: Colors.black.withOpacity(0.20000000298023224),
+                        color: Colors.black.withOpacity(0.2),
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -168,19 +198,19 @@ class Search extends StatelessWidget {
                   width: 176,
                   height: 58,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFFFE57D),
+                    color: const Color(0xFFFFE57D),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
                         width: 1,
-                        color: Colors.black.withOpacity(0.20000000298023224),
+                        color: Colors.black.withOpacity(0.2),
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -190,7 +220,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 50,
                 top: 493,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 120,
                   height: 28,
                   child: Text(
@@ -207,7 +237,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 34,
                 top: 663,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 383,
                   height: 39,
                   child: Text(
@@ -224,7 +254,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 96,
                 top: 916,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 212,
                   height: 32,
                   child: Text(
@@ -241,7 +271,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 39,
                 top: 696,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 179,
                   height: 28,
                   child: Text(
@@ -258,7 +288,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 97,
                 top: 235,
-                child: Text(
+                child: const Text(
                   'เลือกวัน-เวลา รับรถ/คืนรถ',
                   style: TextStyle(
                     color: Colors.black,
@@ -271,7 +301,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 64,
                 top: 266,
-                child: Text(
+                child: const Text(
                   'รับรถ',
                   style: TextStyle(
                     color: Color(0xFF575454),
@@ -284,7 +314,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 61,
                 top: 371,
-                child: Text(
+                child: const Text(
                   'คืนรถ',
                   style: TextStyle(
                     color: Color(0xFF575454),
@@ -297,7 +327,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 234,
                 top: 492,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 154,
                   height: 27,
                   child: Text(
@@ -318,7 +348,7 @@ class Search extends StatelessWidget {
                   width: 75,
                   height: 7,
                   decoration: ShapeDecoration(
-                    color: Color(0xFF8F8F8F),
+                    color: const Color(0xFF8F8F8F),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(22),
                     ),
@@ -332,16 +362,16 @@ class Search extends StatelessWidget {
                   width: 310,
                   height: 42,
                   decoration: ShapeDecoration(
-                    color: Color(0xFF9CD9FF),
+                    color: const Color(0xFF9CD9FF),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(width: 1),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -355,16 +385,16 @@ class Search extends StatelessWidget {
                   width: 310,
                   height: 42,
                   decoration: ShapeDecoration(
-                    color: Color(0xFF9CD9FF),
+                    color: const Color(0xFF9CD9FF),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(width: 1),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -422,59 +452,80 @@ class Search extends StatelessWidget {
                   ),
                 ),
               ),
+              // ---- Date/Time fields with calendar navigation ----
               Positioned(
                 left: 79,
                 top: 303,
-                child: Text(// change to text fieldเพื่อให้รับค่าๆได้ ดูจากลิงของฟริ้น แบบสร้างหน้าเปล่ามาแล้วส่งค่าไปอีกหน้าได้
-                //รอง
-                  '01/01/2025',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'IBM Plex Sans Thai Looped',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 79,
-                top: 414,
-                child: Text(
-                  '02/01/2025',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'IBM Plex Sans Thai Looped',
-                    fontWeight: FontWeight.w400,
+                child: GestureDetector(
+                  onTap: _navigateToCalendar,
+                  child: Text(
+                    pickupDate != null
+                        ? '${pickupDate!.day}/${pickupDate!.month}/${pickupDate!.year}'
+                        : '01/01/2025',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontFamily: 'IBM Plex Sans Thai Looped',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ),
               Positioned(
                 left: 256,
                 top: 303,
-                child: Text(
-                  '01:30 น.',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'IBM Plex Sans Thai Looped',
-                    fontWeight: FontWeight.w400,
+                child: GestureDetector(
+                  onTap: _navigateToCalendar,
+                  child: Text(
+                    pickupTime != null
+                        ? '${pickupTime!.hour}:${pickupTime!.minute} น.'
+                        : '01:30 น.',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontFamily: 'IBM Plex Sans Thai Looped',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 79,
+                top: 414,
+                child: GestureDetector(
+                  onTap: _navigateToCalendar,
+                  child: Text(
+                    returnDate != null
+                        ? '${returnDate!.day}/${returnDate!.month}/${returnDate!.year}'
+                        : '02/01/2025',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontFamily: 'IBM Plex Sans Thai Looped',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ),
               Positioned(
                 left: 256,
                 top: 414,
-                child: Text(
-                  '01:30 น.',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'IBM Plex Sans Thai Looped',
-                    fontWeight: FontWeight.w400,
+                child: GestureDetector(
+                  onTap: _navigateToCalendar,
+                  child: Text(
+                    returnTime != null
+                        ? '${returnTime!.hour}:${returnTime!.minute} น.'
+                        : '01:30 น.',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontFamily: 'IBM Plex Sans Thai Looped',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ),
+              // ------------------------------------------------------------------
               Positioned(
                 left: 172,
                 top: 62,
@@ -511,7 +562,7 @@ class Search extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                       image: AssetImage("assets/image/caricon.png"),
+                      image: AssetImage("assets/image/caricon.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -524,7 +575,7 @@ class Search extends StatelessWidget {
                   width: 68,
                   height: 64,
                   decoration: ShapeDecoration(
-                    color: Color(0x846B6B6B),
+                    color: const Color(0x846B6B6B),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(width: 1),
                       borderRadius: BorderRadius.circular(10),
@@ -535,7 +586,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 371,
                 top: 665,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 25,
                   height: 14,
                   child: Text(
@@ -552,7 +603,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 371,
                 top: 678,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 48,
                   height: 13,
                   child: Text(
@@ -569,7 +620,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 371,
                 top: 693,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 50,
                   height: 13,
                   child: Text(
@@ -590,7 +641,7 @@ class Search extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFC5FF92),
+                    color: const Color(0xFFC5FF92),
                     shape: OvalBorder(side: BorderSide(width: 1)),
                   ),
                 ),
@@ -602,7 +653,7 @@ class Search extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFFFF399),
+                    color: const Color(0xFFFFF399),
                     shape: OvalBorder(side: BorderSide(width: 1)),
                   ),
                 ),
@@ -614,7 +665,7 @@ class Search extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFFF8E8E),
+                    color: const Color(0xFFFF8E8E),
                     shape: OvalBorder(side: BorderSide(width: 1)),
                   ),
                 ),
@@ -626,16 +677,16 @@ class Search extends StatelessWidget {
                   width: 93,
                   height: 31,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFB6B6B6),
+                    color: const Color(0xFFB6B6B6),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(width: 1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -645,7 +696,7 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 64,
                 top: 574,
-                child: Text(
+                child: const Text(
                   'กรองผล',
                   style: TextStyle(
                     color: Colors.black,
@@ -663,7 +714,7 @@ class Search extends StatelessWidget {
                   height: 193,
                   decoration: ShapeDecoration(
                     image: DecorationImage(
-                       image: AssetImage("assets/image/donutscar.png"),
+                      image: AssetImage("assets/image/donutscar.png"),
                       fit: BoxFit.fill,
                     ),
                     shape: RoundedRectangleBorder(
@@ -671,9 +722,9 @@ class Search extends StatelessWidget {
                     ),
                     shadows: [
                       BoxShadow(
-                        color: Color(0x3F000000),
+                        color: const Color(0x3F000000),
                         blurRadius: 4,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                         spreadRadius: 0,
                       )
                     ],
@@ -687,7 +738,7 @@ class Search extends StatelessWidget {
                   width: 17,
                   height: 17,
                   decoration: ShapeDecoration(
-                    color: Color(0xFFFF8E8E),
+                    color: const Color(0xFFFF8E8E),
                     shape: OvalBorder(side: BorderSide(width: 1)),
                   ),
                 ),
