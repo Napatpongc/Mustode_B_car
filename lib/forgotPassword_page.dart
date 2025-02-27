@@ -1,119 +1,89 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
+import 'package:get/get.dart';
+import 'otp_verification_page.dart';
+import 'thaibulksms_service.dart';
+
 
 class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({Key? key}) : super(key: key);
+
   @override
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isProcessing = false; // สำหรับแสดงสถานะการส่งคำขอรีเซ็ตรหัสผ่าน
+  final TextEditingController _phoneController = TextEditingController();
+  final ThaiBulkSMSService smsService = ThaiBulkSMSService();
+  final RxBool isProcessing = false.obs;
+
+  // ฟังก์ชันสุ่ม OTP 6 หลัก
+  String generateOTP() => (Random().nextInt(900000) + 100000).toString();
+
+  Future<void> _sendOTP() async {
+    isProcessing.value = true;
+    // แปลงเบอร์ที่ผู้ใช้กรอก เช่น "0812345678" ให้เป็น "+66812345678"
+    String phoneNumber = "66" + _phoneController.text.substring(1);
+    String otp = generateOTP();
+    try {
+      // ส่ง SMS ผ่าน ThaiBulkSMS
+      bool sent = await smsService.sendSms(phoneNumber, "Your OTP code is: $otp");
+      if (!sent) {
+        Get.snackbar("Error", "Failed to send OTP via ThaiBulkSMS");
+        isProcessing.value = false;
+        return;
+      }
+      // บันทึก OTP ลง Firestore พร้อม expireTime 5 นาที
+      DateTime now = DateTime.now();
+      DateTime expireTime = now.add(Duration(minutes: 5));
+      await FirebaseFirestore.instance.collection('otp_codes').doc(phoneNumber).set({
+        'otp': otp,
+        'createdAt': FieldValue.serverTimestamp(),
+        'expireAt': expireTime,
+        'isUsed': false,
+      });
+      Get.to(() => OtpVerificationPage(phoneNumber: phoneNumber));
+    } catch (e) {
+      Get.snackbar("Error", "Failed to send OTP: $e");
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Forgot Password'),
-        backgroundColor: Color(0xFF00377E),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // ข้อความแนะนำ
-                Text(
-                  'กรุณากรอกอีเมลของคุณเพื่อรีเซ็ตรหัสผ่าน',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
-                ),
-                SizedBox(height: 20),
-                
-                // ช่องกรอกอีเมล
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: "Email",
-                    border: OutlineInputBorder(),
-                    hintText: "example@mail.com",
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  validator: (value) {
-                    // ตรวจสอบรูปแบบอีเมล
-                    if (value == null || value.isEmpty) {
-                      return 'กรุณากรอกอีเมล';
-                    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-                      return 'อีเมลไม่ถูกต้อง';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 20),
-
-                // ปุ่มส่งคำขอรีเซ็ตรหัสผ่าน
-                _isProcessing
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _resetPassword,
-                        style: ElevatedButton.styleFrom(
-                          shadowColor: Color(0xFF00377E),
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                        ),
-                        child: Text(
-                          'Reset Password',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                SizedBox(height: 20),
-
-                // ลิงก์กลับไปที่หน้าล็อกอิน
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // กลับไปหน้าล็อกอิน
-                  },
-                  child: Text(
-                    'ย้อนกลับไปหน้าล็อกอิน',
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-              ],
+      appBar: AppBar(title: const Text('Forgot Password')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: "Enter Phone Number",
+                border: OutlineInputBorder(),
+                hintText: "08XXXXXXXX",
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Obx(() => isProcessing.value
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _sendOTP,
+                    child: const Text("Send OTP"),
+                  )),
+          ],
         ),
       ),
     );
   }
-
-  // ฟังก์ชันที่ใช้ในการรีเซ็ตรหัสผ่าน
-  void _resetPassword() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isProcessing = true; // แสดง progress indicator
-      });
-
-      String email = _emailController.text;
-      // แสดงข้อความบอกว่าอีเมลจะถูกส่งให้ผู้ใช้เพื่อรีเซ็ตรหัสผ่าน
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('ส่งคำขอรีเซ็ตรหัสผ่านไปที่อีเมล $email แล้ว'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // เพิ่มการทำงานเพิ่มเติม เช่น ส่งคำขอไปยังเซิร์ฟเวอร์ที่สามารถรีเซ็ตรหัสผ่านให้ผู้ใช้
-
-      // จำลองการรอคอยจากเซิร์ฟเวอร์
-      Future.delayed(Duration(seconds: 2), () {
-        setState(() {
-          _isProcessing = false; // ซ่อน progress indicator
-        });
-      });
-    }
-  }
-}
+}*/

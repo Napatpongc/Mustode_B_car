@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
+import 'phone_auth_page.dart';
 import 'signup_page.dart';
 import 'home_page.dart';
 import 'forgotPassword_page.dart';
@@ -227,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ForgotPasswordPage()),
+                                builder: (context) => PhoneAuthPage()),
                           );
                         },
                         child: Text(
