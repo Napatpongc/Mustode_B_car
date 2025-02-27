@@ -1,0 +1,2 @@
+C:/Users/Aizy/Desktop/se/Mustode_B_car/android/app/.cxx/Debug/l28682k1/x86/CMakeFiles/edit_cache.dir
+C:/Users/Aizy/Desktop/se/Mustode_B_car/android/app/.cxx/Debug/l28682k1/x86/CMakeFiles/rebuild_cache.dir
