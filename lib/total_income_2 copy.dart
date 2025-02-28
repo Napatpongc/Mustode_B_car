@@ -29,12 +29,12 @@ class TotalIncome2 extends StatelessWidget {
       children: [
         Container(
           width: 440,
-          height: 956,
+          height: 956,//เดี๋ยวต้องปรับให้มันเลื่อนลงได้ในกรณ
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(color: Colors.white),
           child: Stack(
             children: [
-              Positioned(
+              Positioned(//แทบสีน้ำเงินใหญ่ที่อยู่คล้ายแถบพื้นหลัง
                 left: 0,
                 top: 0,
                 child: Container(
@@ -44,11 +44,11 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 20,
+                left: 10,
                 top: 10,
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 43,
+                  height: 43,
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage("assets/image/lessterthan_sign_image.png"),
@@ -57,25 +57,27 @@ class TotalIncome2 extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                left: 139,
-                top: 61,
-                child: SizedBox(
-                  width: 162,
-                  height: 38,
-                  child: Text(
-                    'รายได้ในวันนี้',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontFamily: 'IBM Plex Sans Thai Looped',
-                      fontWeight: FontWeight.w400,
+              Stack(
+                children: [
+                  Container(
+                    width: double.infinity,  // แถบเต็มความกว้าง
+                    height: 140,  // ความสูงของแถบ
+                    alignment: Alignment.center,  // จัดตรงกลาง
+                    child: Text(
+                      'รายได้ในวันนี้',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontFamily: 'IBM Plex Sans Thai Looped',
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-              Positioned(
+
+              Positioned(//กรอบรายได้วันนี้
                 left: 47,
                 top: 129,
                 child: Container(
@@ -138,7 +140,7 @@ class TotalIncome2 extends StatelessWidget {
                   decoration: BoxDecoration(color: Color(0x00D9D9D9)),
                 ),
               ),
-              Positioned(
+              Positioned(//เส้นบนค่าเช่าลด แต่ ล่างกรอบรายได้วันนี้
                 left: -1,
                 top: 295,
                 child: Container(
@@ -154,7 +156,7 @@ class TotalIncome2 extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              Positioned(//เส้นบนค่าเช่าลด อันที่2
                 left: -1,
                 top: 517,
                 child: Container(
@@ -184,7 +186,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 336,
+                left: 306,
                 top: 300,
                 child: Text(
                   'วันที่  xx/xx/xxxx',
@@ -266,7 +268,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 360,
+                left: 350,
                 top: 356,
                 child: SizedBox(
                   width: 63,
@@ -282,7 +284,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 376,
+                left: 360,
                 top: 434,
                 child: SizedBox(
                   width: 47,
@@ -298,7 +300,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 361,
+                left: 350,
                 top: 478,
                 child: SizedBox(
                   width: 55,
@@ -356,7 +358,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 337,
+                left: 307,
                 top: 523,
                 child: Text(
                   'วันที่  xx/xx/xxxx',
@@ -434,7 +436,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 361,
+                left: 351,
                 top: 575,
                 child: SizedBox(
                   width: 63,
@@ -450,7 +452,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 377,
+                left: 360,
                 top: 653,
                 child: SizedBox(
                   width: 47,
@@ -466,7 +468,7 @@ class TotalIncome2 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 362,
+                left: 351,
                 top: 697,
                 child: SizedBox(
                   width: 55,

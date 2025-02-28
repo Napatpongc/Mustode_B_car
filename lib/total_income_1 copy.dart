@@ -234,19 +234,19 @@ class TotalIncome1 extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 330,
+                left: 305,
                 top: 122,
                 child: Container(
                   width: 96,
-                  height: 47,
+                  height: 57,
                   child: Stack(
                     children: [
                       Positioned(
-                        left: 9.60,
-                        top: 34,
+                        left: 5,
+                        top: 36,
                         child: SizedBox(
                           width: 23.47,
-                          height: 13,
+                          height: 20,
                           child: Text(
                             'ผู้เช่า',
                             style: TextStyle(
@@ -259,11 +259,11 @@ class TotalIncome1 extends StatelessWidget {
                         ),
                       ),
                       Positioned(
-                        left: 45.87,
-                        top: 34,
+                        left: 38.87,
+                        top: 36,
                         child: SizedBox(
                           width: 50.13,
-                          height: 13,
+                          height: 18,
                           child: Text(
                             'ผู้ปล่อยเช่า',
                             style: TextStyle(
@@ -275,7 +275,7 @@ class TotalIncome1 extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
+                      Positioned(//กรอบเลื่อนตรง ผู้เช่า กับผู้ปล่อยเช่า
                         left: 0,
                         top: 0,
                         child: Container(
@@ -297,7 +297,7 @@ class TotalIncome1 extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
+                      Positioned(//ตัวปุ่มเลื่อนที่ถูกจัดอยู่ในกรอบ เป็นตัวโชวว่าตอนนี้อยู่ในหน้า ผู้เช่าหรือผู้ปล่อยเช่า
                         left: 53.33,
                         top: 4,
                         child: Container(
@@ -344,7 +344,7 @@ class TotalIncome1 extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              Positioned(////ตรงที่คลิกแล้วเปลี่ยนสีของ ข้อมูลส่วนตัว 
                 left: 0,
                 top: 254,
                 child: Container(
@@ -364,7 +364,7 @@ class TotalIncome1 extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              Positioned(//ตรงที่คลิกแล้วเปลี่ยนสีของ  รายได้ทั้งหมด
                 left: 220,
                 top: 254,
                 child: Container(
