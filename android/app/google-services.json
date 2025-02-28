@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "773381728190",
+    "firebase_url": "https://mustodebcar-ac28a-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "mustodebcar-ac28a",
     "storage_bucket": "mustodebcar-ac28a.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.myproject"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "773381728190-prk05o5pqqc6rcpp0dnf3m4s1ik1i5c7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myproject",
+            "certificate_hash": "2df4f5f118e96f548bc9a972a86e9b8abb590232"
+          }
+        },
+        {
+          "client_id": "773381728190-dj52deemnl7laq9cqoomqf0fe9dnee0i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyArjg8YOon1nOmUboXE8K0X3w7t4S0fPxk"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773381728190-dj52deemnl7laq9cqoomqf0fe9dnee0i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
