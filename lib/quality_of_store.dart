@@ -37,6 +37,8 @@ class FigmaToCodeApp extends StatelessWidget {
 }
 
 class QualityOfStore extends StatelessWidget {
+  const QualityOfStore({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -44,7 +46,7 @@ class QualityOfStore extends StatelessWidget {
         Container(
           width: 440,
           height: 956,
-          clipBehavior: Clip.antiAlias,//ตัดขอบให้ดูsmooth
+          clipBehavior: Clip.antiAlias, //ตัดขอบให้ดูsmooth
           decoration: BoxDecoration(color: Colors.white),
           child: Stack(
             children: [
@@ -57,7 +59,8 @@ class QualityOfStore extends StatelessWidget {
                   decoration: BoxDecoration(color: Color(0xFF00377E)),
                 ),
               ),
-              Positioned( //'รีวิวโดยรวม'
+              Positioned(
+                //'รีวิวโดยรวม'
                 left: 159,
                 top: 65,
                 child: SizedBox(
@@ -227,16 +230,21 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//รุปเครื่องหมายน้อยกว่าสำหรับกลับไปหน้าก่อน
+              Positioned(
+                //รุปเครื่องหมายน้อยกว่าสำหรับกลับไปหน้าก่อน
                 left: 10,
                 top: 10,
                 child: Container(
                   width: 43,
                   height: 43,
-                  decoration: BoxDecoration(//เป็น Decoration ที่ใช้กับ Container เพื่อกำหนด ...,รูปภาพ
-                    image: DecorationImage(//ใช้สำหรับกำหนด รูปภาพ ให้กับ Container
-                      image: AssetImage("assets/image/lessterthan_sign_image.png"),
-                      fit: BoxFit.fill,//ขยายภาพให้เต็มพื้นที่โดย ยืด/บีบ ภาพให้เต็ม Container
+                  decoration: BoxDecoration(
+                    //เป็น Decoration ที่ใช้กับ Container เพื่อกำหนด ...,รูปภาพ
+                    image: DecorationImage(
+                      //ใช้สำหรับกำหนด รูปภาพ ให้กับ Container
+                      image:
+                          AssetImage("assets/image/lessterthan_sign_image.png"),
+                      fit: BoxFit
+                          .fill, //ขยายภาพให้เต็มพื้นที่โดย ยืด/บีบ ภาพให้เต็ม Container
                     ),
                   ),
                 ),
@@ -258,7 +266,8 @@ class QualityOfStore extends StatelessWidget {
     ),
   ),
 ),*/ //เป็นรูปลูกษรย้อนกลับน่าซ้ำกับอันบน
-              Positioned(//เส้นบาร์เลื่อน
+              Positioned(
+                //เส้นบาร์เลื่อน
                 left: 432,
                 top: 175,
                 child: Container(
@@ -272,7 +281,8 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//กรอบดาวเฉลี่ย
+              Positioned(
+                //กรอบดาวเฉลี่ย
                 left: 35,
                 top: 188,
                 child: Container(
@@ -287,7 +297,8 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//กรอบโตโยต้า
+              Positioned(
+                //กรอบโตโยต้า
                 left: 72,
                 top: 122,
                 child: Container(
@@ -302,7 +313,8 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//กรอบคะแนนความสะอาด
+              Positioned(
+                //กรอบคะแนนความสะอาด
                 left: 237,
                 top: 188,
                 child: Container(
@@ -385,7 +397,8 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//รูปดาวตรงรีวิวเฉลี่ย
+              Positioned(
+                //รูปดาวตรงรีวิวเฉลี่ย
                 left: 72,
                 top: 235,
                 child: Container(
@@ -399,7 +412,8 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//รูปไม้กวาดตรงความสะอาด
+              Positioned(
+                //รูปไม้กวาดตรงความสะอาด
                 left: 269,
                 top: 235,
                 child: Container(
@@ -413,7 +427,7 @@ class QualityOfStore extends StatelessWidget {
                   ),
                 ),
               ),
-            /*  Positioned(
+              /*  Positioned(
   left: 283,
   top: 238,
   child: Container(
@@ -440,47 +454,53 @@ class QualityOfStore extends StatelessWidget {
       ],
     ),
   ),
-),*///เป็นรูปไม้กวาดทำความสะอาดซำ้กับด้านบน
+),*/ //เป็นรูปไม้กวาดทำความสะอาดซำ้กับด้านบน
 
-             Positioned(//ดาวที่ใส่ในรีวิวของอันแรก(1-3ธค67)
-  left: 360,
-  top: 393,
-  child: Container(
-    width: 19.50,
-    height: 19.50,
-    child: Image.asset("assets/image/broom_icon.png"), // ใส่รูปไม้กวาด
-  ),
-),
-Positioned(//ดาวที่ใส่ในรีวิวของอันสอง(1-7มค67)
-  left: 360,
-  top: 443,
-  child: Container(
-    width: 19.50,
-    height: 19.50,
-    child: Image.asset("assets/image/broom_icon.png"), // ใส่รูปไม้กวาด
-  ),
-),
-Positioned(// ดาวที่ใส่ใน comment ของอันแรก (1-3 ธค 67)
-  left: 252,
-  top: 391,
-  child: Container(
-    width: 19.50,
-    height: 19.50,
-    child: Image.asset("assets/image/star_icon.png"), // ใส่รูปดาว
-  ),
-),
-Positioned(// ดาวที่ใส่ใน comment ของอันที่สอง (1-7 มค 67)
-  left: 252,
-  top: 442, // ปรับ top ให้ห่างจากอันแรก
-  child: Container(
-    width: 19.50,
-    height: 19.50,
-    child: Image.asset("assets/image/star_icon.png"), // ใส่รูปดาว
-  ),
-),
+              Positioned(
+                //ดาวที่ใส่ในรีวิวของอันแรก(1-3ธค67)
+                left: 360,
+                top: 393,
+                child: SizedBox(
+                  width: 19.50,
+                  height: 19.50,
+                  child: Image.asset(
+                      "assets/image/broom_icon.png"), // ใส่รูปไม้กวาด
+                ),
+              ),
+              Positioned(
+                //ดาวที่ใส่ในรีวิวของอันสอง(1-7มค67)
+                left: 360,
+                top: 443,
+                child: SizedBox(
+                  width: 19.50,
+                  height: 19.50,
+                  child: Image.asset(
+                      "assets/image/broom_icon.png"), // ใส่รูปไม้กวาด
+                ),
+              ),
+              Positioned(
+                // ดาวที่ใส่ใน comment ของอันแรก (1-3 ธค 67)
+                left: 252,
+                top: 391,
+                child: SizedBox(
+                  width: 19.50,
+                  height: 19.50,
+                  child: Image.asset("assets/image/star_icon.png"), // ใส่รูปดาว
+                ),
+              ),
+              Positioned(
+                // ดาวที่ใส่ใน comment ของอันที่สอง (1-7 มค 67)
+                left: 252,
+                top: 442, // ปรับ top ให้ห่างจากอันแรก
+                child: SizedBox(
+                  width: 19.50,
+                  height: 19.50,
+                  child: Image.asset("assets/image/star_icon.png"), // ใส่รูปดาว
+                ),
+              ),
 
-
-              Positioned(//เป็นกรอบสีเทาเอาไว้ใส่ข้อความของ 'คะแนนที่ให้ความสะอาดสูงสุด',
+              Positioned(
+                //เป็นกรอบสีเทาเอาไว้ใส่ข้อความของ 'คะแนนที่ให้ความสะอาดสูงสุด',
                 left: 158,
                 top: 296,
                 child: Container(
@@ -488,7 +508,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   height: 17,
                   decoration: ShapeDecoration(
                     color: Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9)),
                   ),
                 ),
               ),
@@ -505,7 +526,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//เป็นกรอบสีเทาเอาไว้ใส่ข้อความของ 'คะแนนที่ให้ดาวสูงสุด'
+              Positioned(
+                //เป็นกรอบสีเทาเอาไว้ใส่ข้อความของ 'คะแนนที่ให้ดาวสูงสุด'
                 left: 33,
                 top: 296,
                 child: Container(
@@ -513,7 +535,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   height: 17,
                   decoration: ShapeDecoration(
                     color: Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9)),
                   ),
                 ),
               ),
@@ -569,7 +592,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//เป็นรูปไอคอนดาวอันเล็กมากๆ ที่อยู่ในกรอบสีเทาที่มีข้อความว่า 'คะแนนที่ให้ดาวสูงสุด'
+              Positioned(
+                //เป็นรูปไอคอนดาวอันเล็กมากๆ ที่อยู่ในกรอบสีเทาที่มีข้อความว่า 'คะแนนที่ให้ดาวสูงสุด'
                 left: 36,
                 top: 301,
                 child: Container(
@@ -598,11 +622,14 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                 ),
               ),
 
-              Positioned(//เป็นไอคอนรูปสามเหลี่ยมเล็กมากๆ ตรงข้อความ คะแนนที่ให้ดาวสูงสุด
+              Positioned(
+                //เป็นไอคอนรูปสามเหลี่ยมเล็กมากๆ ตรงข้อความ คะแนนที่ให้ดาวสูงสุด
                 left: 130,
                 top: 307,
                 child: Transform(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(3.14),
                   child: Container(
                     width: 6,
                     height: 5,
@@ -614,11 +641,14 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                 ),
               ),
 
-              Positioned(//เป็นไอคอนรูปสามเหลี่ยมเล็กมากๆ ตรงข้อความ คะแนนที่ให้ความสะอาดสูงสุด
+              Positioned(
+                //เป็นไอคอนรูปสามเหลี่ยมเล็กมากๆ ตรงข้อความ คะแนนที่ให้ความสะอาดสูงสุด
                 left: 291,
                 top: 307,
                 child: Transform(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(3.14),
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(3.14),
                   child: Container(
                     width: 6,
                     height: 5,
@@ -629,11 +659,14 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//ลูกศรเปลี่ยนรถเลื่อนไปทางขวา
+              Positioned(
+                //ลูกศรเปลี่ยนรถเลื่อนไปทางขวา
                 left: 355,
                 top: 132,
                 child: Transform(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(1.57),
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(1.57),
                   child: Container(
                     width: 20,
                     height: 17,
@@ -644,24 +677,27 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//ลูกศรเปลี่ยนรถเลื่อนไปทางซ้าย
-  left: 79,
-  top: 152,
-  child: Transform(
-    transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(-1.57), // เปลี่ยนเป็น -90 องศา (ชี้ซ้าย)
-    child: Container(
-      width: 20,
-      height: 17,
-      decoration: ShapeDecoration(
-        color: Colors.black,
-        shape: StarBorder.polygon(sides: 3), // สามเหลี่ยมสีดำ
-      ),
-    ),
-  ),
-),
+              Positioned(
+                //ลูกศรเปลี่ยนรถเลื่อนไปทางซ้าย
+                left: 79,
+                top: 152,
+                child: Transform(
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(-1.57), // เปลี่ยนเป็น -90 องศา (ชี้ซ้าย)
+                  child: Container(
+                    width: 20,
+                    height: 17,
+                    decoration: ShapeDecoration(
+                      color: Colors.black,
+                      shape: StarBorder.polygon(sides: 3), // สามเหลี่ยมสีดำ
+                    ),
+                  ),
+                ),
+              ),
 
-              
-              Positioned(//เส้น ดำข้างล่างช่วงเวลา รีวิว
+              Positioned(
+                //เส้น ดำข้างล่างช่วงเวลา รีวิว
                 left: -3,
                 top: 375,
                 child: Container(
@@ -676,7 +712,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//เส้นดำต่อจากบรรทัดบน
+              Positioned(
+                //เส้นดำต่อจากบรรทัดบน
                 left: 0,
                 top: 428,
                 child: Container(
@@ -691,7 +728,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned(//เส้นดำบรร
+              Positioned(
+                //เส้นดำบรร
                 left: 0,
                 top: 478,
                 child: Container(
@@ -706,7 +744,8 @@ Positioned(// ดาวที่ใส่ใน comment ของอันที
                   ),
                 ),
               ),
-              Positioned( //เส้นดำบรรทัดแรก
+              Positioned(
+                //เส้นดำบรรทัดแรก
                 left: 0,
                 top: 324,
                 child: Container(

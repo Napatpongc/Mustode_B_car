@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'calendar_page.dart';
 
 class TarHomePage extends StatefulWidget {
+  const TarHomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -43,9 +45,9 @@ class _HomePageState extends State<TarHomePage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text('เลือกวัน-เวลา รับรถ/คืนรถ', 
-        textAlign: TextAlign.center,
-        style: _textStyle(20, color: Colors.white)),
+      title: Text('เลือกวัน-เวลา รับรถ/คืนรถ',
+          textAlign: TextAlign.center,
+          style: _textStyle(20, color: Colors.white)),
       backgroundColor: Color(0xFF00377E),
       leading: IconButton(
         icon: Icon(Icons.menu),
@@ -62,7 +64,7 @@ class _HomePageState extends State<TarHomePage> {
       _overlayEntry = null;
     } else {
       _overlayEntry = _createOverlay();
-      Overlay.of(context)?.insert(_overlayEntry!);
+      Overlay.of(context).insert(_overlayEntry!);
     }
   }
 
@@ -70,7 +72,7 @@ class _HomePageState extends State<TarHomePage> {
     return OverlayEntry(
       builder: (context) => Positioned(
         top: 0,
-        left: 0,  // Align overlay to the left
+        left: 0, // Align overlay to the left
         child: Material(
           color: Colors.transparent,
           child: GestureDetector(
@@ -103,87 +105,94 @@ class _HomePageState extends State<TarHomePage> {
     );
   }
 
-Widget _buildSearchBox() {
-  return Column(
-    children: [
-      Container(
-        padding: EdgeInsets.all(16),
-        decoration: _boxDecoration(),
-        child: Column(
-          children: [
-            _dateTimeField(
-              label: 'วันเวลาที่รับรถ',
-              date: _pickupDate != null ? _formatDate(_pickupDate!) : 'เลือกวันที่',
-              time: _pickupTime.format(context),
-              onTap: () => _showDateTimePicker(context, true),
-            ),
-            SizedBox(height: 15),
-            _dateTimeField(
-              label: 'วันเวลาที่คืนรถ',
-              date: _returnDate != null ? _formatDate(_returnDate!) : 'เลือกวันที่',
-              time: _returnTime.format(context),
-              onTap: () => _showDateTimePicker(context, false),
-            ),
-          ],
+  Widget _buildSearchBox() {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: _boxDecoration(),
+          child: Column(
+            children: [
+              _dateTimeField(
+                label: 'วันเวลาที่รับรถ',
+                date: _pickupDate != null
+                    ? _formatDate(_pickupDate!)
+                    : 'เลือกวันที่',
+                time: _pickupTime.format(context),
+                onTap: () => _showDateTimePicker(context, true),
+              ),
+              SizedBox(height: 15),
+              _dateTimeField(
+                label: 'วันเวลาที่คืนรถ',
+                date: _returnDate != null
+                    ? _formatDate(_returnDate!)
+                    : 'เลือกวันที่',
+                time: _returnTime.format(context),
+                onTap: () => _showDateTimePicker(context, false),
+              ),
+            ],
+          ),
         ),
-      ),
-      SizedBox(height: 20), // Space between the search box and buttons
-      _buildButtons(), // Add buttons here
-    ],
-  );
-}
+        SizedBox(height: 20), // Space between the search box and buttons
+        _buildButtons(), // Add buttons here
+      ],
+    );
+  }
 
-Widget _buildButtons() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-      ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _showResults = true; // Show results when this button is pressed
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF00377E),
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  Widget _buildButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showResults = true; // Show results when this button is pressed
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF00377E),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Text("ค้นหารถว่าง", style: TextStyle(color: Colors.white)),
         ),
-        child: Text("ค้นหารถว่าง", style: TextStyle(color: Colors.white)),
-      ),
-      ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _showResults = true; // Show results when this button is pressed
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF00377E),
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showResults = true; // Show results when this button is pressed
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF00377E),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Text("ค้นหาบนแผนที่", style: TextStyle(color: Colors.white)),
         ),
-        child: Text("ค้นหาบนแผนที่", style: TextStyle(color: Colors.white)),
-      ),
-      ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _showResults = true; // Show results when this button is pressed
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF00377E),
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _showResults = true; // Show results when this button is pressed
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF00377E),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Text("กรองผล", style: TextStyle(color: Colors.white)),
         ),
-        child: Text("กรองผล", style: TextStyle(color: Colors.white)),
-      ),
-    ],
-  );
-}
-
-
+      ],
+    );
+  }
 
   void _showDateTimePicker(BuildContext context, bool isPickup) {
-    DateTime tempDate = isPickup ? (_pickupDate ?? DateTime.now()) : (_returnDate ?? DateTime.now());
+    DateTime tempDate = isPickup
+        ? (_pickupDate ?? DateTime.now())
+        : (_returnDate ?? DateTime.now());
     TimeOfDay tempTime = isPickup ? _pickupTime : _returnTime;
 
     showModalBottomSheet(
@@ -197,7 +206,8 @@ Widget _buildButtons() {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('เลือกวันที่', style: _textStyle(20, fontWeight: FontWeight.bold)),
+                  Text('เลือกวันที่',
+                      style: _textStyle(20, fontWeight: FontWeight.bold)),
                   SizedBox(height: 10),
                   CalendarDatePicker(
                     initialDate: tempDate,
@@ -210,7 +220,8 @@ Widget _buildButtons() {
                     },
                   ),
                   SizedBox(height: 20),
-                  Text('เลือกเวลา', style: _textStyle(20, fontWeight: FontWeight.bold)),
+                  Text('เลือกเวลา',
+                      style: _textStyle(20, fontWeight: FontWeight.bold)),
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () async {
@@ -227,7 +238,8 @@ Widget _buildButtons() {
                     child: Text('เลือกเวลา', style: _textStyle(16)),
                   ),
                   SizedBox(height: 10),
-                  Text("เวลาที่เลือก: ${tempTime.format(context)}", style: _textStyle(18, color: Colors.blue)),
+                  Text("เวลาที่เลือก: ${tempTime.format(context)}",
+                      style: _textStyle(18, color: Colors.blue)),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -254,26 +266,27 @@ Widget _buildButtons() {
   }
 
   Widget _buildResultsSection() {
-  if (!_showResults) {
-    return SizedBox.shrink(); // Return an empty widget if results shouldn't be shown
+    if (!_showResults) {
+      return SizedBox
+          .shrink(); // Return an empty widget if results shouldn't be shown
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFD6EFFF),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text('ผลการค้นหา : รถว่างทั้งหมด', style: _textStyle(24)),
+          SizedBox(height: 10),
+          Text('พบรถว่าง 3 คัน',
+              style: _textStyle(15, color: Color(0xFF09C000))),
+        ],
+      ),
+    );
   }
-
-  return Container(
-    padding: EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Color(0xFFD6EFFF),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      children: [
-        Text('ผลการค้นหา : รถว่างทั้งหมด', style: _textStyle(24)),
-        SizedBox(height: 10),
-        Text('พบรถว่าง 3 คัน', style: _textStyle(15, color: Color(0xFF09C000))),
-      ],
-    ),
-  );
-}
-
 
   Widget _buildFooter(BuildContext context) {
     return Padding(
@@ -283,14 +296,20 @@ Widget _buildButtons() {
         style: ElevatedButton.styleFrom(
           backgroundColor: Color(0xFF00377E),
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: Text("ตกลง", style: TextStyle(color: Colors.white, fontSize: 16)),
+        child:
+            Text("ตกลง", style: TextStyle(color: Colors.white, fontSize: 16)),
       ),
     );
   }
 
-  Widget _dateTimeField({required String label, required String date, required String time, required VoidCallback onTap}) {
+  Widget _dateTimeField(
+      {required String label,
+      required String date,
+      required String time,
+      required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -319,15 +338,21 @@ Widget _buildButtons() {
   }
 
   BoxDecoration _boxDecoration() {
-    return BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9), boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)]);
+    return BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(9),
+        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)]);
   }
 
-  TextStyle _textStyle(double size, {Color color = Colors.black, FontWeight fontWeight = FontWeight.normal}) {
+  TextStyle _textStyle(double size,
+      {Color color = Colors.black, FontWeight fontWeight = FontWeight.normal}) {
     return TextStyle(fontSize: size, color: color, fontWeight: fontWeight);
   }
 }
 
 class Frame3 extends StatelessWidget {
+  const Frame3({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

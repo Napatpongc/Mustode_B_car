@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarPage extends StatefulWidget {
+  const CalendarPage({super.key});
+
   @override
   _CalendarPageState createState() => _CalendarPageState();
 }
 
 class _CalendarPageState extends State<CalendarPage> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;  
+  final CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
-  DateTime _today = DateTime.now();
+  final DateTime _today = DateTime.now();
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   TimeOfDay _pickupTime = TimeOfDay(hour: 12, minute: 0);
@@ -34,7 +36,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   int _calculateRentalDays() {
     if (_rangeStart != null && _rangeEnd != null) {
-      return _rangeEnd!.difference(_rangeStart!).inDays + 1;  
+      return _rangeEnd!.difference(_rangeStart!).inDays + 1;
     }
     return 0;
   }
@@ -45,14 +47,14 @@ class _CalendarPageState extends State<CalendarPage> {
       appBar: AppBar(
         title: Text('เลือกวัน-เวลา รับรถ/คืนรถ'),
         backgroundColor: Color(0xFF00377E),
-        elevation: 0, 
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDateSelection(context),  
+            _buildDateSelection(context),
             SizedBox(height: 20),
             _buildCalendar(),
             SizedBox(height: 20),
@@ -77,7 +79,8 @@ class _CalendarPageState extends State<CalendarPage> {
           label: 'วันรับรถ',
           date: _rangeStart != null ? _formatDate(_rangeStart!) : 'เลือกวันที่',
           time: _pickupTime.format(context),
-          onTapDate: () => setState(() => _rangeSelectionMode = RangeSelectionMode.toggledOn),
+          onTapDate: () => setState(
+              () => _rangeSelectionMode = RangeSelectionMode.toggledOn),
           onTapTime: () => _selectTime(context, true),
         ),
         _dateBox(
@@ -101,7 +104,11 @@ class _CalendarPageState extends State<CalendarPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF575454))),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF575454))),
           GestureDetector(
             onTap: onTapDate,
             child: Container(
@@ -109,9 +116,18 @@ class _CalendarPageState extends State<CalendarPage> {
               decoration: BoxDecoration(
                 color: Color(0xFF9CD9FF),
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(2, 2))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(2, 2))
+                ],
               ),
-              child: Text(date, style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold)),
+              child: Text(date,
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
             ),
           ),
           SizedBox(height: 8),
@@ -122,9 +138,15 @@ class _CalendarPageState extends State<CalendarPage> {
               decoration: BoxDecoration(
                 color: Color(0xFFF0F0F0),
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(2, 2))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(2, 2))
+                ],
               ),
-              child: Text(time, style: TextStyle(fontSize: 16, color: Colors.black)),
+              child: Text(time,
+                  style: TextStyle(fontSize: 16, color: Colors.black)),
             ),
           ),
         ],
@@ -134,7 +156,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildCalendar() {
     return TableCalendar(
-      firstDay: _today,  
+      firstDay: _today,
       lastDay: DateTime(2030),
       focusedDay: _focusedDay,
       calendarFormat: _calendarFormat,
@@ -155,7 +177,8 @@ class _CalendarPageState extends State<CalendarPage> {
         formatButtonVisible: false,
         titleCentered: true,
         decoration: BoxDecoration(color: Color(0xFF00377E)),
-        titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
       ),
     );
   }
@@ -164,7 +187,8 @@ class _CalendarPageState extends State<CalendarPage> {
     int rentalDays = _calculateRentalDays();
     return Text(
       rentalDays > 0 ? 'จำนวนวันเช่า: $rentalDays วัน' : 'โปรดเลือกช่วงวันเช่า',
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+      style: TextStyle(
+          fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
     );
   }
 

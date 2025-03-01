@@ -23,6 +23,8 @@ class FigmaToCodeApp extends StatelessWidget {
 }
 
 class TotalIncome1 extends StatelessWidget {
+  const TotalIncome1({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -56,19 +58,22 @@ class TotalIncome1 extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(//burger bar
+              Positioned(
+                //burger bar
                 left: 20,
                 top: 19,
-                child: Container(
+                child: SizedBox(
                   width: 60,
                   height: 60,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(3, (index) => 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3), // เพิ่มช่องไฟแนวตั้ง
+                      children: List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 3), // เพิ่มช่องไฟแนวตั้ง
                           child: Row(
                             children: [
                               Container(
@@ -79,7 +84,8 @@ class TotalIncome1 extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 6), // ปรับระยะห่างระหว่างจุดกับเส้น
+                              const SizedBox(
+                                  width: 6), // ปรับระยะห่างระหว่างจุดกับเส้น
                               Container(
                                 width: 29, // ลดความยาวของขีดให้เหมาะสม
                                 height: 4, // คงความหนาเท่าเดิม
@@ -101,7 +107,7 @@ class TotalIncome1 extends StatelessWidget {
                   height: 28,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                       image: AssetImage("assets/image/checkmark_image.png"),
+                      image: AssetImage("assets/image/checkmark_image.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -185,7 +191,8 @@ class TotalIncome1 extends StatelessWidget {
                   height: 39,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/image/greaterthan_sign_image.png"),
+                      image:
+                          AssetImage("assets/image/greaterthan_sign_image.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -199,7 +206,8 @@ class TotalIncome1 extends StatelessWidget {
                   height: 39,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/image/greaterthan_sign_image.png"),
+                      image:
+                          AssetImage("assets/image/greaterthan_sign_image.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -236,7 +244,7 @@ class TotalIncome1 extends StatelessWidget {
               Positioned(
                 left: 330,
                 top: 122,
-                child: Container(
+                child: SizedBox(
                   width: 96,
                   height: 47,
                   child: Stack(

@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'ProfileLessor.dart'; // เพื่อใช้ MyDrawer ที่เราได้สร้างไว้ใน ProfileLessor.dart
 
-
 class ProfileRenter extends StatefulWidget {
+  const ProfileRenter({super.key});
+
   @override
   _ProfileRenterState createState() => _ProfileRenterState();
 }
@@ -32,8 +33,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
           decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("ยกเลิก")),
-          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: Text("บันทึก")),
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: Text("ยกเลิก")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text("บันทึก")),
         ],
       ),
     );
@@ -75,7 +79,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
       return Scaffold(body: Center(child: Text("ไม่พบผู้ใช้ที่ login")));
     }
     // ตรวจสอบว่า Login ด้วย Google หรือไม่
-    bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
+    bool isGoogleLogin =
+        currentUser.providerData.any((p) => p.providerId == 'google.com');
 
     return Scaffold(
       appBar: AppBar(
@@ -89,16 +94,23 @@ class _ProfileRenterState extends State<ProfileRenter> {
         ),
       ),
       // เพิ่ม Drawer โดยใช้ MyDrawer จาก ProfileLessor
-      drawer: MyDrawer(username: username ?? "ไม่มีชื่อ", isGoogleLogin: isGoogleLogin),
+      drawer: MyDrawer(
+          username: username ?? "ไม่มีชื่อ", isGoogleLogin: isGoogleLogin),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text("เกิดข้อผิดพลาด"));
-          if (snapshot.connectionState == ConnectionState.waiting)
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || !snapshot.data!.exists)
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
             return Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน"));
+          }
 
           var data = snapshot.data!.data() as Map<String, dynamic>;
           _initializeLocalData(data);
@@ -120,12 +132,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       ),
                       SizedBox(width: 16),
                       Expanded(
-                        child: Text(username ?? "ไม่มีชื่อ", style: TextStyle(fontSize: 24, color: Colors.black)),
+                        child: Text(username ?? "ไม่มีชื่อ",
+                            style:
+                                TextStyle(fontSize: 24, color: Colors.black)),
                       ),
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         onPressed: () async {
-                          String? newVal = await _editDialog("ชื่อผู้ใช้", username);
+                          String? newVal =
+                              await _editDialog("ชื่อผู้ใช้", username);
                           if (newVal != null && newVal.isNotEmpty) {
                             setState(() {
                               username = newVal;
@@ -142,7 +157,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                   value: true,
                   onChanged: (val) {
                     if (!val) {
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileLessor()));
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (_) => ProfileLessor()));
                     }
                   },
                   secondary: Icon(Icons.swap_horiz),
@@ -159,7 +175,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text("ข้อมูลส่วนตัว",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
                       SizedBox(height: 16),
                       _buildWhiteBox(
                         Column(
@@ -172,12 +190,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("จังหวัด : ${province ?? "ไม่มีข้อมูล"}")),
+                                      Flexible(
+                                          child: Text(
+                                              "จังหวัด : ${province ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        icon: Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog("จังหวัด", province);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "จังหวัด", province);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               province = newVal;
                                             });
@@ -191,12 +214,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("อำเภอ : ${district ?? "ไม่มีข้อมูล"}")),
+                                      Flexible(
+                                          child: Text(
+                                              "อำเภอ : ${district ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        icon: Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog("อำเภอ", district);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "อำเภอ", district);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               district = newVal;
                                             });
@@ -213,12 +241,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}")),
+                                      Flexible(
+                                          child: Text(
+                                              "ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        icon: Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog("ตำบล", subdistrict);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "ตำบล", subdistrict);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               subdistrict = newVal;
                                             });
@@ -232,12 +265,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}")),
+                                      Flexible(
+                                          child: Text(
+                                              "รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        icon: Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog("รหัสไปรษณีย์", postalCode);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "รหัสไปรษณีย์", postalCode);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               postalCode = newVal;
                                             });
@@ -254,12 +292,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Flexible(child: Text("เพิ่มเติม : ${moreinfo ?? "ไม่มีข้อมูล"}")),
+                                      Flexible(
+                                          child: Text(
+                                              "เพิ่มเติม : ${moreinfo ?? "ไม่มีข้อมูล"}")),
                                       IconButton(
-                                        icon: Icon(Icons.edit, color: Colors.blue),
+                                        icon: Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog("เพิ่มเติม", moreinfo);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "เพิ่มเติม", moreinfo);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               moreinfo = newVal;
                                             });
@@ -277,11 +320,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       _buildWhiteBox(
                         Row(
                           children: [
-                            Expanded(child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}", style: TextStyle(fontSize: 16))),
+                            Expanded(
+                                child: Text(
+                                    "เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}",
+                                    style: TextStyle(fontSize: 16))),
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue),
                               onPressed: () async {
-                                String? newVal = await _editDialog("เบอร์โทรศัพท์", phone);
+                                String? newVal =
+                                    await _editDialog("เบอร์โทรศัพท์", phone);
                                 if (newVal != null && newVal.isNotEmpty) {
                                   setState(() {
                                     phone = newVal;
@@ -295,7 +342,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       _buildWhiteBox(
                         Row(
                           children: [
-                            Expanded(child: Text("อีเมล: ${email}", style: TextStyle(fontSize: 16))),
+                            Expanded(
+                                child: Text("อีเมล: $email",
+                                    style: TextStyle(fontSize: 16))),
                           ],
                         ),
                       ),
@@ -321,7 +370,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
                         alignment: Alignment.center,
                         child: ElevatedButton(
                           onPressed: () async {
-                            await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(currentUser.uid)
+                                .update({
                               'username': username,
                               'email': email,
                               'phone': phone,
@@ -333,15 +385,20 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 'moreinfo': moreinfo,
                               }
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text("บันทึกข้อมูลเรียบร้อย")));
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                            child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 24),
+                            child: Text("บันทึก",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.white)),
                           ),
                         ),
                       ),

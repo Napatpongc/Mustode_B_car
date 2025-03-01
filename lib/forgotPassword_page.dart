@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
+
   @override
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
@@ -32,7 +34,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(height: 20),
-                
+
                 // ช่องกรอกอีเมล
                 TextFormField(
                   controller: _emailController,
@@ -48,7 +50,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     // ตรวจสอบรูปแบบอีเมล
                     if (value == null || value.isEmpty) {
                       return 'กรุณากรอกอีเมล';
-                    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+                    } else if (!RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                        .hasMatch(value)) {
                       return 'อีเมลไม่ถูกต้อง';
                     }
                     return null;

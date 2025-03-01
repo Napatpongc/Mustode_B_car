@@ -8,13 +8,15 @@ import 'home_page.dart';
 import 'forgotPassword_page.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  FocusNode _emailFocusNode = FocusNode();
-  FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isSkipButtonVisible = true;
 
   final TextEditingController _emailController = TextEditingController();
@@ -125,7 +127,10 @@ class _LoginPageState extends State<LoginPage> {
             "ownedCars": [],
           });
           // สร้างเอกสารใน collection "payments" โดยใช้ uid ของผู้ใช้เป็น payment_id
-          await FirebaseFirestore.instance.collection("payments").doc(user.uid).set({
+          await FirebaseFirestore.instance
+              .collection("payments")
+              .doc(user.uid)
+              .set({
             "mypayment": 0, // กำหนดค่าเริ่มต้นของ mypayment เป็น 0
           });
         }

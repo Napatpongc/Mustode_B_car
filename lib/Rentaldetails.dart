@@ -140,7 +140,7 @@ class RentalDetailsScreen extends StatelessWidget {
               Positioned(
                 left: -19,
                 top: 509,
-                child: Container(
+                child: SizedBox(
                   width: 482,
                   height: 1265,
                   child: Stack(
@@ -254,7 +254,7 @@ class RentalDetailsScreen extends StatelessWidget {
                       Positioned(
                         left: 0,
                         top: 527,
-                        child: Container(
+                        child: SizedBox(
                           width: 482,
                           height: 738,
                           child: Stack(
@@ -1056,7 +1056,7 @@ class RentalDetailsScreen extends StatelessWidget {
                       Positioned(
                         left: 0,
                         top: 60,
-                        child: Container(
+                        child: SizedBox(
                           width: 482,
                           height: 424,
                           child: Stack(
@@ -1238,7 +1238,7 @@ class RentalDetailsScreen extends StatelessWidget {
               Positioned(
                 left: 15,
                 top: 165,
-                child: Container(
+                child: SizedBox(
                   width: 168,
                   height: 141,
                   child: Stack(

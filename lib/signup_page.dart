@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
@@ -84,9 +86,9 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     } on FirebaseAuthException catch (e) {
       String msg = "เกิดข้อผิดพลาด";
-      if (e.code == 'email-already-in-use')
+      if (e.code == 'email-already-in-use') {
         msg = "อีเมลนี้ถูกใช้ไปแล้ว";
-      else if (e.code == 'weak-password')
+      } else if (e.code == 'weak-password')
         msg = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
       else if (e.code == 'invalid-email') msg = "อีเมลไม่ถูกต้อง";
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -99,12 +101,14 @@ class _SignUpPageState extends State<SignUpPage> {
     return FutureBuilder(
       future: _firebaseInitialization,
       builder: (_, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return Scaffold(
               appBar: AppBar(title: Text("Error")),
               body: Center(child: Text("${snapshot.error}")));
-        if (snapshot.connectionState != ConnectionState.done)
+        }
+        if (snapshot.connectionState != ConnectionState.done) {
           return Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
         return Scaffold(
           body: Stack(
             children: [

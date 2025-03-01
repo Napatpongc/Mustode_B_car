@@ -23,6 +23,8 @@ class FigmaToCodeApp extends StatelessWidget {
 }
 
 class TotalIncome2 extends StatelessWidget {
+  const TotalIncome2({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -51,7 +53,8 @@ class TotalIncome2 extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/image/lessterthan_sign_image.png"),
+                      image:
+                          AssetImage("assets/image/lessterthan_sign_image.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -114,7 +117,7 @@ class TotalIncome2 extends StatelessWidget {
               Positioned(
                 left: 639,
                 top: 362,
-                child: Container(width: 3, height: 4),
+                child: SizedBox(width: 3, height: 4),
               ),
               Positioned(
                 left: 69,

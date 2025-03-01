@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-  //คือให้รองทดรองสร้างหน้ามาอีกหน้านึงแล้วให้ปิงข้ามหน้า
-  //แบบอีกหน้าที่เป็นหน้าเปล่าใส่ค่าในหน้านั้นแล้วให้มันขึ้นshowในหน้านี้
-  void main() {
+
+//คือให้รองทดรองสร้างหน้ามาอีกหน้านึงแล้วให้ปิงข้ามหน้า
+//แบบอีกหน้าที่เป็นหน้าเปล่าใส่ค่าในหน้านั้นแล้วให้มันขึ้นshowในหน้านี้
+void main() {
   runApp(const HomePage());
 }
 
@@ -24,6 +25,8 @@ class HomePage extends StatelessWidget {
 }
 
 class Search extends StatelessWidget {
+  const Search({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -44,8 +47,10 @@ class Search extends StatelessWidget {
                   decoration: BoxDecoration(color: Color(0xFF00377E)),
                 ),
               ),
-              Positioned(//mustodebcarmain.png
-                left: (MediaQuery.of(context).size.width - 95) / 2, // กึ่งกลางหน้าจอแนวนอน
+              Positioned(
+                //mustodebcarmain.png
+                left: (MediaQuery.of(context).size.width - 95) /
+                    2, // กึ่งกลางหน้าจอแนวนอน
                 top: 53, // สามารถเปลี่ยนค่าตามต้องการเพื่อขยับขึ้น-ลง
                 child: Container(
                   width: 103,
@@ -56,21 +61,24 @@ class Search extends StatelessWidget {
                       fit: BoxFit.fill,
                     ),
                   ),
-                  ),
+                ),
               ),
-              Positioned(//burger bar
+              Positioned(
+                //burger bar
                 left: 20,
                 top: 19,
-                child: Container(
+                child: SizedBox(
                   width: 60,
                   height: 60,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(3, (index) => 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3), // เพิ่มช่องไฟแนวตั้ง
+                      children: List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 3), // เพิ่มช่องไฟแนวตั้ง
                           child: Row(
                             children: [
                               Container(
@@ -81,7 +89,8 @@ class Search extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 6), // ปรับระยะห่างระหว่างจุดกับเส้น
+                              const SizedBox(
+                                  width: 6), // ปรับระยะห่างระหว่างจุดกับเส้น
                               Container(
                                 width: 29, // ลดความยาวของขีดให้เหมาะสม
                                 height: 4, // คงความหนาเท่าเดิม
@@ -390,7 +399,9 @@ class Search extends StatelessWidget {
                 left: 220,
                 top: 303,
                 child: Transform(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(1.57),
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(1.57),
                   child: Container(
                     width: 29,
                     decoration: ShapeDecoration(
@@ -408,7 +419,9 @@ class Search extends StatelessWidget {
                 left: 219,
                 top: 414,
                 child: Transform(
-                  transform: Matrix4.identity()..translate(0.0, 0.0)..rotateZ(1.57),
+                  transform: Matrix4.identity()
+                    ..translate(0.0, 0.0)
+                    ..rotateZ(1.57),
                   child: Container(
                     width: 29,
                     decoration: ShapeDecoration(
@@ -425,8 +438,9 @@ class Search extends StatelessWidget {
               Positioned(
                 left: 79,
                 top: 303,
-                child: Text(// change to text fieldเพื่อให้รับค่าๆได้ ดูจากลิงของฟริ้น แบบสร้างหน้าเปล่ามาแล้วส่งค่าไปอีกหน้าได้
-                //รอง
+                child: Text(
+                  // change to text fieldเพื่อให้รับค่าๆได้ ดูจากลิงของฟริ้น แบบสร้างหน้าเปล่ามาแล้วส่งค่าไปอีกหน้าได้
+                  //รอง
                   '01/01/2025',
                   style: TextStyle(
                     color: Colors.black,
@@ -511,7 +525,7 @@ class Search extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                       image: AssetImage("assets/image/caricon.png"),
+                      image: AssetImage("assets/image/caricon.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -663,7 +677,7 @@ class Search extends StatelessWidget {
                   height: 193,
                   decoration: ShapeDecoration(
                     image: DecorationImage(
-                       image: AssetImage("assets/image/donutscar.png"),
+                      image: AssetImage("assets/image/donutscar.png"),
                       fit: BoxFit.fill,
                     ),
                     shape: RoundedRectangleBorder(

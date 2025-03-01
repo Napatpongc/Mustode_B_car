@@ -8,7 +8,7 @@ import 'package:location/location.dart';
 //import 'package:location/location.dart';
 
 class MapDetailPage extends StatefulWidget {
-  const MapDetailPage({Key? key}) : super(key: key);
+  const MapDetailPage({super.key});
 
   @override
   _MapDetailPageState createState() => _MapDetailPageState();
@@ -98,21 +98,25 @@ class _MapDetailPageState extends State<MapDetailPage> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                    initialCenter: LatLng(
+                        _locationData!.latitude!, _locationData!.longitude!),
                     initialZoom: _currentZoom,
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                          point: LatLng(_locationData!.latitude!,
+                              _locationData!.longitude!),
                           width: 80,
                           height: 80,
-                          child: const Icon(Icons.location_on, size: 50, color: Colors.red),
+                          child: const Icon(Icons.location_on,
+                              size: 50, color: Colors.red),
                         ),
                       ],
                     ),
@@ -128,22 +132,22 @@ class _MapDetailPageState extends State<MapDetailPage> {
                 FloatingActionButton(
                   heroTag: "zoomIn",
                   onPressed: _zoomIn,
-                  child: const Icon(Icons.add),
                   mini: true,
+                  child: const Icon(Icons.add),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   heroTag: "zoomOut",
                   onPressed: _zoomOut,
-                  child: const Icon(Icons.remove),
                   mini: true,
+                  child: const Icon(Icons.remove),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   heroTag: "reload",
                   onPressed: _reloadLocation,
-                  child: const Icon(Icons.refresh),
                   mini: true,
+                  child: const Icon(Icons.refresh),
                 ),
               ],
             ),
