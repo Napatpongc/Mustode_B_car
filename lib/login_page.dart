@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // ผู้ใช้ยกเลิกการล็อกอิน
+      if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -120,8 +120,16 @@ class _LoginPageState extends State<LoginPage> {
               "moreinfo": null,
             },
             "image": {
-              "imagesidcard": [],
-              "imagesidcar": [],
+              "id_card": null,
+              "deletehash_id_card": null,
+              "driving_license": null,
+              "deletehash_driving_license": null,
+              "rental_contract": null,
+              "deletehash_rental_contract": null,
+            },
+            "location": {
+              "latitude": null,
+              "longitude": null,
             },
             "rentedCars": [],
             "ownedCars": [],
@@ -154,7 +162,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // ภาพพื้นหลัง
           Container(
             width: screenWidth,
             height: screenHeight,

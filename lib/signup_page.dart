@@ -90,7 +90,7 @@ class _SignUpPageState extends State<SignUpPage> {
             "postalCode": null,
             "moreinfo": null,
           },
-          "image": {"imagesidcard": [], "imagesidcar": []},
+          "image": {},
           "rentedCars": [],
           "ownedCars": [],
         });
