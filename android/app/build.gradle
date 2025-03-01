@@ -10,6 +10,10 @@ android {
     compileSdk 34  // เปลี่ยนเป็นเลขเต็มแทน flutter.compileSdkVersion
     ndkVersion "27.0.12077973"
 
+    lintOptions {
+        disable 'Deprecation'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
