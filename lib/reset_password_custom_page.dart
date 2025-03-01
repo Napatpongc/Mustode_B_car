@@ -1,77 +1,55 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'otp_verification_page.dart';
-import 'utils.dart';
+import 'login_page.dart';
 
-class PhoneAuthCustomPage extends StatefulWidget {
-  const PhoneAuthCustomPage({Key? key}) : super(key: key);
+class ResetPasswordCustomPage extends StatefulWidget {
+  final String phoneNumber;
+  const ResetPasswordCustomPage({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
-  _PhoneAuthCustomPageState createState() => _PhoneAuthCustomPageState();
+  _ResetPasswordCustomPageState createState() => _ResetPasswordCustomPageState();
 }
 
-class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
-  final TextEditingController _phoneController = TextEditingController();
-  bool isProcessing = false;
+class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
+  final TextEditingController _passwordController = TextEditingController();
+  bool isUpdating = false;
 
-  // ฟังก์ชันส่ง SMS จริง (ต้องผสานกับ API ของ SMS Gateway)
-  Future<void> sendSms(String phone, String otp) async {
-    // ตัวอย่างจำลองส่ง SMS
-    print('Sending SMS to $phone: Your OTP code is $otp');
-    // TODO: Implement SMS API call here (e.g., Twilio)
-  }
+  Future<void> _updatePassword() async {
+    setState(() => isUpdating = true);
+    try {
+      // ค้นหา document ของ user โดยใช้เบอร์โทร (ในที่นี้สมมุติว่าเบอร์โทรถูกเก็บใน field 'phone')
+      QuerySnapshot userQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phone', isEqualTo: widget.phoneNumber)
+          .get();
 
-  Future<void> _sendOTP() async {
-    setState(() => isProcessing = true);
+      if (userQuery.docs.isEmpty) {
+        Get.snackbar("Error", "ไม่พบผู้ใช้งานสำหรับเบอร์นี้");
+        return;
+      }
+      // สมมุติว่ามีแค่ 1 document
+      String userId = userQuery.docs.first.id;
 
-    // แปลงเบอร์เป็น E.164
-    String phoneNumber = formatThaiPhone(_phoneController.text.trim());
+      // อัปเดตรหัสผ่านใหม่ (ในโปรเจกต์จริง ควรเข้ารหัสก่อนเก็บ)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({'password': _passwordController.text.trim()});
 
-    // ตรวจสอบว่ามีเบอร์นี้ใน Collection "users"
-    QuerySnapshot userQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('phone', isEqualTo: phoneNumber)
-        .get();
-
-    if (userQuery.docs.isEmpty) {
-      Get.snackbar("Error", "เบอร์นี้ยังไม่ถูกลงทะเบียนในระบบ");
-      setState(() => isProcessing = false);
-      return;
+      Get.snackbar("Success", "รหัสผ่านถูกเปลี่ยนเรียบร้อยแล้ว");
+      // นำทางไปยังหน้า LoginPage
+      Get.offAll(() => LoginPage());
+    } catch (e) {
+      Get.snackbar("Error", "ไม่สามารถเปลี่ยนรหัสผ่านได้: $e");
+    } finally {
+      setState(() => isUpdating = false);
     }
-
-    // สุ่ม OTP 6 หลัก
-    String otp = generateOTP();
-
-    // กำหนดเวลา expire 5 นาที
-    DateTime now = DateTime.now();
-    DateTime expireAt = now.add(const Duration(minutes: 5));
-
-    // เก็บ OTP ลงใน Collection "otp_codes"
-    await FirebaseFirestore.instance
-        .collection('otp_codes')
-        .doc(phoneNumber)
-        .set({
-      'otp': otp,
-      'createdAt': now,
-      'expireAt': expireAt,
-      'used': false,
-    });
-
-    // ส่ง SMS จริง
-    await sendSms(phoneNumber, otp);
-
-    Get.snackbar("OTP Sent", "OTP ถูกส่งไปที่ $phoneNumber");
-
-    // ไปหน้า OTP Verification
-    Get.to(() => OtpVerificationCustomPage(phoneNumber: phoneNumber));
-
-    setState(() => isProcessing = false);
   }
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -80,12 +58,12 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      // AppBar ที่ใช้สีเดียวกับโทนหลัก
       appBar: AppBar(
-        title: const Text("กรุณาใส่เบอร์โทรศัพท์"),
+        title: const Text("Reset Password"),
         centerTitle: true,
         backgroundColor: const Color(0xFF00377E),
       ),
-      // พื้นหลังฟ้าอ่อนเต็มหน้าจอ
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -94,10 +72,7 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
           child: SingleChildScrollView(
             child: Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 40,
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
                 width: screenWidth * 0.9,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.9),
@@ -115,8 +90,9 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // หัวข้อ
                       Text(
-                        "Enter phone number",
+                        "เปลี่ยนรหัสผ่าน",
                         style: TextStyle(
                           fontSize: screenWidth * 0.06,
                           fontWeight: FontWeight.bold,
@@ -124,14 +100,14 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
+                      // ช่องกรอก New Password
                       TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
+                        controller: _passwordController,
+                        obscureText: true,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.phone, color: Colors.black54),
-                          labelText: "Enter Phone Number",
+                          prefixIcon: const Icon(Icons.lock, color: Colors.black54),
+                          labelText: "New Password",
                           labelStyle: const TextStyle(color: Colors.black87),
-                          hintText: "08XXXXXXXX",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -140,12 +116,13 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      isProcessing
+                      // ปุ่ม Update Password
+                      isUpdating
                           ? const CircularProgressIndicator()
                           : SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _sendOTP,
+                                onPressed: _updatePassword,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF00377E),
                                   padding: const EdgeInsets.symmetric(vertical: 15),
@@ -154,7 +131,7 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                                   ),
                                 ),
                                 child: const Text(
-                                  "ยืนยัน",
+                                  "Update Password",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,

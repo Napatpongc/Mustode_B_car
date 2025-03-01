@@ -355,4 +355,37 @@ class _ProfileRenterState extends State<ProfileRenter> {
       ),
     );
   }
+
+  /// ฟังก์ชันสร้าง widget สำหรับแสดงข้อมูลแต่ละฟิลด์
+  Widget _buildInfoField(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.black.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 4,
+              offset: Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                "$title\n$value",
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+            ),
+            Icon(Icons.edit, color: Colors.blue),
+          ],
+        ),
+      ),
+    );
+  }
 }
