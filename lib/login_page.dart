@@ -5,7 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
 import 'signup_page.dart';
 import 'home_page.dart';
-import 'forgotPassword_page.dart';
+import 'forgotpassword.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  // ฟังก์ชันสำหรับล็อกอินด้วย Email/Password
+  // ฟังก์ชันล็อกอินด้วย Email/Password
   void _login() async {
     String email = _emailController.text;
     String password = _passwordController.text;
@@ -82,11 +82,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ฟังก์ชันสำหรับล็อกอินด้วย Google
+  // ฟังก์ชันล็อกอินด้วย Google พร้อมเพิ่ม field สำหรับรูปและโลเคชั่น
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // ผู้ใช้ยกเลิกการล็อกอิน
+      if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -99,13 +99,12 @@ class _LoginPageState extends State<LoginPage> {
           await FirebaseAuth.instance.signInWithCredential(credential);
       final User? user = userCredential.user;
       if (user != null) {
-        // ตรวจสอบว่าใน Firestore มี document สำหรับผู้ใช้นี้หรือยัง
         final DocumentReference userDoc =
             FirebaseFirestore.instance.collection('users').doc(user.uid);
 
         final docSnapshot = await userDoc.get();
         if (!docSnapshot.exists) {
-          // ถ้ายังไม่มี ให้สร้าง document ด้วยข้อมูลเริ่มต้น
+          // สร้าง document ด้วยข้อมูลเริ่มต้นและเพิ่ม field สำหรับรูปและโลเคชั่น
           await userDoc.set({
             "username": googleUser.displayName ?? "",
             "email": googleUser.email,
@@ -118,16 +117,24 @@ class _LoginPageState extends State<LoginPage> {
               "moreinfo": null,
             },
             "image": {
-              "imagesidcard": [],
-              "imagesidcar": [],
+              "id_card": null,
+              "deletehash_id_card": null,
+              "driving_license": null,
+              "deletehash_driving_license": null,
+              "rental_contract": null,
+              "deletehash_rental_contract": null,
+            },
+            "location": {
+              "latitude": null,
+              "longitude": null,
             },
             "rentedCars": [],
             "ownedCars": [],
           });
-          // สร้างเอกสารใน collection "payments" โดยใช้ uid ของผู้ใช้เป็น payment_id
-          await FirebaseFirestore.instance.collection("payments").doc(user.uid).set({
-            "mypayment": 0, // กำหนดค่าเริ่มต้นของ mypayment เป็น 0
-          });
+          await FirebaseFirestore.instance
+              .collection("payments")
+              .doc(user.uid)
+              .set({"mypayment": 0});
         }
         Navigator.pushReplacement(
           context,
@@ -152,7 +159,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // ภาพพื้นหลัง
           Container(
             width: screenWidth,
             height: screenHeight,
@@ -163,7 +169,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // กล่องข้อมูลล็อกอินตรงกลาง (ปรับขนาดกล่องให้รองรับเนื้อหาเพิ่มเติม)
           Center(
             child: Container(
               width: screenWidth * 0.85,
@@ -183,13 +188,11 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // โลโก้ด้านบน
                     Image.asset(
                       "assets/icon/app_icon.png",
                       height: screenHeight * 0.15,
                     ),
                     SizedBox(height: 20),
-                    // ช่องกรอก Email
                     TextField(
                       controller: _emailController,
                       focusNode: _emailFocusNode,
@@ -204,7 +207,6 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 10),
-                    // ช่องกรอก Password
                     TextField(
                       controller: _passwordController,
                       focusNode: _passwordFocusNode,
@@ -219,7 +221,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 8),
-                    // ลิงก์ Forgot Password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -232,15 +233,11 @@ class _LoginPageState extends State<LoginPage> {
                         },
                         child: Text(
                           "Forgot password?",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.blue, fontSize: 12),
                         ),
                       ),
                     ),
                     SizedBox(height: 8),
-                    // ปุ่ม Sign In
                     ElevatedButton(
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
@@ -262,16 +259,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 15),
-                    // ข้อความ "or continue with"
                     Text(
                       "or continue with",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.black, fontSize: 16),
                     ),
                     SizedBox(height: 15),
-                    // ปุ่ม Login ด้วย Google
                     ElevatedButton(
                       onPressed: _signInWithGoogle,
                       style: ElevatedButton.styleFrom(
@@ -303,7 +295,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 30),
-                    // ลิงก์ Sign Up
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -312,14 +303,10 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => SignUpPage()),
+                              MaterialPageRoute(builder: (context) => SignUpPage()),
                             );
                           },
-                          child: Text(
-                            "Sign up",
-                            style: TextStyle(color: Colors.red),
-                          ),
+                          child: Text("Sign up", style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
@@ -328,7 +315,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          // ปุ่ม "ข้าม" - Guest Sign-In
           Visibility(
             visible: _isSkipButtonVisible,
             child: Positioned(
@@ -337,9 +323,7 @@ class _LoginPageState extends State<LoginPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    // ล็อกอินแบบ Anonymous
-                    UserCredential guestUser =
-                        await FirebaseAuth.instance.signInAnonymously();
+                    UserCredential guestUser = await FirebaseAuth.instance.signInAnonymously();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => ProfileRenter()),
@@ -361,15 +345,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 child: Text(
                   "ข้าม",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.black, fontSize: 14),
                 ),
               ),
             ),
           ),
-          // ข้อความเงื่อนไขการใช้งาน
           Positioned(
             bottom: 10,
             left: 20,
@@ -377,10 +357,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Text(
               "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.indigoAccent,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.indigoAccent, fontSize: 12),
             ),
           ),
         ],

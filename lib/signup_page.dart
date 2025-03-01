@@ -59,6 +59,7 @@ class _SignUpPageState extends State<SignUpPage> {
             .set({
           "username": _usernameController.text.trim(),
           "email": _emailController.text.trim(),
+          "password": _passwordController.text,
           "phone": null,
           "address": {
             "province": null,
@@ -67,7 +68,7 @@ class _SignUpPageState extends State<SignUpPage> {
             "postalCode": null,
             "moreinfo": null
           },
-          "image": {"imagesidcard": [], "imagesidcar": []},
+          "image": {},
           "rentedCars": [],
           "ownedCars": [],
         });
