@@ -8,6 +8,7 @@ import 'package:myproject/into_app.dart';
 //import 'screens/login_screen/login_screen.dart';
 //import 'screens/otp_screen/otp_screen.dart';
 
+//version1.1+2=3.1
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
