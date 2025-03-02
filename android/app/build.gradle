@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace "com.example.myproject"
-    compileSdk 34  // เปลี่ยนเป็นเลขเต็มแทน flutter.compileSdkVersion
+    compileSdk 35  // เปลี่ยนเป็นเลขเต็มแทน flutter.compileSdkVersion
     ndkVersion "27.0.12077973"
 
     lintOptions {

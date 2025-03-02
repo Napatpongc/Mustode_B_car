@@ -7,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:geolocator/geolocator.dart'; // เพิ่มสำหรับใช้งานตำแหน่งที่ตั้ง
+
 import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'Mycar.dart';
@@ -683,15 +685,46 @@ class _ProfileLessorState extends State<ProfileLessor> {
                             ),
                           ],
                           const SizedBox(height: 20),
-                          // ปุ่มเพิ่มตำแหน่งที่ตั้ง
+                          // ปุ่มเพิ่มตำแหน่งที่ตั้ง (แก้ไข event ที่นี่)
                           ElevatedButton.icon(
-                            onPressed: () {
-                              // Event ยังไม่ navigate ไปที่หน้าแผนที่
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        "เลือกตำแหน่งที่ตั้ง (ยังไม่ได้ implement)")),
+                            onPressed: () async {
+                              // ตรวจสอบสิทธิ์การเข้าถึงตำแหน่ง
+                              LocationPermission permission = await Geolocator.checkPermission();
+                              if (permission == LocationPermission.denied) {
+                                permission = await Geolocator.requestPermission();
+                                if (permission == LocationPermission.denied) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("ไม่ได้รับสิทธิ์การเข้าถึงตำแหน่ง")),
+                                  );
+                                  return;
+                                }
+                              }
+                              if (permission == LocationPermission.deniedForever) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("สิทธิ์การเข้าถึงตำแหน่งถูกปฏิเสธอย่างถาวร")),
+                                );
+                                return;
+                              }
+
+                              // ดึงตำแหน่งปัจจุบัน
+                              Position position = await Geolocator.getCurrentPosition(
+                                desiredAccuracy: LocationAccuracy.high,
                               );
+                              double latitude = position.latitude;
+                              double longitude = position.longitude;
+
+                              // อัปเดตหรือสร้าง field location ใน Firestore
+                              if (user != null) {
+                                await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                                  'location': {
+                                    'latitude': latitude,
+                                    'longitude': longitude,
+                                  }
+                                }, SetOptions(merge: true));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("อัปเดตตำแหน่งที่ตั้งเรียบร้อย")),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.location_on),
                             label: const Text("เพิ่มตำแหน่งที่ตั้ง"),
