@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'mycar.dart';
+import 'Mycar.dart';
 
 class AddCar extends StatefulWidget {
   const AddCar({Key? key}) : super(key: key);
@@ -26,15 +26,26 @@ class _AddCarState extends State<AddCar> {
   final _engineCtrl = TextEditingController();
   final _baggageCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
+  final _carRegistrationCtrl = TextEditingController(); // สำหรับป้ายทะเบียนรถ
 
-  // ตัวแปรเก็บ URL รูปจาก Imgur
-  String? _carImage;
+  // ตัวแปรเก็บ URL รูปจาก Imgur สำหรับ Step 1 (รถ)
+  String? _carFrontImage;
+  String? _carSideImage;
+  String? _carBackImage;
+  String? _carInsideImage;
+  
+  // ตัวแปรเก็บ URL รูปจาก Imgur สำหรับเอกสารใน Step 2
   String? _vehicleRegImage;
   String? _motorVehicleImage;
   String? _checkVehicleImage;
 
-  // ตัวแปรเก็บ deletehash ของแต่ละรูป
-  String? _deletehashCar;
+  // ตัวแปรเก็บ deletehash ของแต่ละรูป สำหรับ Step 1 (รถ)
+  String? _deletehashCarFront;
+  String? _deletehashCarSide;
+  String? _deletehashCarBack;
+  String? _deletehashCarInside;
+  
+  // ตัวแปรเก็บ deletehash สำหรับเอกสารใน Step 2
   String? _deletehashVehicleReg;
   String? _deletehashMotorVehicle;
   String? _deletehashCheckVehicle;
@@ -60,7 +71,7 @@ class _AddCarState extends State<AddCar> {
     return null;
   }
 
-  // เลือกรูปจากเครื่องและอัปโหลด (ระบุประเภท: car, vehicle_registration, motor_vehicle, check_vehicle)
+  // เลือกรูปจากเครื่องและอัปโหลด (ระบุประเภทเพื่อแยกเก็บข้อมูล)
   Future<void> _pickAndUploadImage(String imageType) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -69,9 +80,18 @@ class _AddCarState extends State<AddCar> {
     var result = await _uploadToImgur(imageFile);
     if (result != null) {
       setState(() {
-        if (imageType == "car") {
-          _carImage = result["link"];
-          _deletehashCar = result["deletehash"];
+        if (imageType == "carfront") {
+          _carFrontImage = result["link"];
+          _deletehashCarFront = result["deletehash"];
+        } else if (imageType == "carside") {
+          _carSideImage = result["link"];
+          _deletehashCarSide = result["deletehash"];
+        } else if (imageType == "carback") {
+          _carBackImage = result["link"];
+          _deletehashCarBack = result["deletehash"];
+        } else if (imageType == "carinside") {
+          _carInsideImage = result["link"];
+          _deletehashCarInside = result["deletehash"];
         } else if (imageType == "vehicle_registration") {
           _vehicleRegImage = result["link"];
           _deletehashVehicleReg = result["deletehash"];
@@ -140,10 +160,14 @@ class _AddCarState extends State<AddCar> {
   // สร้างส่วน Label + ปุ่มเลือกรูป พร้อม preview รูป (ถ้ามี)
   Widget _buildLabelWithButton(String label, String imageType) {
     String? preview;
-    if (imageType == "car") preview = _carImage;
+    if (imageType == "carfront") preview = _carFrontImage;
+    else if (imageType == "carside") preview = _carSideImage;
+    else if (imageType == "carback") preview = _carBackImage;
+    else if (imageType == "carinside") preview = _carInsideImage;
     else if (imageType == "vehicle_registration") preview = _vehicleRegImage;
     else if (imageType == "motor_vehicle") preview = _motorVehicleImage;
     else if (imageType == "check_vehicle") preview = _checkVehicleImage;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -208,7 +232,7 @@ class _AddCarState extends State<AddCar> {
     if (_currentStep == 2) setState(() => _currentStep = 1);
   }
 
-  // บันทึกข้อมูลลง Firestore พร้อมเพิ่ม field availability และ statuscar
+  // บันทึกข้อมูลลง Firestore พร้อมเพิ่ม field availability, statuscar และตามโครงสร้างที่ระบุ
   Future<void> _submitCarData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -232,20 +256,29 @@ class _AddCarState extends State<AddCar> {
       },
       "price": double.tryParse(_priceCtrl.text) ?? 0.0,
       "image": {
-        "car": _carImage ?? "",
-        "deletehash_car": _deletehashCar ?? "",
-        "vehicle_registration": _vehicleRegImage ?? "",
-        "deletehash_vehicle_registration": _deletehashVehicleReg ?? "",
+        "carfront": _carFrontImage ?? "",
+        "carside": _carSideImage ?? "",
+        "carback": _carBackImage ?? "",
+        "carinside": _carInsideImage ?? "",
+        "vehicle registration": _vehicleRegImage ?? "",
         "motor_vehicle": _motorVehicleImage ?? "",
-        "deletehash_motor_vehicle": _deletehashMotorVehicle ?? "",
         "check_vehicle": _checkVehicleImage ?? "",
-        "deletehash_check_vehicle": _deletehashCheckVehicle ?? "",
       },
       "location": {"latitude": null, "longitude": null},
       "availability": {
         "availableFrom": Timestamp.fromDate(now),
         "availableTo": Timestamp.fromDate(availableTo)
       },
+      "deletehash": {
+        "deletehashcarfront": _deletehashCarFront ?? "",
+        "deletehashcarside": _deletehashCarSide ?? "",
+        "deletehashcarback": _deletehashCarBack ?? "",
+        "deletehashcarinside": _deletehashCarInside ?? "",
+        "deletehashvehicle_registration": _deletehashVehicleReg ?? "",
+        "deletehashmotor_vehicle": _deletehashMotorVehicle ?? "",
+        "deletehashcheck_vehicle": _deletehashCheckVehicle ?? "",
+      },
+      "Car registration": _carRegistrationCtrl.text.trim(),
       "statuscar": "yes"
     };
     try {
@@ -268,7 +301,7 @@ class _AddCarState extends State<AddCar> {
     return _currentStep == 1 ? _buildStep1() : _buildStep2();
   }
 
-  // STEP 1: ข้อมูลรถ
+  // STEP 1: ข้อมูลรถ (เพิ่มอัปโหลดรูป 4 รูป และ TextField สำหรับป้ายทะเบียนรถ)
   Widget _buildStep1() {
     return Scaffold(
       appBar: AppBar(
@@ -288,7 +321,18 @@ class _AddCarState extends State<AddCar> {
               children: [
                 _buildStepHeader(1),
                 const SizedBox(height: 20),
-                _buildLabelWithButton("รูปภาพรถ", "car"),
+                // เพิ่มปุ่มเลือกรูป 4 รูป: carfront, carside, carback, carinside
+                _buildLabelWithButton("รูปด้านหน้า", "carfront"),
+                _buildLabelWithButton("รูปด้านข้าง", "carside"),
+                _buildLabelWithButton("รูปด้านหลัง", "carback"),
+                _buildLabelWithButton("รูปด้านใน", "carinside"),
+                // เพิ่ม TextField สำหรับป้ายทะเบียนรถ
+                _buildTextField(
+                  title: "ป้ายทะเบียนรถ",
+                  hint: "กรอกป้ายทะเบียนรถ",
+                  controller: _carRegistrationCtrl,
+                  validator: (val) => (val == null || val.trim().isEmpty) ? "กรุณากรอกป้ายทะเบียนรถ" : null,
+                ),
                 _buildTextField(
                   title: "ชื่อยี่ห้อรถ", hint: "Name", controller: _brandCtrl,
                   validator: (val) => (val == null || val.trim().isEmpty) ? "กรุณากรอกชื่อยี่ห้อรถ" : null,

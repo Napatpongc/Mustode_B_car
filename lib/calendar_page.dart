@@ -7,17 +7,24 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;  
+  // Separate variables for pickup and return dates.
+  DateTime? _pickupDate;
+  DateTime? _returnDate;
+  
+  // Time variables
+  TimeOfDay _pickupTime = const TimeOfDay(hour: 12, minute: 0);
+  TimeOfDay _returnTime = const TimeOfDay(hour: 12, minute: 0);
+  
+  // Calendar settings
   DateTime _focusedDay = DateTime.now();
-  DateTime _today = DateTime.now();
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
-  TimeOfDay _pickupTime = TimeOfDay(hour: 12, minute: 0);
-  TimeOfDay _returnTime = TimeOfDay(hour: 12, minute: 0);
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
-
+  final DateTime _firstDay = DateTime.now();
+  final DateTime _lastDay = DateTime(2030);
+  
+  // 0: pickup, 1: return
+  int _selectedTab = 0;
+  
   Future<void> _selectTime(BuildContext context, bool isPickup) async {
-    TimeOfDay? pickedTime = await showTimePicker(
+    final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: isPickup ? _pickupTime : _returnTime,
     );
@@ -31,165 +38,129 @@ class _CalendarPageState extends State<CalendarPage> {
       });
     }
   }
-
-  int _calculateRentalDays() {
-    if (_rangeStart != null && _rangeEnd != null) {
-      return _rangeEnd!.difference(_rangeStart!).inDays + 1;  
-    }
-    return 0;
-  }
-
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('เลือกวัน-เวลา รับรถ/คืนรถ'),
-        backgroundColor: Color(0xFF00377E),
-        elevation: 0, 
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDateSelection(context),  
-            SizedBox(height: 20),
-            _buildCalendar(),
-            SizedBox(height: 20),
-            Center(
-              child: _buildRentalDaysDisplay(),
-            ),
-            SizedBox(height: 30),
-            Center(
-              child: _buildConfirmButton(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateSelection(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _dateBox(
-          label: 'วันรับรถ',
-          date: _rangeStart != null ? _formatDate(_rangeStart!) : 'เลือกวันที่',
-          time: _pickupTime.format(context),
-          onTapDate: () => setState(() => _rangeSelectionMode = RangeSelectionMode.toggledOn),
-          onTapTime: () => _selectTime(context, true),
-        ),
-        _dateBox(
-          label: 'วันคืนรถ',
-          date: _rangeEnd != null ? _formatDate(_rangeEnd!) : 'เลือกวันที่',
-          time: _returnTime.format(context),
-          onTapTime: () => _selectTime(context, false),
-        ),
-      ],
-    );
-  }
-
-  Widget _dateBox({
-    required String label,
-    required String date,
-    required String time,
-    required VoidCallback onTapTime,
-    VoidCallback? onTapDate,
-  }) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF575454))),
-          GestureDetector(
-            onTap: onTapDate,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Color(0xFF9CD9FF),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(2, 2))],
+    // Entire page in light theme
+    return Theme(
+      data: ThemeData.light(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('เลือกวัน-เวลา รับรถ/คืนรถ')),
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              // Toggle to switch between pickup and return slots.
+              ToggleButtons(
+                isSelected: [_selectedTab == 0, _selectedTab == 1],
+                onPressed: (index) {
+                  setState(() {
+                    _selectedTab = index;
+                    _focusedDay = DateTime.now();
+                  });
+                },
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('วันรับรถ'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('วันคืนรถ'),
+                  ),
+                ],
               ),
-              child: Text(date, style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          SizedBox(height: 8),
-          GestureDetector(
-            onTap: onTapTime,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Color(0xFFF0F0F0),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(2, 2))],
+              const SizedBox(height: 20),
+              // Calendar as a single-date selector.
+              TableCalendar(
+                firstDay: _firstDay,
+                lastDay: _lastDay,
+                focusedDay: _focusedDay,
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _focusedDay = focusedDay;
+                    if (_selectedTab == 0) {
+                      _pickupDate = selectedDay;
+                    } else {
+                      _returnDate = selectedDay;
+                    }
+                  });
+                },
+                selectedDayPredicate: (day) {
+                  if (_selectedTab == 0) {
+                    return isSameDay(day, _pickupDate);
+                  } else {
+                    return isSameDay(day, _returnDate);
+                  }
+                },
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                  selectedDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
+                  defaultTextStyle: const TextStyle(color: Colors.black),
+                  weekendTextStyle: const TextStyle(color: Colors.red),
+                ),
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  decoration: const BoxDecoration(color: Colors.white),
+                  titleTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
               ),
-              child: Text(time, style: TextStyle(fontSize: 16, color: Colors.black)),
-            ),
+              const SizedBox(height: 20),
+              // Larger, easier-to-tap time selection button.
+              _selectedTab == 0
+                  ? GestureDetector(
+                      onTap: () => _selectTime(context, true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.blue, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Text(
+                          'เวลารับรถ: ${_pickupTime.format(context)}',
+                          style: const TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                      ),
+                    )
+                  : GestureDetector(
+                      onTap: () => _selectTime(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.blue, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Text(
+                          'เวลาคืนรถ: ${_returnTime.format(context)}',
+                          style: const TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () {
+                  if (_pickupDate == null || _returnDate == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('กรุณาเลือกทั้งวันรับรถและวันคืนรถ')),
+                    );
+                  } else {
+                    Navigator.pop(context, {
+                      'pickupDate': _pickupDate,
+                      'pickupTime': _pickupTime,
+                      'returnDate': _returnDate,
+                      'returnTime': _returnTime,
+                    });
+                  }
+                },
+                child: const Text("ตกลง"),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
-  }
-
-  Widget _buildCalendar() {
-    return TableCalendar(
-      firstDay: _today,  
-      lastDay: DateTime(2030),
-      focusedDay: _focusedDay,
-      calendarFormat: _calendarFormat,
-      availableCalendarFormats: {CalendarFormat.month: 'Month'},
-      rangeSelectionMode: _rangeSelectionMode,
-      rangeStartDay: _rangeStart,
-      rangeEndDay: _rangeEnd,
-      onRangeSelected: (start, end, focusedDay) {
-        if (start != null && start.isBefore(_today)) return;
-        if (end != null && end.isBefore(_today)) return;
-        setState(() {
-          _rangeStart = start;
-          _rangeEnd = end;
-          _focusedDay = focusedDay;
-        });
-      },
-      headerStyle: HeaderStyle(
-        formatButtonVisible: false,
-        titleCentered: true,
-        decoration: BoxDecoration(color: Color(0xFF00377E)),
-        titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-      ),
-    );
-  }
-
-  Widget _buildRentalDaysDisplay() {
-    int rentalDays = _calculateRentalDays();
-    return Text(
-      rentalDays > 0 ? 'จำนวนวันเช่า: $rentalDays วัน' : 'โปรดเลือกช่วงวันเช่า',
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
-    );
-  }
-
-  Widget _buildConfirmButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        if (_rangeStart == null || _rangeEnd == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('กรุณาเลือกวันรับและวันคืนรถ')),
-          );
-        } else {
-          Navigator.pop(context);
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFF00377E),
-        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 5,
-      ),
-      child: Text("ตกลง", style: TextStyle(color: Colors.white, fontSize: 16)),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
   }
 }
