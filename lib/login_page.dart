@@ -5,7 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
 import 'phone_auth_page.dart';
 import 'signup_page.dart';
-import 'home_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   @override
