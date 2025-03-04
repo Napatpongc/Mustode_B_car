@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'calendar_page.dart';
+import 'account_page.dart';
 
 class MapDetailPage extends StatefulWidget {
   const MapDetailPage({Key? key}) : super(key: key);
@@ -176,7 +177,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => CalendarPage()),
+                                    builder: (context) => AccountPage()),
                               );
                             },
                             child: const Icon(Icons.location_on,size: 50, color: Colors.blue),
