@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:myproject/into_app.dart';
+import 'HomePage.dart';
 
 //import 'screens/home_screen/home_screen.dart';
 //import 'screens/login_screen/login_screen.dart';
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: const Color.fromARGB(255, 253, 188, 51),
       ),
-      home:  IntoApp(),
+      home: IntoApp(),
       getPages: [
        // GetPage(name: '/otpScreen', page: () => const OtpScreen()),
         //GetPage(name: '/homeScreen', page: () => const HomeScreen()),

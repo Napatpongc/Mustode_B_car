@@ -7,8 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart'; // ใช้กรณี Google Sign Out
+import 'HomePage.dart'; // นำเข้า HomePage สำหรับ navigation
 import 'login_page.dart'; // เพื่อไปหน้า login
-import 'ProfileLessor.dart'; // เพื่อสลับไปหน้าผู้ปล่อยเช่า (Segmented control)
+import 'ProfileLessor.dart'; // สำหรับสลับไปหน้าผู้ปล่อยเช่า (Segmented control)
 
 class ProfileRenter extends StatefulWidget {
   @override
@@ -113,7 +114,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-
+      
       final response = await http.post(
         Uri.parse('https://api.imgur.com/3/image'),
         headers: {
@@ -124,7 +125,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
           'type': 'base64',
         },
       );
-
+      
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (data['success'] == true) {
         return {
@@ -217,7 +218,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
       ),
     );
   }
-
+  
   // ------------------ ส่วน build หลัก ------------------
   @override
   Widget build(BuildContext context) {
@@ -227,16 +228,13 @@ class _ProfileRenterState extends State<ProfileRenter> {
         body: Center(child: Text("ไม่พบผู้ใช้ที่ login")),
       );
     }
-
+    
     // ตรวจสอบว่า Login ด้วย Google หรือไม่
     bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
-
+    
     // ใช้ StreamBuilder ดึงข้อมูลผู้ใช้จาก Firestore
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Scaffold(
@@ -253,20 +251,19 @@ class _ProfileRenterState extends State<ProfileRenter> {
             body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")),
           );
         }
-
+        
         // ได้ data จาก Firestore
         var data = snapshot.data!.data() as Map<String, dynamic>;
         // กำหนดค่าเริ่มต้นให้ตัวแปรใน State (username, phone ฯลฯ)
         _initializeLocalData(data);
-
+        
         // ข้อมูลรูปจาก Firestore
         final imageData = data['image'] ?? {};
         final oldProfileUrl = imageData['profile'];
         final oldProfileDeleteHash = imageData['deletehashprofil'];
         final oldDrivingUrl = imageData['driving_license'];
         final oldDrivingDeleteHash = imageData['deletehash_driving_license'];
-
-        // ---- สร้าง Scaffold ตัวเดียว ----
+        
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF00377E),
@@ -278,7 +275,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
               ),
             ),
           ),
-          // ประกาศ Drawer ของเรา (MyDrawerRenter)
+          // Drawer สำหรับ ProfileRenter โดยใช้ MyDrawerRenter ที่ปรับ navigation แล้ว
           drawer: MyDrawerRenter(
             username: username ?? "ไม่มีชื่อ",
             isGoogleLogin: isGoogleLogin,
@@ -287,7 +284,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // Header: รูปโปรไฟล์, ชื่อ, ปุ่มแก้ไขโปรไฟล์
+                // ส่วน Header: รูปโปรไฟล์, ชื่อ, ปุ่มแก้ไขโปรไฟล์ (ส่วนอื่น ๆ ไม่แก้)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -309,7 +306,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 ? const Icon(Icons.person, size: 40, color: Colors.blue)
                                 : null,
                           ),
-                          // ปุ่มแก้ไขเล็กๆ ที่มุมล่างขวาของรูปโปรไฟล์
+                          // ปุ่มแก้ไขเล็ก ๆ ที่มุมล่างขวาของรูปโปรไฟล์
                           Positioned(
                             bottom: 0,
                             right: 0,
@@ -353,11 +350,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     ],
                   ),
                 ),
-
+                
                 // Segmented control สำหรับสลับไปหน้า ProfileLessor
                 _buildProfileSwitch(),
-
-                // ข้อมูลส่วนตัว
+                
+                // ข้อมูลส่วนตัว (ส่วนอื่น ๆ ไม่แก้)
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
@@ -391,8 +388,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                       IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("จังหวัด", province);
+                                          String? newVal = await _editDialog("จังหวัด", province);
                                           if (newVal != null && newVal.isNotEmpty) {
                                             setState(() {
                                               province = newVal;
@@ -413,8 +409,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                       IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("อำเภอ", district);
+                                          String? newVal = await _editDialog("อำเภอ", district);
                                           if (newVal != null && newVal.isNotEmpty) {
                                             setState(() {
                                               district = newVal;
@@ -438,8 +433,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                       IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("ตำบล", subdistrict);
+                                          String? newVal = await _editDialog("ตำบล", subdistrict);
                                           if (newVal != null && newVal.isNotEmpty) {
                                             setState(() {
                                               subdistrict = newVal;
@@ -455,14 +449,12 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child:
-                                            Text("รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}"),
+                                        child: Text("รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal = await _editDialog(
-                                              "รหัสไปรษณีย์", postalCode);
+                                          String? newVal = await _editDialog("รหัสไปรษณีย์", postalCode);
                                           if (newVal != null && newVal.isNotEmpty) {
                                             setState(() {
                                               postalCode = newVal;
@@ -486,8 +478,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                       IconButton(
                                         icon: const Icon(Icons.edit, color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("เพิ่มเติม", moreinfo);
+                                          String? newVal = await _editDialog("เพิ่มเติม", moreinfo);
                                           if (newVal != null && newVal.isNotEmpty) {
                                             setState(() {
                                               moreinfo = newVal;
@@ -515,8 +506,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blue),
                               onPressed: () async {
-                                String? newVal =
-                                    await _editDialog("เบอร์โทรศัพท์", phone);
+                                String? newVal = await _editDialog("เบอร์โทรศัพท์", phone);
                                 if (newVal != null && newVal.isNotEmpty) {
                                   setState(() {
                                     phone = newVal;
@@ -540,8 +530,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // ส่วนรูปใบขับขี่
+                      // ส่วนเลือกรูปใบขับขี่
                       _buildWhiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +554,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 20),
                       Align(
                         alignment: Alignment.center,
@@ -588,10 +576,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   'moreinfo': moreinfo,
                                 },
                               });
-
+                              
                               // ------------------ อัปเดตรูปโปรไฟล์ (ถ้ามี) ------------------
                               if (_profileFile != null) {
-                                // ถ้ามีรูปเก่าใน Firestore และ deleteHash เก่า
                                 if (oldProfileUrl != null &&
                                     oldProfileUrl != 'null' &&
                                     oldProfileDeleteHash != null &&
@@ -607,7 +594,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   'image.deletehashprofil': uploadResult['deletehash'],
                                 });
                               }
-
+                              
                               // ------------------ อัปเดตรูปใบขับขี่ (ถ้ามี) ------------------
                               if (_drivingLicenseFile != null) {
                                 if (oldDrivingUrl != null &&
@@ -616,19 +603,16 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                     oldDrivingDeleteHash != 'null') {
                                   await _deleteImageFromImgur(oldDrivingDeleteHash);
                                 }
-                                final uploadResult =
-                                    await _uploadImageToImgur(_drivingLicenseFile!);
+                                final uploadResult = await _uploadImageToImgur(_drivingLicenseFile!);
                                 await FirebaseFirestore.instance
                                     .collection('users')
                                     .doc(currentUser.uid)
                                     .update({
                                   'image.driving_license': uploadResult['link'],
-                                  'image.deletehash_driving_license':
-                                      uploadResult['deletehash'],
+                                  'image.deletehash_driving_license': uploadResult['deletehash'],
                                 });
                               }
-
-                              // แจ้งเตือนว่าอัปเดตเสร็จ
+                              
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
                               );
@@ -662,19 +646,19 @@ class _ProfileRenterState extends State<ProfileRenter> {
   }
 }
 
-// ------------------- Drawer ใหม่สำหรับ ProfileRenter ------------------- //
+// ------------------- Drawer สำหรับ ProfileRenter ------------------- //
 class MyDrawerRenter extends StatelessWidget {
   final String username;
   final bool isGoogleLogin;
   final String? profileUrl;
-
+  
   const MyDrawerRenter({
     Key? key,
     required this.username,
     required this.isGoogleLogin,
     this.profileUrl,
   }) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -699,7 +683,8 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: ใส่โค้ดนำทางไปหน้าหลัก (Home) ตามต้องการ
+              // นำทางไปที่ HomePage เมื่อกด "หน้าหลัก"
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -723,7 +708,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('การตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: ใส่โค้ดนำทางไปหน้าการตั้งค่าบัญชี
+              // เมื่อกด "การตั้งค่าบัญชี" ใน ProfileRenter อยู่แล้ว ให้คงหน้าไว้ (หรือสามารถปรับ logic ได้ตามต้องการ)
             },
           ),
           const Spacer(),
@@ -745,7 +730,7 @@ class MyDrawerRenter extends StatelessWidget {
       ),
     );
   }
-
+  
   /// ฟังก์ชันสร้าง widget สำหรับแสดงข้อมูลแต่ละฟิลด์
   Widget _buildInfoField(String title, String value) {
     return Padding(

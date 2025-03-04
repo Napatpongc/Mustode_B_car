@@ -240,6 +240,18 @@ class _AddCarState extends State<AddCar> {
           .showSnackBar(const SnackBar(content: Text("ไม่พบผู้ใช้ที่ล็อกอิน")));
       return;
     }
+    // ดึงค่าตำแหน่งจาก collection "users" โดยใช้ user.uid
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("users").doc(user.uid).get();
+    double latitude = 0;
+    double longitude = 0;
+    if (userDoc.exists && userDoc.data() != null) {
+      var userData = userDoc.data() as Map<String, dynamic>;
+      if (userData["location"] != null) {
+        latitude = (userData["location"]["latitude"] ?? 0).toDouble();
+        longitude = (userData["location"]["longitude"] ?? 0).toDouble();
+      }
+    }
+
     // กำหนดวันที่บันทึกและคำนวณวันที่หลังจาก 3 เดือน
     DateTime now = DateTime.now();
     DateTime availableTo = now.add(const Duration(days: 90));
@@ -264,7 +276,11 @@ class _AddCarState extends State<AddCar> {
         "motor_vehicle": _motorVehicleImage ?? "",
         "check_vehicle": _checkVehicleImage ?? "",
       },
-      "location": {"latitude": null, "longitude": null},
+      // กำหนดค่า location โดยดึงมาจาก document ใน collection "users"
+      "location": {
+        "latitude": latitude,
+        "longitude": longitude,
+      },
       "availability": {
         "availableFrom": Timestamp.fromDate(now),
         "availableTo": Timestamp.fromDate(availableTo)
