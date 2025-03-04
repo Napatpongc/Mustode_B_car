@@ -3,11 +3,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
-import 'calendar_page.dart';
 import 'account_page.dart';
 
 class MapDetailPage extends StatefulWidget {
-  const MapDetailPage({Key? key}) : super(key: key);
+  const MapDetailPage({super.key});
 
   @override
   _MapDetailPageState createState() => _MapDetailPageState();
@@ -157,7 +156,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
                     TileLayer(
                       urlTemplate:
                           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: ['a', 'b', 'c'],
+                      subdomains: const ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
                       markers: [
@@ -169,7 +168,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
                             child: const Icon(Icons.location_on,size: 50, color: Colors.red),
                         ),
                         Marker(
-                          point: LatLng(13.119408, 100.920170),
+                          point: const LatLng(13.119408, 100.920170),
                           width: 80,
                           height: 80,
                           child: GestureDetector(
@@ -195,15 +194,15 @@ class _MapDetailPageState extends State<MapDetailPage> {
                 FloatingActionButton(
                   heroTag: "zoomIn",
                   onPressed: _zoomIn,
-                  child: const Icon(Icons.add),
                   mini: true,
+                  child: const Icon(Icons.add),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   heroTag: "zoomOut",
                   onPressed: _zoomOut,
-                  child: const Icon(Icons.remove),
                   mini: true,
+                  child: const Icon(Icons.remove),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
@@ -213,8 +212,8 @@ class _MapDetailPageState extends State<MapDetailPage> {
                       _isManualLocation = false; // Resume GPS tracking
                     });
                   },
-                  child: const Icon(Icons.gps_fixed),
                   mini: true,
+                  child: const Icon(Icons.gps_fixed),
                 ),
               ],
             ),

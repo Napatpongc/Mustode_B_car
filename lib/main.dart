@@ -15,6 +15,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MapDetailPage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
+      home: const MapDetailPage(),  // กำหนดให้หน้า IntoApp เป็นหน้าเริ่มต้น
     );
   }
 }
