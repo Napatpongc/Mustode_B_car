@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: const Color.fromARGB(255, 253, 188, 51),
       ),
-      home: IntoApp(), // กำหนด navigation flow ของคุณ
+      home:  IntoApp(), // กำหนด navigation flow ของคุณ
       getPages: [
         // กำหนด GetX routes หากต้องการ
       ],

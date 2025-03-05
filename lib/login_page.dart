@@ -40,8 +40,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onFocusChange() {
     setState(() {
-      _isSkipButtonVisible =
-          !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
+      _isSkipButtonVisible = !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
     });
   }
 
@@ -51,14 +50,8 @@ class _LoginPageState extends State<LoginPage> {
     String password = _passwordController.text.trim();
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),
-      );
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileRenter()));
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
       if (e.code == 'user-not-found') {
@@ -67,17 +60,11 @@ class _LoginPageState extends State<LoginPage> {
         errorMessage = "รหัสผ่านไม่ถูกต้อง";
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.redAccent),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("เกิดข้อผิดพลาด"),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text("เกิดข้อผิดพลาด"), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -88,10 +75,7 @@ class _LoginPageState extends State<LoginPage> {
       // โค้ดสำหรับ Google Sign-In ที่นี่
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Google Sign-In error: ${e.toString()}"),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text("Google Sign-In error: ${e.toString()}"), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -117,10 +101,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.3),
-                  ],
+                  colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.3)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -135,22 +116,14 @@ class _LoginPageState extends State<LoginPage> {
                 child: Card(
                   color: Colors.white.withOpacity(0.8),
                   elevation: 12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 30,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // โลโก้
-                        Image.asset(
-                          "assets/icon/app_icon.png",
-                          height: screenHeight * 0.15,
-                        ),
+                        Image.asset("assets/icon/app_icon.png", height: screenHeight * 0.15),
                         SizedBox(height: 20),
                         // ช่อง Email
                         TextField(
@@ -159,9 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: InputDecoration(
                             labelText: "Email",
                             prefixIcon: Icon(Icons.email),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.7),
                           ),
@@ -176,17 +147,11 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: InputDecoration(
                             labelText: "Password",
                             prefixIcon: Icon(Icons.lock),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.8),
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
+                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                               onPressed: () {
                                 setState(() {
                                   _obscurePassword = !_obscurePassword;
@@ -203,18 +168,10 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        PhoneAuthCustomPage()),
+                                MaterialPageRoute(builder: (context) => PhoneAuthCustomPage()),
                               );
                             },
-                            child: Text(
-                              "Forgot password?",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontSize: 12,
-                              ),
-                            ),
+                            child: Text("Forgot password?", style: TextStyle(color: Colors.blue, fontSize: 12)),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -226,29 +183,14 @@ class _LoginPageState extends State<LoginPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF00377E),
                               padding: EdgeInsets.symmetric(vertical: 15),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             ),
-                            child: Text(
-                              "Sign in",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            child: Text("Sign in", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                           ),
                         ),
                         SizedBox(height: 15),
                         // "or continue with"
-                        Text(
-                          "or continue with",
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16,
-                          ),
-                        ),
+                        Text("or continue with", style: TextStyle(color: Colors.black87, fontSize: 16)),
                         SizedBox(height: 15),
                         // ปุ่ม Google Sign-In
                         SizedBox(
@@ -267,19 +209,9 @@ class _LoginPageState extends State<LoginPage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Image.asset(
-                                  "assets/icon/google_logo.png",
-                                  height: 24,
-                                ),
+                                Image.asset("assets/icon/google_logo.png", height: 24),
                                 SizedBox(width: 10),
-                                Text(
-                                  "Login with Google",
-                                  style: TextStyle(
-                                    color: Colors.black87,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                Text("Login with Google", style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -294,14 +226,10 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                      builder: (context) => SignUpPage()),
+                                  MaterialPageRoute(builder: (context) => SignUpPage()),
                                 );
                               },
-                              child: Text(
-                                "Sign up",
-                                style: TextStyle(color: Colors.redAccent),
-                              ),
+                              child: Text("Sign up", style: TextStyle(color: Colors.redAccent)),
                             ),
                           ],
                         ),
@@ -321,37 +249,20 @@ class _LoginPageState extends State<LoginPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    UserCredential guestUser =
-                        await FirebaseAuth.instance.signInAnonymously();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ProfileRenter()),
-                    );
+                    UserCredential guestUser = await FirebaseAuth.instance.signInAnonymously();
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileRenter()));
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            Text("Guest Sign-In error: ${e.toString()}"),
-                        backgroundColor: Colors.redAccent,
-                      ),
+                      SnackBar(content: Text("Guest Sign-In error: ${e.toString()}"), backgroundColor: Colors.redAccent),
                     );
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withOpacity(0.8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                child: Text(
-                  "ข้าม",
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                  ),
-                ),
+                child: Text("ข้าม", style: TextStyle(color: Colors.black87, fontSize: 14)),
               ),
             ),
           ),
@@ -365,10 +276,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Text(
                 "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.indigoAccent,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.indigoAccent, fontSize: 12),
               ),
             ),
           ),

@@ -6,7 +6,7 @@ import 'reset_password_custom_page.dart';
 import 'utils.dart';
 
 class OtpVerificationPage extends StatefulWidget {
-  final String verificationId; // ไม่ได้ใช้สำหรับ OTP จาก Firestore
+  final String verificationId; // ไม่ได้ใช้ในที่นี้
   final String phoneNumber; // เบอร์โทรในรูปแบบ E.164
   const OtpVerificationPage({Key? key, required this.verificationId, required this.phoneNumber}) : super(key: key);
 
@@ -15,10 +15,8 @@ class OtpVerificationPage extends StatefulWidget {
 }
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (index) => TextEditingController());
-  final List<FocusNode> _focusNodes =
-      List.generate(6, (index) => FocusNode());
+  final List<TextEditingController> _controllers = List.generate(6, (index) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   Timer? _resendTimer;
   int _secondsRemaining = 300;
 
@@ -66,9 +64,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         maxLength: 1,
         decoration: InputDecoration(
           counterText: "",
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           filled: true,
           fillColor: Colors.white.withOpacity(0.7),
         ),
@@ -89,8 +85,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     );
   }
 
-  String get _enteredOtp =>
-      _controllers.map((controller) => controller.text).join();
+  String get _enteredOtp => _controllers.map((c) => c.text).join();
 
   Future<void> _verifyOTP() async {
     String enteredOtp = _enteredOtp.trim();
@@ -98,22 +93,15 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       Get.snackbar("Error", "กรุณากรอก OTP ให้ครบ 6 หลัก");
       return;
     }
-    // ดึงข้อมูล OTP จาก Firestore โดยใช้เบอร์โทรเป็น document ID
-    DocumentSnapshot otpDoc = await FirebaseFirestore.instance
-        .collection('otp_codes')
-        .doc(widget.phoneNumber)
-        .get();
-
+    DocumentSnapshot otpDoc = await FirebaseFirestore.instance.collection('otp_codes').doc(widget.phoneNumber).get();
     if (!otpDoc.exists) {
       Get.snackbar("Error", "ไม่พบ OTP สำหรับเบอร์นี้");
       return;
     }
-
     Map<String, dynamic> data = otpDoc.data() as Map<String, dynamic>;
     String otp = data['otp'];
     DateTime expireAt = (data['expireAt'] as Timestamp).toDate();
     bool used = data['used'] ?? false;
-
     if (used) {
       Get.snackbar("Error", "OTP นี้ถูกใช้งานไปแล้ว กรุณาขอใหม่");
       return;
@@ -123,10 +111,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       return;
     }
     if (enteredOtp == otp) {
-      await FirebaseFirestore.instance
-          .collection('otp_codes')
-          .doc(widget.phoneNumber)
-          .update({'used': true});
+      await FirebaseFirestore.instance.collection('otp_codes').doc(widget.phoneNumber).update({'used': true});
       Get.snackbar("Success", "OTP ถูกต้อง");
       Get.to(() => ResetPasswordCustomPage(phoneNumber: widget.phoneNumber));
     } else {
@@ -179,26 +164,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00377E),
                   padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 child: const Text(
                   "Verify OTP",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             _secondsRemaining > 0
-                ? Text(
-                    "ขอรหัสใหม่ได้ในอีก ${formattedTime} นาที",
-                    style: const TextStyle(fontSize: 14),
-                  )
+                ? Text("ขอรหัสใหม่ได้ในอีก ${formattedTime} นาที", style: const TextStyle(fontSize: 14))
                 : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -214,11 +190,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       ),
                       child: const Text(
                         "Resend OTP",
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

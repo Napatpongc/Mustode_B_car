@@ -7,95 +7,70 @@ import 'ProfileRenter.dart';
 
 class ResetPasswordCustomPage extends StatefulWidget {
   final String phoneNumber;
-  const ResetPasswordCustomPage({Key? key, required this.phoneNumber})
-      : super(key: key);
+  const ResetPasswordCustomPage({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
-  _ResetPasswordCustomPageState createState() =>
-      _ResetPasswordCustomPageState();
+  _ResetPasswordCustomPageState createState() => _ResetPasswordCustomPageState();
 }
 
 class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
-  final TextEditingController _currentPasswordController =
-      TextEditingController();
+  // เพิ่มช่องกรอกรหัสผ่านปัจจุบันสำหรับ re-authenticate
+  final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-
   bool _isUpdating = false;
 
   Future<void> _updatePassword() async {
     final currentPassword = _currentPasswordController.text.trim();
     final newPassword = _newPasswordController.text.trim();
-
     if (currentPassword.isEmpty || newPassword.isEmpty) {
       Get.snackbar("Error", "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่");
       return;
     }
-
     setState(() => _isUpdating = true);
-
     try {
-      // 1) ดึงข้อมูลผู้ใช้จาก Firestore ด้วย phoneNumber
+      // Query Firestore เพื่อดึงข้อมูลผู้ใช้ตามเบอร์โทร
       final QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('users')
           .where('phone', isEqualTo: widget.phoneNumber)
           .get();
-
       if (userQuery.docs.isEmpty) {
         Get.snackbar("Error", "ไม่พบผู้ใช้งานสำหรับเบอร์นี้");
         return;
       }
-
       final String userId = userQuery.docs.first.id;
-      final Map<String, dynamic> userData =
-          userQuery.docs.first.data() as Map<String, dynamic>;
-
-      // สมมุติว่าใน userData มี field 'email'
+      final Map<String, dynamic> userData = userQuery.docs.first.data() as Map<String, dynamic>;
       final String email = (userData['email'] ?? "").toString().trim();
       if (email.isEmpty) {
         Get.snackbar("Error", "ไม่พบอีเมลของผู้ใช้ในระบบ");
         return;
       }
 
-      // 2) ทดสอบ signInWithEmailAndPassword ด้วย (email, currentPassword)
-      //    เพื่อเช็คว่ารหัสผ่านปัจจุบันถูกต้องไหม
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: currentPassword,
-      );
-
-      // 3) เมื่อ sign in สำเร็จ => แสดงว่า currentPassword ถูกต้อง
-      //    currentUser ใน FirebaseAuth จะอัปเดตเป็นผู้ใช้ email นี้
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        Get.snackbar("Error", "ไม่พบผู้ใช้งานล็อกอินอยู่หลัง sign in");
+        Get.snackbar("Error", "ไม่พบผู้ใช้งานล็อกอินอยู่ กรุณาล็อกอินใหม่");
         return;
       }
 
-      // 4) re-authenticate อีกครั้ง (optional) หรือข้ามได้
-      //    เพราะการ signInWithEmailAndPassword ด้านบนถือเป็นการ re-auth อยู่แล้ว
-      final AuthCredential credential = EmailAuthProvider.credential(
+      // re-authenticate ด้วย EmailAuthProvider credential
+      AuthCredential credential = EmailAuthProvider.credential(
         email: email,
         password: currentPassword,
       );
       await currentUser.reauthenticateWithCredential(credential);
 
-      // 5) updatePassword ใน FirebaseAuth
+      // updatePassword ใน FirebaseAuth
       await currentUser.updatePassword(newPassword);
 
-      // 6) อัปเดตรหัสผ่านใน Firestore ให้สอดคล้องกัน
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .update({'password': newPassword});
+      // อัปเดตรหัสผ่านใน Firestore ให้สอดคล้องกัน
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({'password': newPassword});
 
       Get.snackbar("Success", "รหัสผ่านถูกเปลี่ยนเรียบร้อยแล้ว");
 
-      // 7) sign out แล้ว sign in ใหม่ด้วยรหัสผ่านใหม่
+      // sign out และ sign in ใหม่ด้วยรหัสผ่านใหม่
       await FirebaseAuth.instance.signOut();
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email, password: newPassword);
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: newPassword);
 
-      // 8) นำทางไปยังหน้า ProfileRenter
+      // นำทางไปยัง ProfileRenter
       Get.offAll(() => ProfileRenter());
     } on FirebaseAuthException catch (e) {
       String errorMessage = "ไม่สามารถเปลี่ยนรหัสผ่านได้: ${e.message}";
@@ -128,11 +103,7 @@ class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
           color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, 5),
-            ),
+            BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 5)),
           ],
         ),
         child: Column(
@@ -154,9 +125,7 @@ class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.lock, color: Colors.black54),
                 labelText: "Current Password",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.7),
               ),
@@ -169,9 +138,7 @@ class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.lock, color: Colors.black54),
                 labelText: "New Password",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.7),
               ),
@@ -186,17 +153,11 @@ class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00377E),
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
                       child: const Text(
                         "Update Password",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -218,9 +179,7 @@ class _ResetPasswordCustomPageState extends State<ResetPasswordCustomPage> {
         width: double.infinity,
         height: double.infinity,
         color: Colors.blue.shade50,
-        child: SafeArea(
-          child: SingleChildScrollView(child: _buildContent(context)),
-        ),
+        child: SafeArea(child: SingleChildScrollView(child: _buildContent(context))),
       ),
     );
   }
