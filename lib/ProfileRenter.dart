@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart'; // ใช้กรณี Google Sign Out
+import 'package:myproject/CarReviewPage.dart';
 import 'login_page.dart'; // เพื่อไปหน้า login
 import 'ProfileLessor.dart'; // เพื่อสลับไปหน้าผู้ปล่อยเช่า (Segmented control)
 
@@ -28,7 +29,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
 
   // ------------------ ตัวแปรรูปภาพ (โปรไฟล์ + ใบขับขี่) ------------------
   File? _drivingLicenseFile; // เก็บไฟล์รูปใบขับขี่
-  File? _profileFile;        // เก็บไฟล์รูปโปรไฟล์
+  File? _profileFile; // เก็บไฟล์รูปโปรไฟล์
   final ImagePicker _picker = ImagePicker();
 
   // ใส่ Client ID ของ Imgur ที่นี่ (ตัวอย่าง)
@@ -90,7 +91,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
 
   // ------------------ ฟังก์ชันเลือกรูปใบขับขี่จาก Gallery ------------------
   Future<void> _pickDrivingLicenseImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _drivingLicenseFile = File(pickedFile.path);
@@ -100,7 +102,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
 
   // ------------------ ฟังก์ชันเลือกรูปโปรไฟล์จาก Gallery ------------------
   Future<void> _pickProfileImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _profileFile = File(pickedFile.path);
@@ -132,7 +135,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
           'deletehash': data['data']['deletehash'],
         };
       } else {
-        throw Exception('อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
+        throw Exception(
+            'อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
       }
     } catch (e) {
       rethrow;
@@ -175,7 +179,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                 // อยู่ในหน้าเดียวกัน ไม่ต้อง navigate
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.blue,
                   borderRadius: BorderRadius.circular(30),
@@ -198,7 +203,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
@@ -229,7 +235,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
 
     // ตรวจสอบว่า Login ด้วย Google หรือไม่
-    bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
+    bool isGoogleLogin =
+        currentUser.providerData.any((p) => p.providerId == 'google.com');
 
     // ใช้ StreamBuilder ดึงข้อมูลผู้ใช้จาก Firestore
     return StreamBuilder<DocumentSnapshot>(
@@ -301,12 +308,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
                             backgroundColor: Colors.grey[300],
                             backgroundImage: _profileFile != null
                                 ? FileImage(_profileFile!)
-                                : (oldProfileUrl != null && oldProfileUrl != 'null'
+                                : (oldProfileUrl != null &&
+                                        oldProfileUrl != 'null'
                                     ? NetworkImage(oldProfileUrl)
                                     : null) as ImageProvider<Object>?,
                             child: (_profileFile == null &&
-                                    (oldProfileUrl == null || oldProfileUrl == 'null'))
-                                ? const Icon(Icons.person, size: 40, color: Colors.blue)
+                                    (oldProfileUrl == null ||
+                                        oldProfileUrl == 'null'))
+                                ? const Icon(Icons.person,
+                                    size: 40, color: Colors.blue)
                                 : null,
                           ),
                           // ปุ่มแก้ไขเล็กๆ ที่มุมล่างขวาของรูปโปรไฟล์
@@ -320,7 +330,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                 decoration: BoxDecoration(
                                   color: Colors.blue,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 1),
+                                  border:
+                                      Border.all(color: Colors.white, width: 1),
                                 ),
                                 child: const Icon(
                                   Icons.edit,
@@ -336,13 +347,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       Expanded(
                         child: Text(
                           username ?? "ไม่มีชื่อ",
-                          style: const TextStyle(fontSize: 24, color: Colors.black),
+                          style: const TextStyle(
+                              fontSize: 24, color: Colors.black),
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () async {
-                          String? newVal = await _editDialog("ชื่อผู้ใช้", username);
+                          String? newVal =
+                              await _editDialog("ชื่อผู้ใช้", username);
                           if (newVal != null && newVal.isNotEmpty) {
                             setState(() {
                               username = newVal;
@@ -371,14 +384,16 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     children: [
                       const Text(
                         "ข้อมูลส่วนตัว",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       _buildWhiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("ที่อยู่:", style: TextStyle(fontSize: 18)),
+                            const Text("ที่อยู่:",
+                                style: TextStyle(fontSize: 18)),
                             const SizedBox(height: 8),
                             Row(
                               children: [
@@ -386,14 +401,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child: Text("จังหวัด : ${province ?? "ไม่มีข้อมูล"}"),
+                                        child: Text(
+                                            "จังหวัด : ${province ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("จังหวัด", province);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "จังหวัด", province);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               province = newVal;
                                             });
@@ -408,14 +426,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child: Text("อำเภอ : ${district ?? "ไม่มีข้อมูล"}"),
+                                        child: Text(
+                                            "อำเภอ : ${district ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("อำเภอ", district);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "อำเภอ", district);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               district = newVal;
                                             });
@@ -433,14 +454,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child: Text("ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}"),
+                                        child: Text(
+                                            "ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("ตำบล", subdistrict);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "ตำบล", subdistrict);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               subdistrict = newVal;
                                             });
@@ -455,15 +479,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child:
-                                            Text("รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}"),
+                                        child: Text(
+                                            "รหัสไปรษณีย์ : ${postalCode ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
                                           String? newVal = await _editDialog(
                                               "รหัสไปรษณีย์", postalCode);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               postalCode = newVal;
                                             });
@@ -481,14 +507,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   child: Row(
                                     children: [
                                       Flexible(
-                                        child: Text("เพิ่มเติม : ${moreinfo ?? "ไม่มีข้อมูล"}"),
+                                        child: Text(
+                                            "เพิ่มเติม : ${moreinfo ?? "ไม่มีข้อมูล"}"),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () async {
-                                          String? newVal =
-                                              await _editDialog("เพิ่มเติม", moreinfo);
-                                          if (newVal != null && newVal.isNotEmpty) {
+                                          String? newVal = await _editDialog(
+                                              "เพิ่มเติม", moreinfo);
+                                          if (newVal != null &&
+                                              newVal.isNotEmpty) {
                                             setState(() {
                                               moreinfo = newVal;
                                             });
@@ -546,7 +575,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('รูปใบขับขี่', style: TextStyle(fontSize: 18)),
+                            const Text('รูปใบขับขี่',
+                                style: TextStyle(fontSize: 18)),
                             const SizedBox(height: 5),
                             ElevatedButton.icon(
                               onPressed: _pickDrivingLicenseImage,
@@ -596,15 +626,18 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                     oldProfileUrl != 'null' &&
                                     oldProfileDeleteHash != null &&
                                     oldProfileDeleteHash != 'null') {
-                                  await _deleteImageFromImgur(oldProfileDeleteHash);
+                                  await _deleteImageFromImgur(
+                                      oldProfileDeleteHash);
                                 }
-                                final uploadResult = await _uploadImageToImgur(_profileFile!);
+                                final uploadResult =
+                                    await _uploadImageToImgur(_profileFile!);
                                 await FirebaseFirestore.instance
                                     .collection('users')
                                     .doc(currentUser.uid)
                                     .update({
                                   'image.profile': uploadResult['link'],
-                                  'image.deletehashprofil': uploadResult['deletehash'],
+                                  'image.deletehashprofil':
+                                      uploadResult['deletehash'],
                                 });
                               }
 
@@ -614,10 +647,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                     oldDrivingUrl != 'null' &&
                                     oldDrivingDeleteHash != null &&
                                     oldDrivingDeleteHash != 'null') {
-                                  await _deleteImageFromImgur(oldDrivingDeleteHash);
+                                  await _deleteImageFromImgur(
+                                      oldDrivingDeleteHash);
                                 }
-                                final uploadResult =
-                                    await _uploadImageToImgur(_drivingLicenseFile!);
+                                final uploadResult = await _uploadImageToImgur(
+                                    _drivingLicenseFile!);
                                 await FirebaseFirestore.instance
                                     .collection('users')
                                     .doc(currentUser.uid)
@@ -630,7 +664,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
 
                               // แจ้งเตือนว่าอัปเดตเสร็จ
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
+                                const SnackBar(
+                                    content: Text("บันทึกข้อมูลเรียบร้อย")),
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -645,8 +680,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
                             ),
                           ),
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                            child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 24),
+                            child: Text("บันทึก",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.white)),
                           ),
                         ),
                       ),
@@ -655,6 +693,19 @@ class _ProfileRenterState extends State<ProfileRenter> {
                 ),
               ],
             ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: Color(0xFF00377E),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      CarReviewPage(carDocumentId: "kGwtIewAoPPjyvTXN5MI"),
+                ),
+              );
+            },
+            child: Icon(Icons.comment, color: Colors.white, size: 28),
           ),
         );
       },
@@ -729,7 +780,8 @@ class MyDrawerRenter extends StatelessWidget {
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title:
+                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().signOut();
