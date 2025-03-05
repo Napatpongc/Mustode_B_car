@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'utils.dart'; // ใช้สำหรับ formatThaiPhone และ generateOTP
 import 'otp_verification_page.dart';
-import 'utils.dart';
 
 class PhoneAuthCustomPage extends StatefulWidget {
   const PhoneAuthCustomPage({Key? key}) : super(key: key);
@@ -15,39 +15,27 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
   final TextEditingController _phoneController = TextEditingController();
   bool isProcessing = false;
 
-  // ฟังก์ชันส่ง SMS จริง (ต้องผสานกับ API ของ SMS Gateway)
-  Future<void> sendSms(String phone, String otp) async {
-    // ตัวอย่างจำลองส่ง SMS
-    print('Sending SMS to $phone: Your OTP code is $otp');
-    // TODO: Implement SMS API call here (e.g., Twilio)
-  }
-
   Future<void> _sendOTP() async {
     setState(() => isProcessing = true);
+    String phoneNumber = formatThaiPhone(_phoneController.text);
+    debugPrint("Phone Number (E.164): $phoneNumber");
 
-    // แปลงเบอร์เป็น E.164
-    String phoneNumber = formatThaiPhone(_phoneController.text.trim());
-
-    // ตรวจสอบว่ามีเบอร์นี้ใน Collection "users"
+    // ตรวจสอบว่ามีเบอร์นี้ใน Firestore (ใน collection 'users')
     QuerySnapshot userQuery = await FirebaseFirestore.instance
         .collection('users')
         .where('phone', isEqualTo: phoneNumber)
         .get();
-
     if (userQuery.docs.isEmpty) {
       Get.snackbar("Error", "เบอร์นี้ยังไม่ถูกลงทะเบียนในระบบ");
       setState(() => isProcessing = false);
       return;
     }
 
-    // สุ่ม OTP 6 หลัก
     String otp = generateOTP();
-
-    // กำหนดเวลา expire 5 นาที
     DateTime now = DateTime.now();
     DateTime expireAt = now.add(const Duration(minutes: 5));
 
-    // เก็บ OTP ลงใน Collection "otp_codes"
+    // บันทึก OTP ลง Firestore (ใช้เบอร์โทรเป็น document ID)
     await FirebaseFirestore.instance
         .collection('otp_codes')
         .doc(phoneNumber)
@@ -58,14 +46,15 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
       'used': false,
     });
 
-    // ส่ง SMS จริง
-    await sendSms(phoneNumber, otp);
+    // ส่ง OTP ไปที่โทรศัพท์จริง (จำลองด้วย print)
+    print("Sending SMS to $phoneNumber: Your OTP is $otp");
+    Get.snackbar("OTP Sent", "OTP has been sent to $phoneNumber");
 
-    Get.snackbar("OTP Sent", "OTP ถูกส่งไปที่ $phoneNumber");
-
-    // ไปหน้า OTP Verification
-    Get.to(() => OtpVerificationCustomPage(phoneNumber: phoneNumber));
-
+    // นำทางไปหน้า OTP Verification
+    Get.to(() => OtpVerificationPage(
+          verificationId: '', // ไม่ใช้สำหรับ OTP จาก Firestore
+          phoneNumber: phoneNumber,
+        ));
     setState(() => isProcessing = false);
   }
 
@@ -77,7 +66,7 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,11 +74,11 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
         centerTitle: true,
         backgroundColor: const Color(0xFF00377E),
       ),
-      // พื้นหลังฟ้าอ่อนเต็มหน้าจอ
+      // พื้นหลังสีฟ้าอ่อน
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.blue.shade50, // พื้นหลังฟ้าอ่อน
+        color: Colors.blue.shade50,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Center(
@@ -111,10 +100,11 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(25),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // หัวข้อ
                       Text(
                         "Enter phone number",
                         style: TextStyle(
@@ -124,12 +114,17 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // ช่องกรอกเบอร์โทร
                       TextField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.phone, color: Colors.black54),
-                          labelText: "Enter Phone Number",
+                          prefixIcon: const Icon(
+                            Icons.phone,
+                            color: Colors.black54,
+                          ),
+                          labelText: "Phone Number",
                           labelStyle: const TextStyle(color: Colors.black87),
                           hintText: "08XXXXXXXX",
                           border: OutlineInputBorder(
@@ -140,6 +135,8 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // ปุ่ม "ยืนยัน"
                       isProcessing
                           ? const CircularProgressIndicator()
                           : SizedBox(
@@ -148,7 +145,9 @@ class _PhoneAuthCustomPageState extends State<PhoneAuthCustomPage> {
                                 onPressed: _sendOTP,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF00377E),
-                                  padding: const EdgeInsets.symmetric(vertical: 15),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 15,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),
                                   ),
