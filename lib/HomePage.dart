@@ -107,17 +107,22 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth  = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     // กำหนดความกว้างของ Container สำหรับเลือกวัน-เวลา
     final double containerWidth = 350;
-    final double containerLeft = (screenWidth - containerWidth) / 2;
+    final double containerLeft  = (screenWidth - containerWidth) / 2;
 
     return Scaffold(
+      // ***** แก้ไขเฉพาะส่วน AppBar เพื่อแสดงรูป *****
       appBar: AppBar(
         backgroundColor: const Color(0xFF00377E),
-        title: const Text("หน้าหลัก"),
+        // ใส่รูปแทน Text
+        title: Image.asset(
+          'assets/image/mustodebcarlogo.png',
+          height: 40, // ปรับขนาดตามต้องการ
+        ),
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
@@ -136,8 +141,7 @@ class _HomePageState extends State<HomePage> {
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Drawer(
-                child: Center(child: CircularProgressIndicator()));
+            return const Drawer(child: Center(child: CircularProgressIndicator()));
           }
           var data = snapshot.data!.data() as Map<String, dynamic>;
           String username = data['username'] ?? "ไม่มีชื่อ";
@@ -145,10 +149,8 @@ class _HomePageState extends State<HomePage> {
           if (data['image'] != null) {
             profileUrl = data['image']['profile'];
           }
-          // สมมติว่าตรวจสอบว่า user นี้ล็อกอินด้วย Google หรือไม่
           bool isGoogleLogin = FirebaseAuth.instance.currentUser?.providerData
-                  .any((p) => p.providerId == 'google.com') ??
-              false;
+              .any((p) => p.providerId == 'google.com') ?? false;
 
           return MyDrawerRenter(
             username: username,
@@ -157,392 +159,374 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-      body: SingleChildScrollView(
-        child: SizedBox(
-          width: screenWidth,
-          height: screenHeight,
-          child: Stack(
-            children: [
-              // Container สำหรับเลือกวัน-เวลา รับรถ/คืนรถ
-              Positioned(
-                left: containerLeft,
-                top: 30,
-                child: Container(
-                  width: containerWidth,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x3F000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "เลือกวัน-เวลา รับรถ/คืนรถ",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // รับรถ
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("รับรถ: "),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _openCalendarPage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF9CD9FF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            child: Text(
-                              pickupDate != null
-                                  ? '${pickupDate!.day}/${pickupDate!.month}/${pickupDate!.year}'
-                                  : '01/01/2025',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _openCalendarPage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF9CD9FF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            child: Text(
-                              pickupTime != null
-                                  ? '${pickupTime!.hour.toString().padLeft(2, '0')}:${pickupTime!.minute.toString().padLeft(2, '0')} น.'
-                                  : '01:30 น.',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // คืนรถ
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("คืนรถ: "),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _openCalendarPage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF9CD9FF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            child: Text(
-                              returnDate != null
-                                  ? '${returnDate!.day}/${returnDate!.month}/${returnDate!.year}'
-                                  : '02/01/2025',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _openCalendarPage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF9CD9FF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                            ),
-                            child: Text(
-                              returnTime != null
-                                  ? '${returnTime!.hour.toString().padLeft(2, '0')}:${returnTime!.minute.toString().padLeft(2, '0')} น.'
-                                  : '01:30 น.',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // ปุ่ม "อัปเดตตำแหน่ง"
-                      ElevatedButton(
-                        onPressed: _getCurrentLocation,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE0FFD9),
-                          foregroundColor: Colors.black,
-                          minimumSize: const Size.fromHeight(40),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text("อัปเดตตำแหน่ง"),
-                      ),
-                      const SizedBox(height: 8),
-                      // แสดงตำแหน่งปัจจุบัน
-                      Text(
-                        currentPosition == null
-                            ? 'ตำแหน่ง: -'
-                            : 'ตำแหน่ง: ${currentPosition!.latitude.toStringAsFixed(4)}, ${currentPosition!.longitude.toStringAsFixed(4)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
+      body: SizedBox(
+        width: screenWidth,
+        height: screenHeight,
+        child: Stack(
+          children: [
+            // Container สำหรับเลือกวัน-เวลา รับรถ/คืนรถ
+            Positioned(
+              left: containerLeft,
+              top: 30,
+              child: Container(
+                width: containerWidth,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                    )
+                  ],
                 ),
-              ),
-
-              // ปุ่ม "ค้นหารถว่าง"
-              Positioned(
-                left: containerLeft,
-                top: 280,
-                child: SizedBox(
-                  width: containerWidth,
-                  child: ElevatedButton(
-                    onPressed: _searchCars,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC5FF92),
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                child: Column(
+                  children: [
+                    const Text(
+                      "เลือกวัน-เวลา รับรถ/คืนรถ",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text("ค้นหารถว่าง"),
-                  ),
-                ),
-              ),
-
-              // Container สำหรับ "ผลการค้นหา" (พื้นหลังสีฟ้า)
-              Positioned(
-                left: containerLeft,
-                top: 400,
-                child: Container(
-                  width: containerWidth,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD6EFFF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "ผลการค้นหา : รถว่างทั้งหมด",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 12),
+                    // รับรถ
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("รับรถ: "),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _openCalendarPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9CD9FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            pickupDate != null
+                                ? '${pickupDate!.day}/${pickupDate!.month}/${pickupDate!.year}'
+                                : '01/01/2025',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "พบรถว่าง $carCount คัน",
-                        style: const TextStyle(
-                          color: Color(0xFF09C000),
-                          fontSize: 15,
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _openCalendarPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9CD9FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            pickupTime != null
+                                ? '${pickupTime!.hour.toString().padLeft(2, '0')}:${pickupTime!.minute.toString().padLeft(2, '0')} น.'
+                                : '01:30 น.',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      // กล่องขาวแสดงรายการรถ
-                      Container(
-                        height: 250,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // คืนรถ
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("คืนรถ: "),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _openCalendarPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9CD9FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            returnDate != null
+                                ? '${returnDate!.day}/${returnDate!.month}/${returnDate!.year}'
+                                : '02/01/2025',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _openCalendarPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF9CD9FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            returnTime != null
+                                ? '${returnTime!.hour.toString().padLeft(2, '0')}:${returnTime!.minute.toString().padLeft(2, '0')} น.'
+                                : '01:30 น.',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // ปุ่ม "อัปเดตตำแหน่ง"
+                    ElevatedButton(
+                      onPressed: _getCurrentLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE0FFD9),
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size.fromHeight(40),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: showCarList
-                            ? StreamBuilder<QuerySnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection("rentals")
-                                    .snapshots(),
-                                builder: (context, rentalSnapshot) {
-                                  if (!rentalSnapshot.hasData) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  }
-                                  // ดึงข้อมูล rentals ทั้งหมด
-                                  final rentalDocs = rentalSnapshot.data!.docs;
-                                  return StreamBuilder<QuerySnapshot>(
-                                    stream: FirebaseFirestore.instance
-                                        .collection("cars")
-                                        .snapshots(),
-                                    builder: (context, carSnapshot) {
-                                      if (!carSnapshot.hasData) {
-                                        return const Center(
-                                            child: CircularProgressIndicator());
+                      ),
+                      child: const Text("อัปเดตตำแหน่ง"),
+                    ),
+                    const SizedBox(height: 8),
+                    // แสดงตำแหน่งปัจจุบัน
+                    Text(
+                      currentPosition == null
+                          ? 'ตำแหน่ง: -'
+                          : 'ตำแหน่ง: ${currentPosition!.latitude.toStringAsFixed(4)}, ${currentPosition!.longitude.toStringAsFixed(4)}',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ปุ่ม "ค้นหารถว่าง"
+            Positioned(
+              left: containerLeft,
+              top: 280,
+              child: SizedBox(
+                width: containerWidth,
+                child: ElevatedButton(
+                  onPressed: _searchCars,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFC5FF92),
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text("ค้นหารถว่าง"),
+                ),
+              ),
+            ),
+
+            // พื้นหลังสีฟ้าเต็มจอด้านล่าง + ขอบโค้งมนด้านบน
+            Positioned(
+              top: 400,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD6EFFF),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "ผลการค้นหา : รถว่างทั้งหมด",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "พบรถว่าง $carCount คัน",
+                      style: const TextStyle(
+                        color: Color(0xFF09C000),
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // ใช้ Expanded เพื่อให้ ListView ขยายลงมาได้
+                    Expanded(
+                      child: showCarList
+                          ? StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection("rentals")
+                                  .snapshots(),
+                              builder: (context, rentalSnapshot) {
+                                if (!rentalSnapshot.hasData) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                // ดึงข้อมูล rentals ทั้งหมด
+                                final rentalDocs = rentalSnapshot.data!.docs;
+                                return StreamBuilder<QuerySnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection("cars")
+                                      .snapshots(),
+                                  builder: (context, carSnapshot) {
+                                    if (!carSnapshot.hasData) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+
+                                    // สร้าง userPickup และ userReturn จากวันที่และเวลาที่เลือก
+                                    DateTime userPickup = DateTime(
+                                      pickupDate!.year,
+                                      pickupDate!.month,
+                                      pickupDate!.day,
+                                      pickupTime!.hour,
+                                      pickupTime!.minute,
+                                    );
+                                    DateTime userReturn = DateTime(
+                                      returnDate!.year,
+                                      returnDate!.month,
+                                      returnDate!.day,
+                                      returnTime!.hour,
+                                      returnTime!.minute,
+                                    );
+
+                                    final docs = carSnapshot.data!.docs.where((doc) {
+                                      final data = doc.data() as Map<String, dynamic>;
+
+                                      // หาก statuscar เป็น "no" ให้ไม่แสดง
+                                      if ((data["statuscar"]?.toString().toLowerCase() ?? "") == "no") {
+                                        return false;
                                       }
 
-                                      // สร้าง userPickup และ userReturn จากวันที่และเวลาที่เลือก
-                                      DateTime userPickup = DateTime(
-                                        pickupDate!.year,
-                                        pickupDate!.month,
-                                        pickupDate!.day,
-                                        pickupTime!.hour,
-                                        pickupTime!.minute,
+                                      // ตรวจสอบข้อมูลตำแหน่ง
+                                      if (data["location"] == null ||
+                                          data["location"]["latitude"] == null ||
+                                          data["location"]["longitude"] == null) {
+                                        return false;
+                                      }
+                                      double carLat = data["location"]["latitude"];
+                                      double carLng = data["location"]["longitude"];
+                                      if (currentPosition == null) return false;
+                                      double distance = Geolocator.distanceBetween(
+                                        currentPosition!.latitude,
+                                        currentPosition!.longitude,
+                                        carLat,
+                                        carLng,
                                       );
-                                      DateTime userReturn = DateTime(
-                                        returnDate!.year,
-                                        returnDate!.month,
-                                        returnDate!.day,
-                                        returnTime!.hour,
-                                        returnTime!.minute,
-                                      );
+                                      // ต้องอยู่ในรัศมี 5 กม.
+                                      if (distance > 5000) return false;
 
-                                      final docs =
-                                          carSnapshot.data!.docs.where((doc) {
-                                        final data =
-                                            doc.data() as Map<String, dynamic>;
-
-                                        // หาก statuscar เป็น "no" ให้ไม่แสดง
-                                        if ((data["statuscar"]
-                                                    ?.toString()
-                                                    .toLowerCase() ??
-                                                "") ==
-                                            "no") {
-                                          return false;
-                                        }
-
-                                        // ตรวจสอบข้อมูลตำแหน่ง
-                                        if (data["location"] == null ||
-                                            data["location"]["latitude"] ==
-                                                null ||
-                                            data["location"]["longitude"] ==
-                                                null) {
-                                          return false;
-                                        }
-                                        double carLat =
-                                            data["location"]["latitude"];
-                                        double carLng =
-                                            data["location"]["longitude"];
-                                        if (currentPosition == null)
-                                          return false;
-                                        double distance =
-                                            Geolocator.distanceBetween(
-                                          currentPosition!.latitude,
-                                          currentPosition!.longitude,
-                                          carLat,
-                                          carLng,
-                                        );
-                                        // ต้องอยู่ในรัศมี 5 กม.
-                                        if (distance > 5000) return false;
-
-                                        // ตรวจสอบเงื่อนไขการซ้อนทับของวัน-เวลา
-                                        bool hasConflict = false;
-                                        for (var rental in rentalDocs) {
-                                          final rentalData = rental.data()
-                                              as Map<String, dynamic>;
-                                          // ตรวจสอบให้ตรงกับ carId
-                                          if (rentalData["carId"] != doc.id)
-                                            continue;
-                                          Timestamp rentalStartTs =
-                                              rentalData["rentalStart"];
-                                          Timestamp rentalEndTs =
-                                              rentalData["rentalEnd"];
-                                          DateTime rentalStart =
-                                              rentalStartTs.toDate();
-                                          DateTime rentalEnd =
-                                              rentalEndTs.toDate();
-                                          // ตรวจสอบการทับซ้อนของวัน-เวลา
-                                          if (userPickup.isBefore(rentalEnd) &&
-                                              userReturn.isAfter(rentalStart)) {
-                                            // หากสถานะไม่ใช่ canceled ให้ถือว่ามีการจองอยู่
-                                            if ((rentalData["status"] ?? "")
-                                                    .toString()
-                                                    .toLowerCase() !=
-                                                "canceled") {
-                                              hasConflict = true;
-                                              break;
-                                            }
+                                      // ตรวจสอบเงื่อนไขการซ้อนทับของวัน-เวลา
+                                      bool hasConflict = false;
+                                      for (var rental in rentalDocs) {
+                                        final rentalData = rental.data() as Map<String, dynamic>;
+                                        if (rentalData["carId"] != doc.id) continue;
+                                        Timestamp rentalStartTs = rentalData["rentalStart"];
+                                        Timestamp rentalEndTs   = rentalData["rentalEnd"];
+                                        DateTime rentalStart = rentalStartTs.toDate();
+                                        DateTime rentalEnd   = rentalEndTs.toDate();
+                                        if (userPickup.isBefore(rentalEnd) && userReturn.isAfter(rentalStart)) {
+                                          // หากสถานะไม่ใช่ canceled ให้ถือว่ามีการจองอยู่
+                                          if ((rentalData["status"] ?? "").toString().toLowerCase() != "canceled") {
+                                            hasConflict = true;
+                                            break;
                                           }
                                         }
-                                        return !hasConflict;
-                                      }).toList();
+                                      }
+                                      return !hasConflict;
+                                    }).toList();
 
-                                      // อัปเดตจำนวนรถ หากค่ามีการเปลี่ยนแปลงจริง
-                                      if (carCount != docs.length) {
-                                        WidgetsBinding.instance
-                                            .addPostFrameCallback((_) {
-                                          setState(() {
-                                            carCount = docs.length;
-                                          });
+                                    // อัปเดตจำนวนรถ หากค่ามีการเปลี่ยนแปลงจริง
+                                    if (carCount != docs.length) {
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        setState(() {
+                                          carCount = docs.length;
                                         });
-                                      }
+                                      });
+                                    }
 
-                                      if (docs.isEmpty) {
-                                        return const Center(
-                                            child: Text(
-                                                "ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
-                                      }
+                                    if (docs.isEmpty) {
+                                      return const Center(
+                                        child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"),
+                                      );
+                                    }
 
-                                      return ListView.builder(
-                                        itemCount: docs.length,
-                                        itemBuilder: (context, index) {
-                                          final data = docs[index].data()
-                                              as Map<String, dynamic>;
-                                          String brand = data["brand"] ?? "";
-                                          String model = data["model"] ?? "";
-                                          String imageUrl =
-                                              data["image"]?["carside"] ?? "";
+                                    return ListView.builder(
+                                      itemCount: docs.length,
+                                      itemBuilder: (context, index) {
+                                        final data = docs[index].data() as Map<String, dynamic>;
+                                        String brand    = data["brand"]  ?? "";
+                                        String model    = data["model"]  ?? "";
+                                        String imageUrl = data["image"]?["carside"] ?? "";
 
-                                          return InkWell(
+                                        return Container(
+                                          margin: const EdgeInsets.only(bottom: 16),
+                                          // ตกแต่งเป็นกรอบ
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(color: Colors.grey, width: 1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: InkWell(
                                             onTap: () {
-                                              // เมื่อกดที่รายการรถ ไปหน้า CarInfo
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (_) => CarInfo(
-                                                      carId: docs[index].id),
+                                                  builder: (_) => CarInfo(carId: docs[index].id),
                                                 ),
                                               );
                                             },
-                                            child: Container(
-                                              // ระยะห่างระหว่างรายการ
-                                              margin: const EdgeInsets.only(
-                                                  bottom: 16),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  // แสดงรูปภาพรถ
-                                                  if (imageUrl.isNotEmpty)
-                                                    ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8),
-                                                      child: Image.network(
-                                                        imageUrl,
-                                                        width: double
-                                                            .infinity, // เต็มความกว้างของ List
-                                                        height:
-                                                            180, // ปรับความสูงตามต้องการ
-                                                        fit: BoxFit
-                                                            .cover, // ให้รูปเต็มพื้นที่
-                                                      ),
-                                                    )
-                                                  else
-                                                    Container(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // แสดงรูปภาพรถ
+                                                if (imageUrl.isNotEmpty)
+                                                  ClipRRect(
+                                                    borderRadius: const BorderRadius.vertical(
+                                                      top: Radius.circular(8),
+                                                    ),
+                                                    child: Image.network(
+                                                      imageUrl,
                                                       width: double.infinity,
                                                       height: 180,
-                                                      color: Colors.grey,
+                                                      fit: BoxFit.cover,
                                                     ),
-
-                                                  const SizedBox(height: 8),
-
-                                                  // แสดง bullet + ชื่อรถ
-                                                  Row(
+                                                  )
+                                                else
+                                                  Container(
+                                                    width: double.infinity,
+                                                    height: 180,
+                                                    color: Colors.grey,
+                                                  ),
+                                                const SizedBox(height: 8),
+                                                // แสดง bullet + ชื่อรถ
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                                  child: Row(
                                                     children: [
                                                       const Icon(
                                                         Icons.circle,
@@ -554,35 +538,35 @@ class _HomePageState extends State<HomePage> {
                                                         "$brand $model",
                                                         style: const TextStyle(
                                                           fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                                          fontWeight: FontWeight.bold,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                              )
-                            : const Center(child: Text("ยังไม่ได้ค้นหา")),
-                      ),
-                    ],
-                  ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            )
+                          : const Center(child: Text("ยังไม่ได้ค้นหา")),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
 // Drawer ที่ใช้ร่วมกัน (MyDrawerRenter)
 class MyDrawerRenter extends StatelessWidget {
   final String username;
@@ -620,8 +604,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (_) => const HomePage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -645,18 +628,15 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('ตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (_) => ProfileRenter()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileRenter()));
             },
           ),
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title:
-                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
-                // ล้างข้อมูลบัญชี Google ออก เพื่อให้ครั้งต่อไปต้องเลือกบัญชีใหม่
                 await GoogleSignIn().disconnect();
               }
               await FirebaseAuth.instance.signOut();

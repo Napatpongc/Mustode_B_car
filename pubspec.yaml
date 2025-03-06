@@ -52,9 +52,18 @@ dependencies:
   geolocator: ^9.0.1
   get : ^4.7.2
   location_picker_flutter_map: ^1.1.0
-  dart_geohash: ^2.1.0
   
   
+  
+  syncfusion_flutter_datepicker: ^28.2.9
+
+
+
+
+
+
+
+ 
 
 dev_dependencies:
   flutter_test:
