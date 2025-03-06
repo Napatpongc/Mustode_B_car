@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter OTP Authentication',
       theme: ThemeData(
-        primaryColor: const Color.fromARGB(255, 253, 188, 51),
+        primaryColor: const Color.fromARGB(255, 0, 0, 0),
       ),
       home:  IntoApp(), // กำหนด navigation flow ของคุณ
       getPages: [

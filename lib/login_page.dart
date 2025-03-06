@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myproject/ProfileRenter.dart';
+import 'home_page_byboss_copy.dart';
 import 'phone_auth_page.dart';
 import 'signup_page.dart';
 
@@ -250,7 +251,7 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () async {
                   try {
                     UserCredential guestUser = await FirebaseAuth.instance.signInAnonymously();
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileRenter()));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePageByboss()));
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Guest Sign-In error: ${e.toString()}"), backgroundColor: Colors.redAccent),
