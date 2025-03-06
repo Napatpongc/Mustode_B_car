@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
 import 'phone_auth_page.dart';
 import 'signup_page.dart';
+import 'HomePage.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -61,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),
+        MaterialPageRoute(builder: (context) => HomePage()),
       );
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
@@ -141,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
         }
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ProfileRenter()),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
     } catch (e) {
