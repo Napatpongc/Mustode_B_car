@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
+
   @override
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
@@ -14,8 +16,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Forgot Password'),
-        backgroundColor: Color(0xFF00377E),
+        title: const Text('Forgot Password'),
+        backgroundColor: const Color(0xFF00377E),
       ),
       body: Center(
         child: Padding(
@@ -26,18 +28,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // ข้อความแนะนำ
-                Text(
+                const Text(
                   'กรุณากรอกอีเมลของคุณเพื่อรีเซ็ตรหัสผ่าน',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 
                 // ช่องกรอกอีเมล
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Email",
                     border: OutlineInputBorder(),
                     hintText: "example@mail.com",
@@ -54,30 +56,30 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 // ปุ่มส่งคำขอรีเซ็ตรหัสผ่าน
                 _isProcessing
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: _resetPassword,
                         style: ElevatedButton.styleFrom(
-                          shadowColor: Color(0xFF00377E),
-                          padding: EdgeInsets.symmetric(vertical: 15),
+                          shadowColor: const Color(0xFF00377E),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Reset Password',
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 // ลิงก์กลับไปที่หน้าล็อกอิน
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context); // กลับไปหน้าล็อกอิน
                   },
-                  child: Text(
+                  child: const Text(
                     'ย้อนกลับไปหน้าล็อกอิน',
                     style: TextStyle(color: Colors.blue),
                   ),
@@ -109,7 +111,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       // เพิ่มการทำงานเพิ่มเติม เช่น ส่งคำขอไปยังเซิร์ฟเวอร์ที่สามารถรีเซ็ตรหัสผ่านให้ผู้ใช้
 
       // จำลองการรอคอยจากเซิร์ฟเวอร์
-      Future.delayed(Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 2), () {
         setState(() {
           _isProcessing = false; // ซ่อน progress indicator
         });

@@ -5,13 +5,15 @@ import 'home_page.dart';  // นำเข้าไฟล์ HomePage
 import 'forgotPassword_page.dart'; // นำเข้าไฟล์ ForgotPasswordPage
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  FocusNode _emailFocusNode = FocusNode();
-  FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isSkipButtonVisible = true;
 
   final TextEditingController _emailController = TextEditingController();
@@ -71,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("เกิดข้อผิดพลาด"),
           backgroundColor: Colors.red,
         ),
@@ -91,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
           Container(
             width: screenWidth,
             height: screenHeight,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage("assets/image/background.png"),
                 fit: BoxFit.cover,
@@ -102,11 +104,11 @@ class _LoginPageState extends State<LoginPage> {
           Center(
             child: Container(
               width: screenWidth * 0.85,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10,
@@ -122,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                     "assets/icon/app_icon.png",
                     height: screenHeight * 0.15,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   // ช่องกรอก Email
                   TextField(
                     controller: _emailController,
@@ -137,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   // ช่องกรอก Password
                   TextField(
                     controller: _passwordController,
@@ -152,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                       fillColor: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   // ลิงก์ Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
@@ -163,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
                         );
                       },
-                      child: Text(
+                      child: const Text(
                         "Forgot password?",
                         style: TextStyle(
                           color: Colors.blue,
@@ -172,18 +174,18 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   // ปุ่ม Sign In
                   ElevatedButton(
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF00377E),
-                      padding: EdgeInsets.symmetric(vertical: 15),
+                      backgroundColor: const Color(0xFF00377E),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Center(
+                    child: const Center(
                       child: Text(
                         "Sign in",
                         style: TextStyle(
@@ -194,12 +196,12 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   // ลิงก์ Sign Up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don’t have an account? "),
+                      const Text("Don’t have an account? "),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -207,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                             MaterialPageRoute(builder: (context) => SignUpPage()),
                           );
                         },
-                        child: Text(
+                        child: const Text(
                           "Sign up",
                           style: TextStyle(color: Colors.red),
                         ),
@@ -231,9 +233,9 @@ class _LoginPageState extends State<LoginPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                child: Text(
+                child: const Text(
                   "ข้าม",
                   style: TextStyle(
                     color: Colors.black,
@@ -244,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           // ข้อความเงื่อนไขการใช้งาน
-          Positioned(
+          const Positioned(
             bottom: 10,
             left: 20,
             right: 20,

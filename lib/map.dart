@@ -1,7 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'account_page.dart';
 
@@ -14,76 +16,73 @@ class MapDetailPage extends StatefulWidget {
 
 class _MapDetailPageState extends State<MapDetailPage> {
   final Location location = Location();
-  bool _serviceEnabled = false;
-  PermissionStatus? _permissionGranted;
+  bool _isManualLocation = false;
   LocationData? _locationData;
   late final MapController _mapController;
   double _currentZoom = 18.0;
-  bool _isManualLocation = false; // Flag to stop GPS updates when manually set
+  List<Map<String, dynamic>> _nearbyCars = [];
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-    _requestLocationPermission();
-    _startTracking();
+    _fetchCurrentLocation();
   }
 
-  Future<void> _requestLocationPermission() async {
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) return;
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) return;
-    }
-
+  void _fetchCurrentLocation() async {
     _locationData = await location.getLocation();
-    setState(() {});
+    setState(() {
+      _mapController.move(
+          LatLng(_locationData!.latitude!, _locationData!.longitude!), _currentZoom);
+    });
+    _listenToLocationChanges();
   }
 
-  void _startTracking() {
+  void _listenToLocationChanges() {
     location.onLocationChanged.listen((LocationData newLocation) {
       if (!_isManualLocation) {
-        // Only update if not manually overridden
         setState(() {
           _locationData = newLocation;
+          _mapController.move(LatLng(newLocation.latitude!, newLocation.longitude!), _currentZoom);
         });
-
-        _mapController.move(
-          LatLng(newLocation.latitude!, newLocation.longitude!),
-          _currentZoom,
-        );
+        _fetchNearbyCars();
       }
     });
   }
 
-  void _zoomIn() {
-    setState(() {
-      _currentZoom += 1;
-      _mapController.move(_mapController.center, _currentZoom);
+  void _fetchNearbyCars() {
+    if (_locationData == null) return;
+    double userLat = _locationData!.latitude!;
+    double userLng = _locationData!.longitude!;
+
+    FirebaseFirestore.instance.collection('cars').snapshots().listen((snapshot) {
+      List<Map<String, dynamic>> filteredCars = [];
+      for (var doc in snapshot.docs) {
+        var data = doc.data();
+        if (data.containsKey('location')) {
+          double carLat = data['location']['latitude'] ?? 0.0;
+          double carLng = data['location']['longitude'] ?? 0.0;
+          double distance = _calculateDistance(userLat, userLng, carLat, carLng);
+          if (distance <= 5.0) {
+            filteredCars.add({...data, 'docId': doc.id});
+          }
+        }
+      }
+      setState(() {
+        _nearbyCars = filteredCars;
+      });
     });
   }
 
-  void _zoomOut() {
-    setState(() {
-      _currentZoom -= 1;
-      _mapController.move(_mapController.center, _currentZoom);
-    });
-  }
-
-  void _reloadLocation() async {
-    _locationData = await location.getLocation();
-    setState(() {});
-
-    _mapController.move(
-      LatLng(_locationData!.latitude!, _locationData!.longitude!),
-      _currentZoom,
-    );
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double radius = 6371;
+    double dLat = (lat2 - lat1) * (pi / 180);
+    double dLon = (lon2 - lon1) * (pi / 180);
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1 * (pi / 180)) * cos(lat2 * (pi / 180)) *
+            sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return radius * c;
   }
 
   void _openLocationPicker() {
@@ -91,22 +90,14 @@ class _MapDetailPageState extends State<MapDetailPage> {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Pick a Location'),
-          ),
+          appBar: AppBar(title: const Text('Pick a Location')),
           body: FlutterLocationPicker(
             initZoom: 11,
             minZoomLevel: 5,
             maxZoomLevel: 16,
             trackMyPosition: true,
-            searchBarBackgroundColor: Colors.white,
-            mapLanguage: 'th',
-            onError: (e) => print(e),
             onPicked: (pickedData) {
-              print(
-                  'Picked location: ${pickedData.latLong.latitude}, ${pickedData.latLong.longitude}');
-              Navigator.pop(
-                  context, pickedData.latLong); // Pass the picked LatLng back
+              Navigator.pop(context, pickedData.latLong);
             },
           ),
         ),
@@ -114,16 +105,11 @@ class _MapDetailPageState extends State<MapDetailPage> {
     ).then((pickedLatLng) {
       if (pickedLatLng != null) {
         setState(() {
-          _isManualLocation = true; // Stop real-time updates
-          _locationData = LocationData.fromMap({
-            'latitude': pickedLatLng.latitude,
-            'longitude': pickedLatLng.longitude,
-          });
-          _mapController.move(
-            LatLng(pickedLatLng.latitude, pickedLatLng.longitude),
-            _currentZoom,
-          );
+          _isManualLocation = true;
+          _locationData = LocationData.fromMap({'latitude': pickedLatLng.latitude, 'longitude': pickedLatLng.longitude});
+          _mapController.move(pickedLatLng, _currentZoom);
         });
+        _fetchNearbyCars();
       }
     });
   }
@@ -131,16 +117,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.teal,
-        title: const Text('Map Detail'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map),
-            onPressed: _openLocationPicker,
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Map Detail')),
       body: Stack(
         children: [
           _locationData == null
@@ -148,40 +125,33 @@ class _MapDetailPageState extends State<MapDetailPage> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    center: LatLng(
-                        _locationData!.latitude!, _locationData!.longitude!),
-                    zoom: _currentZoom,
-                  ),
+                      center: LatLng(_locationData!.latitude!, _locationData!.longitude!), zoom: _currentZoom),
                   children: [
                     TileLayer(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: const ['a', 'b', 'c'],
-                    ),
+                        urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        subdomains: const ['a', 'b', 'c']),
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(_locationData!.latitude!,
-                              _locationData!.longitude!),
+                          point: LatLng(_locationData!.latitude!, _locationData!.longitude!),
                           width: 80,
                           height: 80,
-                            child: const Icon(Icons.location_on,size: 50, color: Colors.red),
+                          child: const Icon(Icons.my_location, size: 50, color: Colors.red),
                         ),
-                        Marker(
-                          point: const LatLng(13.119408, 100.920170),
-                          width: 80,
-                          height: 80,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => AccountPage()),
-                              );
-                            },
-                            child: const Icon(Icons.location_on,size: 50, color: Colors.blue),
+                        for (var car in _nearbyCars)
+                          Marker(
+                            point: LatLng(car['location']['latitude'], car['location']['longitude']),
+                            width: 80,
+                            height: 80,
+                            child: GestureDetector(
+                              onTap: () {
+                                String ownerId = car['ownerId'];
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) => AccountPage(docId: ownerId)));
+                              },
+                              child: const Icon(Icons.directions_car, size: 50, color: Colors.blue),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -192,29 +162,10 @@ class _MapDetailPageState extends State<MapDetailPage> {
             child: Column(
               children: [
                 FloatingActionButton(
-                  heroTag: "zoomIn",
-                  onPressed: _zoomIn,
-                  mini: true,
-                  child: const Icon(Icons.add),
-                ),
-                const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: "zoomOut",
-                  onPressed: _zoomOut,
-                  mini: true,
-                  child: const Icon(Icons.remove),
-                ),
-                const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: "resumeTracking",
-                  onPressed: () {
-                    setState(() {
-                      _isManualLocation = false; // Resume GPS tracking
-                    });
-                  },
-                  mini: true,
-                  child: const Icon(Icons.gps_fixed),
-                ),
+                    heroTag: "pickLocation",
+                    onPressed: _openLocationPicker,
+                    mini: true,
+                    child: const Icon(Icons.map)),
               ],
             ),
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FilterScreen extends StatelessWidget {
-  const FilterScreen({Key? key}) : super(key: key);
+  const FilterScreen({super.key});
 
   static const _headerBackgroundColor = Color(0xFF00377E);
 
@@ -13,12 +13,12 @@ class FilterScreen extends StatelessWidget {
           children: [
             _buildHeader(context),
             // ใช้ Expanded เพื่อให้ส่วน scrollable ครอบคลุมพื้นที่ที่เหลือ
-            Expanded(
+            const Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     PriceRangeSlider(),
                     SizedBox(height: 20),
                     StarRatingFilter(),
@@ -69,7 +69,7 @@ class FilterScreen extends StatelessWidget {
 }
 
 class PriceRangeSlider extends StatefulWidget {
-  const PriceRangeSlider({Key? key}) : super(key: key);
+  const PriceRangeSlider({super.key});
 
   @override
   _PriceRangeSliderState createState() => _PriceRangeSliderState();
@@ -139,7 +139,7 @@ class _PriceRangeSliderState extends State<PriceRangeSlider> {
 
 // Stub สำหรับ widget ที่ยังไม่มีการ implement
 class StarRatingFilter extends StatelessWidget {
-  const StarRatingFilter({Key? key}) : super(key: key);
+  const StarRatingFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +156,7 @@ class StarRatingFilter extends StatelessWidget {
 }
 
 class VehicleTypeFilter extends StatelessWidget {
-  const VehicleTypeFilter({Key? key}) : super(key: key);
+  const VehicleTypeFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +173,7 @@ class VehicleTypeFilter extends StatelessWidget {
 }
 
 class TransmissionFilter extends StatelessWidget {
-  const TransmissionFilter({Key? key}) : super(key: key);
+  const TransmissionFilter({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +190,7 @@ class TransmissionFilter extends StatelessWidget {
 }
 
 class SearchResults extends StatelessWidget {
-  const SearchResults({Key? key}) : super(key: key);
+  const SearchResults({super.key});
 
   @override
   Widget build(BuildContext context) {

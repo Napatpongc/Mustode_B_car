@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:myproject/RegisterData.dart';
 
 class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
@@ -19,17 +21,17 @@ class _SignUpPageState extends State<SignUpPage> {
   String? selectedFilePath;
   final Future<FirebaseApp> firebase = Firebase.initializeApp();
 
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _confirmPasswordController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _confirmEmailController = TextEditingController();
-  TextEditingController _provinceController = TextEditingController();
-  TextEditingController _districtController = TextEditingController();
-  TextEditingController _subDistrictController = TextEditingController();
-  TextEditingController _postalCodeController = TextEditingController();
-  TextEditingController _additionalAddressController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _confirmEmailController = TextEditingController();
+  final TextEditingController _provinceController = TextEditingController();
+  final TextEditingController _districtController = TextEditingController();
+  final TextEditingController _subDistrictController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
+  final TextEditingController _additionalAddressController = TextEditingController();
 
   Widget _buildTextField(String label,
       {TextEditingController? controller,
@@ -38,7 +40,7 @@ class _SignUpPageState extends State<SignUpPage> {
       List<TextInputFormatter>? inputFormatters,
       int maxLines = 1}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
@@ -83,13 +85,13 @@ class _SignUpPageState extends State<SignUpPage> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(
-            appBar: AppBar(title: Text("Error")),
+            appBar: AppBar(title: const Text("Error")),
             body: Center(child: Text("${snapshot.error}")),
           );
         }
 
         if (snapshot.connectionState == ConnectionState.done) {
-          Widget _buildSignUpButton(BuildContext context) {
+          Widget buildSignUpButton(BuildContext context) {
             return ElevatedButton(
               onPressed: () async {
                 if (formkey.currentState!.validate()) {
@@ -106,7 +108,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     // ล้างข้อมูลในฟอร์มหลังสมัครเสร็จ
                     formkey.currentState!.reset();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("สมัครสมาชิกสำเร็จ!")),
+                      const SnackBar(content: Text("สมัครสมาชิกสำเร็จ!")),
                     );
 
                     // กลับไปหน้าก่อนหน้า
@@ -128,16 +130,16 @@ class _SignUpPageState extends State<SignUpPage> {
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("โปรดกรอกข้อมูลให้ครบถ้วน")),
+                    const SnackBar(content: Text("โปรดกรอกข้อมูลให้ครบถ้วน")),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF00377E),
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+                backgroundColor: const Color(0xFF00377E),
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(
+              child: const Text(
                 "ยืนยัน",
                 style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
               ),
@@ -150,7 +152,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 Container(
                   width: screenWidth,
                   height: screenHeight,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage("assets/image/background.png"),
                       fit: BoxFit.cover,
@@ -160,14 +162,14 @@ class _SignUpPageState extends State<SignUpPage> {
                 SingleChildScrollView(
                   child: Container(
                     margin: EdgeInsets.only(top: screenHeight * 0.1),
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Form(
                       key: formkey,
                       child: Column(
                         children: [
                           Container(
                             width: screenWidth * 0.9,
-                            padding: EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.8),
                               borderRadius: BorderRadius.circular(20),
@@ -179,7 +181,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     IconButton(
-                                      icon: Icon(Icons.close, size: 30, color: Colors.black),
+                                      icon: const Icon(Icons.close, size: 30, color: Colors.black),
                                       onPressed: () => Navigator.pop(context),
                                     ),
                                   ],
@@ -193,7 +195,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                                 _buildTextField("Username", controller: _usernameController),
                                 _buildTextField("Password", controller: _passwordController, obscureText: true),
                                 _buildTextField("Confirm password", controller: _confirmPasswordController, obscureText: true),
@@ -205,8 +207,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                 _buildTextField("ตำบล", controller: _subDistrictController),
                                 _buildTextField("เลขไปรษณีย์", controller: _postalCodeController, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
                                 _buildTextField("รายละเอียดที่อยู่เพิ่มเติม", controller: _additionalAddressController, maxLines: 3),
-                                SizedBox(height: 20),
-                                Center(child: _buildSignUpButton(context)),
+                                const SizedBox(height: 20),
+                                Center(child: buildSignUpButton(context)),
                               ],
                             ),
                           ),
@@ -220,7 +222,7 @@ class _SignUpPageState extends State<SignUpPage> {
           );
         }
 
-        return Scaffold(
+        return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       },
