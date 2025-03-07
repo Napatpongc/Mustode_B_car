@@ -54,7 +54,6 @@ dependencies:
   location_picker_flutter_map: ^1.1.0
   
   
-  
   syncfusion_flutter_datepicker: ^28.2.9
 
 

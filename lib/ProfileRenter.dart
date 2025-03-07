@@ -6,9 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart'; // ใช้กรณี Google Sign Out
-import 'HomePage.dart'; // นำเข้า HomePage สำหรับ navigation
-import 'login_page.dart'; // เพื่อไปหน้า login
+import 'package:google_sign_in/google_sign_in.dart'; // สำหรับ Google Sign Out
+import 'home_page.dart'; // นำเข้า HomePage สำหรับ navigation
+import 'login_page.dart'; // ไปหน้า login
 import 'ProfileLessor.dart'; // สำหรับสลับไปหน้าผู้ปล่อยเช่า (Segmented control)
 
 class ProfileRenter extends StatefulWidget {
@@ -28,8 +28,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
   String? moreinfo;
 
   // ------------------ ตัวแปรรูปภาพ (โปรไฟล์ + ใบขับขี่) ------------------
-  File? _drivingLicenseFile; // เก็บไฟล์รูปใบขับขี่
-  File? _profileFile;        // เก็บไฟล์รูปโปรไฟล์
+  File? _drivingLicenseFile; // รูปใบขับขี่
+  File? _profileFile;        // รูปโปรไฟล์
   final ImagePicker _picker = ImagePicker();
 
   // ใส่ Client ID ของ Imgur ที่นี่ (ตัวอย่าง)
@@ -41,10 +41,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("แก้ไข$fieldLabel"),
+        title: Text("แก้ไข $fieldLabel"),
         content: TextField(
           controller: controller,
-          decoration: InputDecoration(hintText: "กรอก$fieldLabel"),
+          decoration: InputDecoration(hintText: "กรอก $fieldLabel"),
         ),
         actions: [
           TextButton(
@@ -60,17 +60,57 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  // ------------------ Widget กล่องสีขาว ------------------
+  // ------------------ Widget กล่องสีขาว (Card) ------------------
   Widget _buildWhiteBox(Widget child) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.9,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: child,
+    );
+  }
+
+  // ------------------ Widget รายได้ ------------------
+  Widget _incomeBox(num myPayment) {
+    final String incomeText = myPayment.toStringAsFixed(2);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text("รายได้วันนี้",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text("฿ $incomeText",
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700])),
+        ],
+      ),
     );
   }
 
@@ -89,7 +129,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
   }
 
-  // ------------------ ฟังก์ชันเลือกรูปใบขับขี่จาก Gallery ------------------
+  // ------------------ ฟังก์ชันเลือกรูปใบขับขี่ ------------------
   Future<void> _pickDrivingLicenseImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -99,7 +139,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
   }
 
-  // ------------------ ฟังก์ชันเลือกรูปโปรไฟล์จาก Gallery ------------------
+  // ------------------ ฟังก์ชันเลือกรูปโปรไฟล์ ------------------
   Future<void> _pickProfileImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -109,12 +149,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
   }
 
-  // ------------------ ฟังก์ชันอัปโหลดรูปไปยัง Imgur ------------------
+  // ------------------ ฟังก์ชันอัปโหลดรูปไป Imgur ------------------
   Future<Map<String, dynamic>> _uploadImageToImgur(File imageFile) async {
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-      
       final response = await http.post(
         Uri.parse('https://api.imgur.com/3/image'),
         headers: {
@@ -125,7 +164,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
           'type': 'base64',
         },
       );
-      
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (data['success'] == true) {
         return {
@@ -140,7 +178,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
   }
 
-  // ------------------ ฟังก์ชันลบรูปใน Imgur โดยใช้ deletehash ------------------
+  // ------------------ ฟังก์ชันลบรูปใน Imgur ------------------
   Future<void> _deleteImageFromImgur(String deleteHash) async {
     try {
       await http.delete(
@@ -155,8 +193,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
   }
 
   // ------------------ Segmented control สำหรับสลับหน้า ------------------
-  // ในหน้า ProfileRenter ให้ "ผู้เช่า" อยู่ฝั่งซ้าย (selected)
-  // และ "ผู้ปล่อยเช่า" อยู่ฝั่งขวา (non-selected)
   Widget _buildProfileSwitch() {
     return Center(
       child: Container(
@@ -218,7 +254,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
       ),
     );
   }
-  
+
   // ------------------ ส่วน build หลัก ------------------
   @override
   Widget build(BuildContext context) {
@@ -228,11 +264,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
         body: Center(child: Text("ไม่พบผู้ใช้ที่ login")),
       );
     }
-    
-    // ตรวจสอบว่า Login ด้วย Google หรือไม่
     bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
-    
-    // ใช้ StreamBuilder ดึงข้อมูลผู้ใช้จาก Firestore
+
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, snapshot) {
@@ -251,19 +284,18 @@ class _ProfileRenterState extends State<ProfileRenter> {
             body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")),
           );
         }
-        
-        // ได้ data จาก Firestore
+
         var data = snapshot.data!.data() as Map<String, dynamic>;
-        // กำหนดค่าเริ่มต้นให้ตัวแปรใน State (username, phone ฯลฯ)
+        // กำหนดค่าเริ่มต้นให้ตัวแปรใน State
         _initializeLocalData(data);
-        
+
         // ข้อมูลรูปจาก Firestore
         final imageData = data['image'] ?? {};
         final oldProfileUrl = imageData['profile'];
         final oldProfileDeleteHash = imageData['deletehashprofil'];
         final oldDrivingUrl = imageData['driving_license'];
         final oldDrivingDeleteHash = imageData['deletehash_driving_license'];
-        
+
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF00377E),
@@ -275,7 +307,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
               ),
             ),
           ),
-          // Drawer สำหรับ ProfileRenter โดยใช้ MyDrawerRenter ที่ปรับ navigation แล้ว
+          // Drawer สำหรับ ProfileRenter
           drawer: MyDrawerRenter(
             username: username ?? "ไม่มีชื่อ",
             isGoogleLogin: isGoogleLogin,
@@ -284,17 +316,23 @@ class _ProfileRenterState extends State<ProfileRenter> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // ส่วน Header: รูปโปรไฟล์, ชื่อ, ปุ่มแก้ไขโปรไฟล์ (ส่วนอื่น ๆ ไม่แก้)
+                // Header: รูปโปรไฟล์, ชื่อ, ปุ่มแก้ไขโปรไฟล์
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  color: Colors.white,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFB3E5FC), Color(0xFFE1F5FE)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
                   child: Row(
                     children: [
                       Stack(
                         children: [
                           CircleAvatar(
-                            radius: 30,
+                            radius: 40,
                             backgroundColor: Colors.grey[300],
                             backgroundImage: _profileFile != null
                                 ? FileImage(_profileFile!)
@@ -303,27 +341,22 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                     : null) as ImageProvider<Object>?,
                             child: (_profileFile == null &&
                                     (oldProfileUrl == null || oldProfileUrl == 'null'))
-                                ? const Icon(Icons.person, size: 40, color: Colors.blue)
+                                ? const Icon(Icons.person, size: 40, color: Colors.white)
                                 : null,
                           ),
-                          // ปุ่มแก้ไขเล็ก ๆ ที่มุมล่างขวาของรูปโปรไฟล์
                           Positioned(
                             bottom: 0,
                             right: 0,
                             child: InkWell(
                               onTap: _pickProfileImage,
                               child: Container(
-                                padding: const EdgeInsets.all(2),
+                                padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   color: Colors.blue,
                                   shape: BoxShape.circle,
                                   border: Border.all(color: Colors.white, width: 1),
                                 ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
+                                child: const Icon(Icons.edit, color: Colors.white, size: 16),
                               ),
                             ),
                           ),
@@ -333,7 +366,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       Expanded(
                         child: Text(
                           username ?? "ไม่มีชื่อ",
-                          style: const TextStyle(fontSize: 24, color: Colors.black),
+                          style: const TextStyle(
+                            fontSize: 28,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -350,25 +387,50 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     ],
                   ),
                 ),
-                
-                // Segmented control สำหรับสลับไปหน้า ProfileLessor
+                // Segmented control (ผู้เช่า / ผู้ปล่อยเช่า)
                 _buildProfileSwitch(),
-                
-                // ข้อมูลส่วนตัว (ส่วนอื่น ๆ ไม่แก้)
+                // รายได้วันนี้ (กรณีอยากแสดงรายได้ของผู้เช่า)
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('payments')
+                      .doc(currentUser.uid)
+                      .snapshots(),
+                  builder: (_, paySnap) {
+                    if (paySnap.hasError) {
+                      return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดรายได้"));
+                    }
+                    if (paySnap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!paySnap.hasData || !paySnap.data!.exists) {
+                      return _incomeBox(0);
+                    }
+                    var payData = paySnap.data!.data() as Map<String, dynamic>;
+                    num income = payData['mypayment'] ?? 0;
+                    return _incomeBox(income);
+                  },
+                ),
+                // ข้อมูลส่วนตัว
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0x9ED6EFFF),
+                    color: const Color(0xFFB3E5FC), // << ฟ้าอ่อนตามที่ต้องการ
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.black),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         "ข้อมูลส่วนตัว",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       _buildWhiteBox(
@@ -536,31 +598,39 @@ class _ProfileRenterState extends State<ProfileRenter> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('รูปใบขับขี่', style: TextStyle(fontSize: 18)),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 8),
                             ElevatedButton.icon(
                               onPressed: _pickDrivingLicenseImage,
                               icon: const Icon(Icons.upload),
                               label: const Text('เลือกรูป'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
                             ),
                             if (_drivingLicenseFile != null) ...[
                               const SizedBox(height: 10),
-                              Image.file(
-                                _drivingLicenseFile!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  _drivingLicenseFile!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ],
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
+                      // ปุ่มบันทึกข้อมูล
                       Align(
                         alignment: Alignment.center,
                         child: ElevatedButton(
                           onPressed: () async {
                             try {
-                              // ------------------ อัปเดตข้อมูลส่วนบุคคล ------------------
+                              // อัปเดตข้อมูลส่วนบุคคล
                               await FirebaseFirestore.instance
                                   .collection('users')
                                   .doc(currentUser.uid)
@@ -576,8 +646,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   'moreinfo': moreinfo,
                                 },
                               });
-                              
-                              // ------------------ อัปเดตรูปโปรไฟล์ (ถ้ามี) ------------------
+                              // อัปเดตรูปโปรไฟล์ (ถ้ามี)
                               if (_profileFile != null) {
                                 if (oldProfileUrl != null &&
                                     oldProfileUrl != 'null' &&
@@ -594,8 +663,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   'image.deletehashprofil': uploadResult['deletehash'],
                                 });
                               }
-                              
-                              // ------------------ อัปเดตรูปใบขับขี่ (ถ้ามี) ------------------
+                              // อัปเดตรูปใบขับขี่ (ถ้ามี)
                               if (_drivingLicenseFile != null) {
                                 if (oldDrivingUrl != null &&
                                     oldDrivingUrl != 'null' &&
@@ -612,7 +680,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
                                   'image.deletehash_driving_license': uploadResult['deletehash'],
                                 });
                               }
-                              
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
                               );
@@ -624,9 +691,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
@@ -683,7 +748,6 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              // นำทางไปที่ HomePage เมื่อกด "หน้าหลัก"
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
@@ -708,7 +772,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('การตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              // เมื่อกด "การตั้งค่าบัญชี" ใน ProfileRenter อยู่แล้ว ให้คงหน้าไว้ (หรือสามารถปรับ logic ได้ตามต้องการ)
+              // อยู่ในหน้าเดียวกันอยู่แล้ว
             },
           ),
           const Spacer(),
@@ -731,12 +795,12 @@ class MyDrawerRenter extends StatelessWidget {
     );
   }
   
-  /// ฟังก์ชันสร้าง widget สำหรับแสดงข้อมูลแต่ละฟิลด์
+  /// ฟังก์ชันสร้าง widget สำหรับแสดงข้อมูลแต่ละฟิลด์ (ตัวอย่าง)
   Widget _buildInfoField(String title, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -745,7 +809,7 @@ class MyDrawerRenter extends StatelessWidget {
             BoxShadow(
               color: Colors.black26,
               blurRadius: 4,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             )
           ],
         ),
@@ -754,10 +818,10 @@ class MyDrawerRenter extends StatelessWidget {
             Expanded(
               child: Text(
                 "$title\n$value",
-                style: TextStyle(fontSize: 16, color: Colors.black),
+                style: const TextStyle(fontSize: 16, color: Colors.black),
               ),
             ),
-            Icon(Icons.edit, color: Colors.blue),
+            const Icon(Icons.edit, color: Colors.blue),
           ],
         ),
       ),

@@ -1,13 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// เพิ่มการ import Google Sign-In
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myproject/ProfileRenter.dart';
-import 'home_page_byboss_copy.dart';
+import 'home_page.dart';
 import 'phone_auth_page.dart';
 import 'signup_page.dart';
-import 'HomePage.dart';
+
+
 
 class LoginPage extends StatefulWidget {
   @override
@@ -15,18 +15,20 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
+  FocusNode _emailFocusNode = FocusNode();
+  FocusNode _passwordFocusNode = FocusNode();
   bool _isSkipButtonVisible = true;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // ตัวแปรควบคุมการซ่อน/แสดงรหัสผ่าน
   bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
+    // เมื่อช่อง Email/Password ถูกโฟกัส จะซ่อนปุ่ม “ข้าม” และข้อความเงื่อนไข
     _emailFocusNode.addListener(_onFocusChange);
     _passwordFocusNode.addListener(_onFocusChange);
   }
@@ -44,18 +46,25 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onFocusChange() {
     setState(() {
-      _isSkipButtonVisible = !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
+      _isSkipButtonVisible =
+          !(_emailFocusNode.hasFocus || _passwordFocusNode.hasFocus);
     });
   }
 
-  // ล็อกอินด้วย FirebaseAuth.instance.signInWithEmailAndPassword
+  // ฟังก์ชันล็อกอินด้วย Email/Password
   void _login() async {
-    String email = _emailController.text.trim().toLowerCase();
-    String password = _passwordController.text.trim();
+    String email = _emailController.text;
+    String password = _passwordController.text;
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
       if (e.code == 'user-not-found') {
@@ -64,22 +73,29 @@ class _LoginPageState extends State<LoginPage> {
         errorMessage = "รหัสผ่านไม่ถูกต้อง";
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("เกิดข้อผิดพลาด"), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text("เกิดข้อผิดพลาด"),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
 
-  // ล็อกอินด้วย Google
+  // ฟังก์ชันล็อกอินด้วย Google
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -88,7 +104,6 @@ class _LoginPageState extends State<LoginPage> {
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
       final User? user = userCredential.user;
-
       if (user != null) {
         final DocumentReference userDoc =
             FirebaseFirestore.instance.collection('users').doc(user.uid);
@@ -126,7 +141,6 @@ class _LoginPageState extends State<LoginPage> {
               .doc(user.uid)
               .set({"mypayment": 0});
         }
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
@@ -134,7 +148,10 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Google Sign-In error: ${e.toString()}"), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text("Google Sign-In error: ${e.toString()}"),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -147,7 +164,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // พื้นหลัง
           Container(
             width: screenWidth,
             height: screenHeight,
@@ -160,145 +176,211 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.3)],
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.3),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
               ),
             ),
           ),
-          // SafeArea + SingleChildScrollView
+
+          // ส่วน SafeArea + SingleChildScrollView
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(30, 30, 30, 100),
-                child: Card(
-                  color: Colors.white.withOpacity(0.8),
-                  elevation: 12,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // โลโก้
-                        Image.asset("assets/icon/app_icon.png", height: screenHeight * 0.15),
-                        SizedBox(height: 20),
-                        // ช่อง Email
-                        TextField(
-                          controller: _emailController,
-                          focusNode: _emailFocusNode,
-                          decoration: InputDecoration(
-                            labelText: "Email",
-                            prefixIcon: Icon(Icons.email),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.7),
+                // เพิ่ม margin bottom เพื่อไม่ชนปุ่ม “ข้าม”
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(30, 30, 30, 100),
+                  child: Card(
+                    color: Colors.white.withOpacity(0.8),
+                    elevation: 12,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 30,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // โลโก้
+                          Image.asset(
+                            "assets/icon/app_icon.png",
+                            height: screenHeight * 0.15,
                           ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        SizedBox(height: 15),
-                        // ช่อง Password
-                        TextField(
-                          controller: _passwordController,
-                          focusNode: _passwordFocusNode,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: "Password",
-                            prefixIcon: Icon(Icons.lock),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.8),
-                            suffixIcon: IconButton(
-                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        // Forgot password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => PhoneAuthCustomPage()),
-                              );
-                            },
-                            child: Text("Forgot password?", style: TextStyle(color: Colors.blue, fontSize: 12)),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        // ปุ่ม Sign In
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF00377E),
-                              padding: EdgeInsets.symmetric(vertical: 15),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            ),
-                            child: Text("Sign in", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        // "or continue with"
-                        Text("or continue with", style: TextStyle(color: Colors.black87, fontSize: 16)),
-                        SizedBox(height: 15),
-                        // ปุ่ม Google Sign-In
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _signInWithGoogle,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(color: Colors.grey.shade300),
+                          SizedBox(height: 20),
+                          // ช่อง Email
+                          TextField(
+                            controller: _emailController,
+                            focusNode: _emailFocusNode,
+                            decoration: InputDecoration(
+                              labelText: "Email",
+                              prefixIcon: Icon(Icons.email),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 15),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.7),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset("assets/icon/google_logo.png", height: 24),
-                                SizedBox(width: 10),
-                                Text("Login with Google", style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
-                              ],
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: 15),
+                          // ช่อง Password
+                          TextField(
+                            controller: _passwordController,
+                            focusNode: _passwordFocusNode,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: "Password",
+                              prefixIcon: Icon(Icons.lock),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.8),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: 30),
-                        // Sign up link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text("Don’t have an account? "),
-                            TextButton(
+                          SizedBox(height: 8),
+                          // Forgot password
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => SignUpPage()),
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          PhoneAuthCustomPage()),
                                 );
                               },
-                              child: Text("Sign up", style: TextStyle(color: Colors.redAccent)),
+                              child: Text(
+                                "Forgot password?",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          SizedBox(height: 8),
+
+                          // ปุ่ม Sign In (เต็มความกว้าง)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF00377E),
+                                padding: EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: Text(
+                                "Sign in",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+
+                          // "or continue with"
+                          Text(
+                            "or continue with",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 15),
+
+                          // ปุ่ม Google (เต็มความกว้าง)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _signInWithGoogle,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side:
+                                      BorderSide(color: Colors.grey.shade300),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 15),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/icon/google_logo.png",
+                                    height: 24,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Login with Google",
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 30),
+
+                          // Sign up link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("Don’t have an account? "),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => SignUpPage()),
+                                  );
+                                },
+                                child: Text(
+                                  "Sign up",
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
+
           // ปุ่ม "ข้าม" - Guest Sign-In
           Visibility(
             visible: _isSkipButtonVisible,
@@ -308,27 +390,39 @@ class _LoginPageState extends State<LoginPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    // หากไม่ต้องการเก็บตัวแปรก็ไม่จำเป็นต้องประกาศ guestUser
-                    await FirebaseAuth.instance.signInAnonymously();
+                    UserCredential guestUser =
+                        await FirebaseAuth.instance.signInAnonymously();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomePageByboss()),
+                      MaterialPageRoute(
+                          builder: (context) => ProfileRenter()),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Guest Sign-In error: ${e.toString()}"), backgroundColor: Colors.redAccent),
+                      SnackBar(
+                        content: Text("Guest Sign-In error: ${e.toString()}"),
+                        backgroundColor: Colors.redAccent,
+                      ),
                     );
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withOpacity(0.8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                child: Text("ข้าม", style: TextStyle(color: Colors.black87, fontSize: 14)),
+                child: Text(
+                  "ข้าม",
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
           ),
+
           // ข้อความเงื่อนไขการใช้งาน
           Visibility(
             visible: _isSkipButtonVisible,
@@ -339,7 +433,10 @@ class _LoginPageState extends State<LoginPage> {
               child: Text(
                 "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.indigoAccent, fontSize: 12),
+                style: TextStyle(
+                  color: Colors.indigoAccent,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
