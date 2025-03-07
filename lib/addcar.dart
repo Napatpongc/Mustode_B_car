@@ -22,9 +22,7 @@ class _AddCarState extends State<AddCar> {
   final _modelCtrl = TextEditingController();
   final _doorCtrl = TextEditingController();
   final _seatCtrl = TextEditingController();
-  final _gearCtrl = TextEditingController();
-  final _engineCtrl = TextEditingController();
-  final _baggageCtrl = TextEditingController();
+  // _gearCtrl, _engineCtrl, _baggageCtrl จะถูกแทนที่ด้วย Dropdown ใหม่
   final _priceCtrl = TextEditingController();
   final _carRegistrationCtrl = TextEditingController(); // สำหรับป้ายทะเบียนรถ
 
@@ -49,6 +47,59 @@ class _AddCarState extends State<AddCar> {
   String? _deletehashVehicleReg;
   String? _deletehashMotorVehicle;
   String? _deletehashCheckVehicle;
+
+  // ตัวแปรสำหรับประเภทยานพาหนะ (Vehicle Type)
+  String? _selectedVehicleType;
+  final List<String> _vehicleTypes = [
+    'รถยนต์ส่วนบุคคล (Sedan)',
+    'รถอเนกประสงค์ (SUV)',
+    'รถกระบะ (Pickup Truck)',
+    'รถตู้ (Van/Minivan)',
+    'รถหรู (Luxury Car)',
+    'รถสปอร์ต (Sports Car)',
+    'รถจักรยานยนต์ (Motorcycle)',
+    'รถบรรทุกขนาดเล็ก (Small Truck)',
+    'รถบรรทุกขนาดใหญ่ (Heavy Truck)',
+    'รถไฟฟ้า (Electric Vehicle - EV)',
+    'รถไฮบริด (Hybrid Car)',
+    'รถมอเตอร์ไซค์ไฟฟ้า (Electric Motorcycle)',
+    'รถบ้าน (Camper Van / RV)',
+    'รถจักรยาน (Bicycle)',
+    'สกู๊ตเตอร์ไฟฟ้า (Electric Scooter)',
+  ];
+
+  // ตัวแปรสำหรับ dropdown ระบบเกียร์, ระบบเครื่องยนต์ และ จำนวนสัมภาระ
+  String? _selectedGear;
+  final List<String> _gearTypes = [
+    'เกียร์ธรรมดา (Manual Transmission)',
+    'เกียร์อัตโนมัติ (Automatic Transmission)',
+  ];
+
+  String? _selectedEngine;
+  final List<String> _engineTypes = [
+    'เครื่องยนต์เบนซิน (Gasoline Engine)',
+    'เครื่องยนต์ดีเซล (Diesel Engine)',
+    'เครื่องยนต์ไฮบริด (Hybrid Engine)',
+    'เครื่องยนต์ไฟฟ้า (Electric Engine)',
+  ];
+
+  String? _selectedBaggage;
+  final List<String> _baggageTypes = [
+    'น้อย (Small)',
+    'ปานกลาง (Medium)',
+    'มาก (Large)',
+  ];
+
+  // ตัวแปรสำหรับ dropdown ระบบเชื้อเพลิง
+  String? _selectedFuel;
+  final List<String> _fuelTypes = [
+    'เบนซิน (Gasoline)',
+    'ดีเซล (Diesel)',
+    'ไฮบริด (Hybrid)',
+    'ไฟฟ้า (Electric)',
+    'ก๊าซธรรมชาติ (Natural Gas)',
+    'ไม่มี (None)',
+  ];
 
   // Imgur Client ID สำหรับ Anonymous Upload
   final String _imgurClientId = 'ed6895b5f1bf3d7';
@@ -188,6 +239,211 @@ class _AddCarState extends State<AddCar> {
     );
   }
 
+  // สร้าง Dropdown สำหรับเลือกประเภทยานพาหนะ
+  Widget _buildVehicleDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("ประเภทยานพาหนะ", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: _selectedVehicleType,
+            decoration: InputDecoration(
+              hintText: "เลือกประเภทยานพาหนะ",
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            items: _vehicleTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedVehicleType = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "กรุณาเลือกประเภทยานพาหนะ";
+              }
+              return null;
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  // สร้าง Dropdown สำหรับเลือก ระบบเกียร์
+  Widget _buildGearDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("ระบบเกียร์", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: _selectedGear,
+            decoration: InputDecoration(
+              hintText: "เลือกระบบเกียร์",
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            items: _gearTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedGear = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "กรุณาเลือกระบบเกียร์";
+              }
+              return null;
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  // สร้าง Dropdown สำหรับเลือก ระบบเครื่องยนต์
+  Widget _buildEngineDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("ระบบเครื่องยนต์", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: _selectedEngine,
+            decoration: InputDecoration(
+              hintText: "เลือกระบบเครื่องยนต์",
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            items: _engineTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedEngine = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "กรุณาเลือกระบบเครื่องยนต์";
+              }
+              return null;
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  // สร้าง Dropdown สำหรับเลือก จำนวนสัมภาระ
+  Widget _buildBaggageDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("จำนวนสัมภาระ", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: _selectedBaggage,
+            decoration: InputDecoration(
+              hintText: "เลือกจำนวนสัมภาระ",
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            items: _baggageTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedBaggage = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "กรุณาเลือกจำนวนสัมภาระ";
+              }
+              return null;
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  // สร้าง Dropdown สำหรับเลือก ระบบเชื้อเพลิง
+  Widget _buildFuelDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("ระบบเชื้อเพลิง", style: TextStyle(fontSize: 16)),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: _selectedFuel,
+            decoration: InputDecoration(
+              hintText: "เลือกระบบเชื้อเพลิง",
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            items: _fuelTypes.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedFuel = value;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "กรุณาเลือกระบบเชื้อเพลิง";
+              }
+              return null;
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   // Header แสดงขั้นตอน 1/2 พร้อมขีดเชื่อม
   Widget _buildStepHeader(int current) {
     return Row(
@@ -233,6 +489,7 @@ class _AddCarState extends State<AddCar> {
   }
 
   // บันทึกข้อมูลลง Firestore พร้อมเพิ่ม field availability, statuscar และตามโครงสร้างที่ระบุ
+  // โดยให้ field Vehicle และ fuel ถูกบันทึกอยู่ใน object detail ของ document รถใน collection "cars"
   Future<void> _submitCarData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -262,9 +519,12 @@ class _AddCarState extends State<AddCar> {
       "detail": {
         "door": int.tryParse(_doorCtrl.text) ?? 0,
         "seat": int.tryParse(_seatCtrl.text) ?? 0,
-        "gear": _gearCtrl.text.trim(),
-        "engine": _engineCtrl.text.trim(),
-        "baggage": int.tryParse(_baggageCtrl.text) ?? 0,
+        "gear": _selectedGear ?? "",
+        "engine": _selectedEngine ?? "",
+        "baggage": _selectedBaggage ?? "",
+        // เพิ่ม field Vehicle และ fuel ใน object detail
+        "Vehicle": _selectedVehicleType ?? "",
+        "fuel": _selectedFuel ?? "",
       },
       "price": double.tryParse(_priceCtrl.text) ?? 0.0,
       "image": {
@@ -317,7 +577,6 @@ class _AddCarState extends State<AddCar> {
     return _currentStep == 1 ? _buildStep1() : _buildStep2();
   }
 
-  // STEP 1: ข้อมูลรถ (เพิ่มอัปโหลดรูป 4 รูป และ TextField สำหรับป้ายทะเบียนรถ)
   Widget _buildStep1() {
     return Scaffold(
       appBar: AppBar(
@@ -337,12 +596,12 @@ class _AddCarState extends State<AddCar> {
               children: [
                 _buildStepHeader(1),
                 const SizedBox(height: 20),
-                // เพิ่มปุ่มเลือกรูป 4 รูป: carfront, carside, carback, carinside
+                // รูปถ่ายรถ
                 _buildLabelWithButton("รูปด้านหน้า", "carfront"),
                 _buildLabelWithButton("รูปด้านข้าง", "carside"),
                 _buildLabelWithButton("รูปด้านหลัง", "carback"),
                 _buildLabelWithButton("รูปด้านใน", "carinside"),
-                // เพิ่ม TextField สำหรับป้ายทะเบียนรถ
+                // ข้อมูลพื้นฐานของรถ เรียงใหม่ตามลำดับที่เหมาะสมสำหรับผู้ใช้
                 _buildTextField(
                   title: "ป้ายทะเบียนรถ",
                   hint: "กรอกป้ายทะเบียนรถ",
@@ -350,19 +609,42 @@ class _AddCarState extends State<AddCar> {
                   validator: (val) => (val == null || val.trim().isEmpty) ? "กรุณากรอกป้ายทะเบียนรถ" : null,
                 ),
                 _buildTextField(
-                  title: "ชื่อยี่ห้อรถ", hint: "Name", controller: _brandCtrl,
+                  title: "ชื่อยี่ห้อรถ", 
+                  hint: "Name", 
+                  controller: _brandCtrl,
                   validator: (val) => (val == null || val.trim().isEmpty) ? "กรุณากรอกชื่อยี่ห้อรถ" : null,
                 ),
                 _buildTextField(
-                  title: "ชื่อรุ่นรถ", hint: "Name", controller: _modelCtrl,
+                  title: "ชื่อรุ่นรถ", 
+                  hint: "Name", 
+                  controller: _modelCtrl,
                   validator: (val) => (val == null || val.trim().isEmpty) ? "กรุณากรอกชื่อรุ่นรถ" : null,
                 ),
-                _buildTextField(title: "จำนวนประตู", hint: "Number", controller: _doorCtrl, keyboardType: TextInputType.number),
-                _buildTextField(title: "จำนวนที่นั่ง", hint: "Number", controller: _seatCtrl, keyboardType: TextInputType.number),
-                _buildTextField(title: "ระบบเกียร์", hint: "Gear", controller: _gearCtrl),
-                _buildTextField(title: "ระบบเครื่องยนต์", hint: "Engine", controller: _engineCtrl),
-                _buildTextField(title: "จำนวนสัมภาระ", hint: "Number", controller: _baggageCtrl, keyboardType: TextInputType.number),
-                _buildTextField(title: "ราคาเช่าต่อวัน", hint: "Price", controller: _priceCtrl, keyboardType: TextInputType.number),
+                // Dropdown ประเภทยานพาหนะ
+                _buildVehicleDropdown(),
+                _buildTextField(
+                  title: "จำนวนประตู", 
+                  hint: "Number", 
+                  controller: _doorCtrl, 
+                  keyboardType: TextInputType.number
+                ),
+                _buildTextField(
+                  title: "จำนวนที่นั่ง", 
+                  hint: "Number", 
+                  controller: _seatCtrl, 
+                  keyboardType: TextInputType.number
+                ),
+                // Dropdown สำหรับระบบเกียร์, เครื่องยนต์, จำนวนสัมภาระ, และระบบเชื้อเพลิง
+                _buildGearDropdown(),
+                _buildEngineDropdown(),
+                _buildBaggageDropdown(),
+                _buildFuelDropdown(),
+                _buildTextField(
+                  title: "ราคาเช่าต่อวัน", 
+                  hint: "Price", 
+                  controller: _priceCtrl, 
+                  keyboardType: TextInputType.number
+                ),
                 Align(
                   alignment: Alignment.centerRight,
                   child: _buildWhiteButton("ถัดไป", Icons.arrow_forward, _nextStep),
