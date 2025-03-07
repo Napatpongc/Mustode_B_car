@@ -46,6 +46,7 @@ dependencies:
   material: ^1.0.0+2
   location_picker_flutter_map: ^3.0.0 
   flutter_map_marker_popup: ^6.1.2
+  firebase_storage: ^12.4.4
  
 
 dev_dependencies:

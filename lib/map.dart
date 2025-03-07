@@ -1,14 +1,15 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
+import 'calendar_page.dart';
 import 'account_page.dart';
 
 class MapDetailPage extends StatefulWidget {
-  const MapDetailPage({super.key});
+  const MapDetailPage({Key? key}) : super(key: key);
 
   @override
   _MapDetailPageState createState() => _MapDetailPageState();
@@ -16,108 +17,144 @@ class MapDetailPage extends StatefulWidget {
 
 class _MapDetailPageState extends State<MapDetailPage> {
   final Location location = Location();
-  bool _isManualLocation = false;
+  bool _serviceEnabled = false;
+  PermissionStatus? _permissionGranted;
   LocationData? _locationData;
   late final MapController _mapController;
   double _currentZoom = 18.0;
-  List<Map<String, dynamic>> _nearbyCars = [];
+  bool _isManualLocation = false;
+  List<Map<String, dynamic>> nearbyOwners = [];
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-    _fetchCurrentLocation();
+    _requestLocationPermission();
+    _startTracking();
   }
 
-  void _fetchCurrentLocation() async {
+  Future<void> _requestLocationPermission() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) return;
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) return;
+    }
+
     _locationData = await location.getLocation();
-    setState(() {
-      _mapController.move(
-          LatLng(_locationData!.latitude!, _locationData!.longitude!), _currentZoom);
-    });
-    _listenToLocationChanges();
+    setState(() {});
+    _fetchNearbyOwners();
   }
 
-  void _listenToLocationChanges() {
+  void _startTracking() {
     location.onLocationChanged.listen((LocationData newLocation) {
       if (!_isManualLocation) {
         setState(() {
           _locationData = newLocation;
-          _mapController.move(LatLng(newLocation.latitude!, newLocation.longitude!), _currentZoom);
         });
-        _fetchNearbyCars();
+
+        _mapController.move(
+          LatLng(newLocation.latitude!, newLocation.longitude!),
+          _currentZoom,
+        );
+        _fetchNearbyOwners();
       }
     });
   }
 
-  void _fetchNearbyCars() {
+  Future<void> _fetchNearbyOwners() async {
     if (_locationData == null) return;
-    double userLat = _locationData!.latitude!;
-    double userLng = _locationData!.longitude!;
 
-    FirebaseFirestore.instance.collection('cars').snapshots().listen((snapshot) {
-      List<Map<String, dynamic>> filteredCars = [];
-      for (var doc in snapshot.docs) {
-        var data = doc.data();
-        if (data.containsKey('location')) {
-          double carLat = data['location']['latitude'] ?? 0.0;
-          double carLng = data['location']['longitude'] ?? 0.0;
-          double distance = _calculateDistance(userLat, userLng, carLat, carLng);
-          if (distance <= 5.0) {
-            filteredCars.add({...data, 'docId': doc.id});
-          }
+    QuerySnapshot usersSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+
+    List<Map<String, dynamic>> filteredOwners = [];
+
+    for (var doc in usersSnapshot.docs) {
+      var data = doc.data() as Map<String, dynamic>;
+      if (data['location'] != null) {
+        double ownerLat = data['location']['latitude'];
+        double ownerLng = data['location']['longitude'];
+        double distance = Geolocator.distanceBetween(
+          _locationData!.latitude!,
+          _locationData!.longitude!,
+          ownerLat,
+          ownerLng,
+        ) / 1000; // แปลงเป็นกิโลเมตร
+
+        print("🔍 Owner ${data['username']} ห่าง ${distance.toStringAsFixed(2)} km");
+
+        if (distance <= 5) {
+          filteredOwners.add({...data, 'docId': doc.id});
         }
       }
-      setState(() {
-        _nearbyCars = filteredCars;
-      });
+    }
+
+    setState(() {
+      nearbyOwners = filteredOwners;
     });
   }
 
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double radius = 6371;
-    double dLat = (lat2 - lat1) * (pi / 180);
-    double dLon = (lon2 - lon1) * (pi / 180);
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * (pi / 180)) * cos(lat2 * (pi / 180)) *
-            sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return radius * c;
-  }
-
-  void _openLocationPicker() {
-    Navigator.push(
+  void _openLocationPicker() async {
+    final pickedLatLng = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Pick a Location')),
+          appBar: AppBar(
+            title: const Text('Pick a Location'),
+          ),
           body: FlutterLocationPicker(
-            initZoom: 11,
+            initZoom: _currentZoom,
             minZoomLevel: 5,
             maxZoomLevel: 16,
-            trackMyPosition: true,
+            trackMyPosition: false,
+            searchBarBackgroundColor: Colors.white,
+            mapLanguage: 'th',
+            initPosition: _locationData != null
+                ? LatLong(_locationData!.latitude!, _locationData!.longitude!)
+                : null,
+            onError: (e) => print(e),
             onPicked: (pickedData) {
-              Navigator.pop(context, pickedData.latLong);
+              Navigator.pop(context, LatLng(pickedData.latLong.latitude, pickedData.latLong.longitude));
             },
           ),
         ),
       ),
-    ).then((pickedLatLng) {
-      if (pickedLatLng != null) {
-        setState(() {
-          _isManualLocation = true;
-          _locationData = LocationData.fromMap({'latitude': pickedLatLng.latitude, 'longitude': pickedLatLng.longitude});
-          _mapController.move(pickedLatLng, _currentZoom);
+    );
+
+    if (pickedLatLng != null) {
+      setState(() {
+        _isManualLocation = true;
+        _locationData = LocationData.fromMap({
+          'latitude': pickedLatLng.latitude,
+          'longitude': pickedLatLng.longitude,
         });
-        _fetchNearbyCars();
-      }
-    });
+        _mapController.move(
+          LatLng(pickedLatLng.latitude, pickedLatLng.longitude),
+          _currentZoom,
+        );
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map Detail')),
+      appBar: AppBar(
+        backgroundColor: Colors.teal,
+        title: const Text('Map Detail'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: _openLocationPicker,
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           _locationData == null
@@ -125,31 +162,44 @@ class _MapDetailPageState extends State<MapDetailPage> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                      center: LatLng(_locationData!.latitude!, _locationData!.longitude!), zoom: _currentZoom),
+                    center: LatLng(
+                        _locationData!.latitude!, _locationData!.longitude!),
+                    zoom: _currentZoom,
+                  ),
                   children: [
                     TileLayer(
-                        urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                        subdomains: const ['a', 'b', 'c']),
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      subdomains: ['a', 'b', 'c'],
+                    ),
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(_locationData!.latitude!, _locationData!.longitude!),
+                          point: LatLng(_locationData!.latitude!,
+                              _locationData!.longitude!),
                           width: 80,
                           height: 80,
-                          child: const Icon(Icons.my_location, size: 50, color: Colors.red),
+                          child: const Icon(Icons.person_pin_circle,
+                              size: 50, color: Colors.green),
                         ),
-                        for (var car in _nearbyCars)
+                        for (var owner in nearbyOwners)
                           Marker(
-                            point: LatLng(car['location']['latitude'], car['location']['longitude']),
+                            point: LatLng(
+                                owner['location']['latitude'],
+                                owner['location']['longitude']),
                             width: 80,
                             height: 80,
                             child: GestureDetector(
                               onTap: () {
-                                String ownerId = car['ownerId'];
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (context) => AccountPage(docId: ownerId)));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AccountPage(docId: owner['docId']),
+                                  ),
+                                );
                               },
-                              child: const Icon(Icons.directions_car, size: 50, color: Colors.blue),
+                              child: const Icon(Icons.person,
+                                  size: 50, color: Colors.blue),
                             ),
                           ),
                       ],
@@ -162,10 +212,28 @@ class _MapDetailPageState extends State<MapDetailPage> {
             child: Column(
               children: [
                 FloatingActionButton(
-                    heroTag: "pickLocation",
-                    onPressed: _openLocationPicker,
-                    mini: true,
-                    child: const Icon(Icons.map)),
+                  heroTag: "zoomIn",
+                  onPressed: () {
+                    setState(() {
+                      _currentZoom += 1;
+                      _mapController.move(_mapController.center, _currentZoom);
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                  mini: true,
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: "zoomOut",
+                  onPressed: () {
+                    setState(() {
+                      _currentZoom -= 1;
+                      _mapController.move(_mapController.center, _currentZoom);
+                    });
+                  },
+                  child: const Icon(Icons.remove),
+                  mini: true,
+                ),
               ],
             ),
           ),
