@@ -13,6 +13,9 @@ import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'Mycar.dart';
 
+// ===== หากมี AddressPicker ในไฟล์อื่น ให้ import มา =====
+import 'address_picker.dart';
+
 /// Sidebar (Drawer) ที่ใช้ใน ProfileLessor
 class MyDrawer extends StatelessWidget {
   final String username;
@@ -98,7 +101,7 @@ class ProfileLessor extends StatefulWidget {
 }
 
 class _ProfileLessorState extends State<ProfileLessor> {
-  // ตัวแปรสำหรับจัดการรูปต่าง ๆ
+  // ----------------- ตัวแปรสำหรับจัดการรูป ------------------
   File? _idCardFile;
   File? _rentalContractFile;
   File? _profileFile;
@@ -107,137 +110,386 @@ class _ProfileLessorState extends State<ProfileLessor> {
   // Imgur Client ID
   final String _imgurClientId = "ed6895b5f1bf3d7";
 
-  Future<void> _pickProfileImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _profileFile = File(pickedFile.path);
-      });
+  // ----------------- ตัวแปร Address สำหรับ AddressPicker ------------------
+  String? _province;
+  String? _district;
+  String? _subdistrict;
+  String? _postalCode;
+  String? _moreInfo;
+
+  // ----------------- ตัวแปรพื้นฐานอื่น ๆ ------------------
+  String? _username;
+  String? _email;
+  String? _phone;
+
+  // ----------------- เมธอดดึงค่าจาก Firestore -> Local State ------------------
+  /// เราจะเรียกใช้ใน build เพื่อเช็คว่าถ้ายังไม่เคยเซตค่า ก็จะเซตจาก Firestore
+  void _initializeLocalData(Map<String, dynamic> data) {
+    _username ??= data['username'];
+    _email ??= data['email'];
+    _phone ??= data['phone'];
+
+    final addr = data['address'] as Map<String, dynamic>?;
+    if (addr != null) {
+      _province ??= addr['province'];
+      _district ??= addr['district'];
+      _subdistrict ??= addr['subdistrict'];
+      _postalCode ??= addr['postalCode'];
+      _moreInfo ??= addr['moreinfo'];
     }
   }
 
-  Future<void> _pickIdCardImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _idCardFile = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<void> _pickRentalContractImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _rentalContractFile = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<Map<String, dynamic>> _uploadImageToImgur(File imageFile) async {
-    try {
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
-      final response = await http.post(
-        Uri.parse('https://api.imgur.com/3/image'),
-        headers: {
-          'Authorization': 'Client-ID $_imgurClientId',
-        },
-        body: {
-          'image': base64Image,
-          'type': 'base64',
-        },
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("ไม่พบผู้ใช้ที่ login")),
       );
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      if (data['success'] == true) {
-        return {
-          'link': data['data']['link'],
-          'deletehash': data['data']['deletehash'],
-        };
-      } else {
-        throw Exception('อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
-      }
-    } catch (e) {
-      rethrow;
     }
-  }
+    bool isGoogleLogin = user.providerData.any((p) => p.providerId == 'google.com');
 
-  Future<void> _deleteImageFromImgur(String deleteHash) async {
-    try {
-      await http.delete(
-        Uri.parse('https://api.imgur.com/3/image/$deleteHash'),
-        headers: {
-          'Authorization': 'Client-ID $_imgurClientId',
-        },
-      );
-    } catch (e) {
-      rethrow;
-    }
-  }
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      builder: (_, snap) {
+        if (snap.hasError) {
+          return const Scaffold(body: Center(child: Text("เกิดข้อผิดพลาด")));
+        }
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (!snap.hasData || !snap.data!.exists) {
+          return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")));
+        }
 
-  Future<String?> _editDialog(String label, String? value) async {
-    final ctrl = TextEditingController(text: value ?? "");
-    return showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("แก้ไข $label"),
-        content: TextField(controller: ctrl),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("ยกเลิก")),
-          TextButton(
-              onPressed: () => Navigator.pop(context, ctrl.text),
-              child: const Text("บันทึก")),
-        ],
-      ),
+        final data = snap.data!.data() as Map<String, dynamic>;
+        _initializeLocalData(data);
+
+        final oldImageData = data['image'] ?? {};
+        final oldIdCardUrl = oldImageData['id_card'];
+        final oldIdCardDeleteHash = oldImageData['deletehash_id_card'];
+        final oldRentalUrl = oldImageData['rental_contract'];
+        final oldRentalDeleteHash = oldImageData['deletehash_rental_contract'];
+        final oldProfileUrl = oldImageData['profile'];
+        final oldProfileDeleteHash = oldImageData['deletehashprofil'];
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: const Color(0xFF00377E),
+            title: const Text("บัญชี (ผู้ปล่อยเช่า)"),
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+          ),
+          drawer: MyDrawer(
+            username: _username ?? "ไม่มีชื่อ",
+            isGoogleLogin: isGoogleLogin,
+            profileUrl: oldProfileUrl,
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // ส่วน Header (รูปโปรไฟล์ + ชื่อ)
+                _buildProfileHeader(
+                  userId: user.uid,
+                  oldProfileUrl: oldProfileUrl,
+                  oldProfileDeleteHash: oldProfileDeleteHash,
+                ),
+                // ปุ่มสวิตช์โปรไฟล์
+                _buildProfileSwitch(),
+                // ส่วนรายได้
+                _buildIncomeSection(user.uid),
+                // ฟอร์มส่วนหลัก
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFB3E5FC), Color(0xFFE1F5FE)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(color: Colors.grey.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+
+                      // AddressPicker แทนการแก้ทีละฟิลด์
+                      AddressPicker(
+                        onAddressSelected: (p, d, s, pc) {
+                          setState(() {
+                            _province = p;
+                            _district = d;
+                            _subdistrict = s;
+                            _postalCode = pc;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ช่องกรอก moreInfo
+                      _whiteBox(
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text("ข้อมูลเพิ่มเติม : ${_moreInfo ?? "ไม่มีข้อมูล"}"),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () async {
+                                final newVal = await _showEditDialog("รายละเอียดเพิ่มเติม", _moreInfo);
+                                if (newVal != null) {
+                                  setState(() {
+                                    _moreInfo = newVal;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // เบอร์โทร
+                      _whiteBox(
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text("เบอร์โทรศัพท์: ${_phone ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () async {
+                                final newVal = await _showEditDialog("เบอร์โทรศัพท์", _phone);
+                                if (newVal != null) {
+                                  setState(() {
+                                    _phone = newVal;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // อีเมล
+                      _whiteBox(
+                        Row(
+                          children: [
+                            Expanded(child: Text("อีเมล: ${_email ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16))),
+                          ],
+                        ),
+                      ),
+
+                      // รูปเอกสารต่าง ๆ
+                      _whiteBox(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('รูปบัตรประชาชน', style: TextStyle(fontSize: 18)),
+                            const SizedBox(height: 5),
+                            ElevatedButton.icon(
+                              onPressed: _pickIdCardImage,
+                              icon: const Icon(Icons.upload),
+                              label: const Text('เลือกรูป'),
+                            ),
+                            if (_idCardFile != null) ...[
+                              const SizedBox(height: 10),
+                              Image.file(_idCardFile!, width: 100, height: 100, fit: BoxFit.cover),
+                            ],
+                            const SizedBox(height: 20),
+
+                            const Text('สัญญาปล่อยเช่า (จำเป็น)', style: TextStyle(fontSize: 18)),
+                            const SizedBox(height: 5),
+                            ElevatedButton.icon(
+                              onPressed: _pickRentalContractImage,
+                              icon: const Icon(Icons.upload),
+                              label: const Text('เลือกรูป'),
+                            ),
+                            if (_rentalContractFile != null) ...[
+                              const SizedBox(height: 10),
+                              Image.file(_rentalContractFile!, width: 100, height: 100, fit: BoxFit.cover),
+                            ],
+                            const SizedBox(height: 20),
+
+                            // ปุ่มอัปเดตตำแหน่งที่ตั้ง
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await _updateCurrentLocation(user.uid);
+                              },
+                              icon: const Icon(Icons.location_on),
+                              label: const Text("เพิ่มตำแหน่งที่ตั้ง"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                                textStyle: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ปุ่มบันทึก
+                      Align(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              // อัปเดตฟิลด์ address และฟิลด์อื่น ๆ
+                              await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                                'username': _username,
+                                'email': _email,
+                                'phone': _phone,
+                                'address': {
+                                  'province': _province,
+                                  'district': _district,
+                                  'subdistrict': _subdistrict,
+                                  'postalCode': _postalCode,
+                                  'moreinfo': _moreInfo,
+                                },
+                              });
+
+                              // รูปโปรไฟล์
+                              if (_profileFile != null) {
+                                if (oldProfileUrl != null &&
+                                    oldProfileUrl != 'null' &&
+                                    oldProfileDeleteHash != null &&
+                                    oldProfileDeleteHash != 'null') {
+                                  await _deleteImageFromImgur(oldProfileDeleteHash);
+                                }
+                                final uploadResult = await _uploadImageToImgur(_profileFile!);
+                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                                  'image.profile': uploadResult['link'],
+                                  'image.deletehashprofil': uploadResult['deletehash'],
+                                });
+                              }
+
+                              // รูปบัตรประชาชน
+                              if (_idCardFile != null) {
+                                if (oldIdCardUrl != null &&
+                                    oldIdCardUrl != 'null' &&
+                                    oldIdCardDeleteHash != null &&
+                                    oldIdCardDeleteHash != 'null') {
+                                  await _deleteImageFromImgur(oldIdCardDeleteHash);
+                                }
+                                final uploadResult = await _uploadImageToImgur(_idCardFile!);
+                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                                  'image.id_card': uploadResult['link'],
+                                  'image.deletehash_id_card': uploadResult['deletehash'],
+                                });
+                              }
+
+                              // รูปสัญญาปล่อยเช่า
+                              if (_rentalContractFile != null) {
+                                if (oldRentalUrl != null &&
+                                    oldRentalUrl != 'null' &&
+                                    oldRentalDeleteHash != null &&
+                                    oldRentalDeleteHash != 'null') {
+                                  await _deleteImageFromImgur(oldRentalDeleteHash);
+                                }
+                                final uploadResult = await _uploadImageToImgur(_rentalContractFile!);
+                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                                  'image.rental_contract': uploadResult['link'],
+                                  'image.deletehash_rental_contract': uploadResult['deletehash'],
+                                });
+                              }
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                            child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _whiteBox(Widget child) => Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: child,
-      );
-
-  Widget _incomeBox(num myPayment) {
-    final String incomeText = myPayment.toStringAsFixed(2);
+  // -------------------- ส่วนย่อยของ UI --------------------
+  Widget _buildProfileHeader({
+    required String userId,
+    required String? oldProfileUrl,
+    required String? oldProfileDeleteHash,
+  }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("รายได้วันนี้",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          Text("฿ $incomeText",
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[700])),
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.grey[300],
+                backgroundImage: _profileFile != null
+                    ? FileImage(_profileFile!)
+                    : (oldProfileUrl != null && oldProfileUrl != 'null'
+                        ? NetworkImage(oldProfileUrl)
+                        : null) as ImageProvider<Object>?,
+                child: (_profileFile == null && (oldProfileUrl == null || oldProfileUrl == 'null'))
+                    ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                    : null,
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: InkWell(
+                  onTap: _pickProfileImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(_username ?? "ไม่มีชื่อ", style: const TextStyle(fontSize: 24)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue),
+            onPressed: () async {
+              final newVal = await _showEditDialog("ชื่อผู้ใช้", _username);
+              if (newVal != null && newVal.isNotEmpty) {
+                setState(() => _username = newVal);
+              }
+            },
+          ),
         ],
       ),
     );
@@ -301,425 +553,174 @@ class _ProfileLessorState extends State<ProfileLessor> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const Scaffold(
-          body: Center(child: Text("ไม่พบผู้ใช้ที่ login")));
-    }
-    bool isGoogleLogin =
-        user.providerData.any((p) => p.providerId == 'google.com');
-
+  Widget _buildIncomeSection(String userId) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance.collection('payments').doc(userId).snapshots(),
       builder: (_, snap) {
         if (snap.hasError) {
-          return const Scaffold(body: Center(child: Text("เกิดข้อผิดพลาด")));
+          return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดรายได้"));
         }
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Center(child: CircularProgressIndicator());
         }
         if (!snap.hasData || !snap.data!.exists) {
-          return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")));
+          return _incomeBox(0);
         }
-
-        var data = snap.data!.data() as Map<String, dynamic>;
-        String? username = data['username'];
-        String? email = data['email'];
-        String? phone = data['phone'];
-        var addr = data['address'] as Map<String, dynamic>?;
-        String? province = addr?['province'];
-        String? district = addr?['district'];
-        String? subdistrict = addr?['subdistrict'];
-        String? postal = addr?['postalCode'];
-        String? more = addr?['moreinfo'];
-
-        // ดึงข้อมูลรูปภาพจาก object image
-        final imageData = data['image'] ?? {};
-        final oldIdCardUrl = imageData['id_card'];
-        final oldIdCardDeleteHash = imageData['deletehash_id_card'];
-        final oldRentalUrl = imageData['rental_contract'];
-        final oldRentalDeleteHash = imageData['deletehash_rental_contract'];
-        final oldProfileUrl = imageData['profile'];
-        final oldProfileDeleteHash = imageData['deletehashprofil'];
-
-        return Scaffold(
-          appBar: AppBar(
-            backgroundColor: const Color(0xFF00377E),
-            title: const Text("บัญชี (ผู้ปล่อยเช่า)"),
-            leading: Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-            ),
-          ),
-          drawer: MyDrawer(
-            username: username ?? "ไม่มีชื่อ",
-            isGoogleLogin: isGoogleLogin,
-            profileUrl: oldProfileUrl,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Header พร้อมโปรไฟล์
-                Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: Colors.grey[300],
-                            backgroundImage: _profileFile != null
-                                ? FileImage(_profileFile!)
-                                : (oldProfileUrl != null && oldProfileUrl != 'null'
-                                    ? NetworkImage(oldProfileUrl)
-                                    : null) as ImageProvider<Object>?,
-                            child: (_profileFile == null && (oldProfileUrl == null || oldProfileUrl == 'null'))
-                                ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: InkWell(
-                              onTap: _pickProfileImage,
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 1),
-                                ),
-                                child: const Icon(Icons.edit, color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(username ?? "ไม่มีชื่อ", style: const TextStyle(fontSize: 24)),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () async {
-                          String? newVal = await _editDialog("ชื่อผู้ใช้", username);
-                          if (newVal != null) {
-                            FirebaseFirestore.instance.collection('users').doc(user.uid).update({'username': newVal});
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                _buildProfileSwitch(),
-                // รายได้วันนี้
-                StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance.collection('payments').doc(user.uid).snapshots(),
-                  builder: (_, paySnap) {
-                    if (paySnap.hasError) {
-                      return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดรายได้"));
-                    }
-                    if (paySnap.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!paySnap.hasData || !paySnap.data!.exists) {
-                      return _incomeBox(0);
-                    }
-                    var payData = paySnap.data!.data() as Map<String, dynamic>;
-                    num income = payData['mypayment'] ?? 0;
-                    return _incomeBox(income);
-                  },
-                ),
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFB3E5FC), Color(0xFFE1F5FE)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(color: Colors.grey.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
-                      _whiteBox(Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("ที่อยู่:", style: TextStyle(fontSize: 18)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(child: Text("จังหวัด : ${province ?? "ไม่มีข้อมูล"}")),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        String? newVal = await _editDialog("จังหวัด", province);
-                                        if (newVal != null) {
-                                          FirebaseFirestore.instance.collection('users').doc(user.uid).update({'address.province': newVal});
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(child: Text("อำเภอ : ${district ?? "ไม่มีข้อมูล"}")),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        String? newVal = await _editDialog("อำเภอ", district);
-                                        if (newVal != null) {
-                                          FirebaseFirestore.instance.collection('users').doc(user.uid).update({'address.district': newVal});
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(child: Text("ตำบล : ${subdistrict ?? "ไม่มีข้อมูล"}")),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        String? newVal = await _editDialog("ตำบล", subdistrict);
-                                        if (newVal != null) {
-                                          FirebaseFirestore.instance.collection('users').doc(user.uid).update({'address.subdistrict': newVal});
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(child: Text("รหัสไปรษณีย์ : ${postal ?? "ไม่มีข้อมูล"}")),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        String? newVal = await _editDialog("รหัสไปรษณีย์", postal);
-                                        if (newVal != null) {
-                                          FirebaseFirestore.instance.collection('users').doc(user.uid).update({'address.postalCode': newVal});
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(child: Text("เพิ่มเติม : ${more ?? "ไม่มีข้อมูล"}")),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        String? newVal = await _editDialog("เพิ่มเติม", more);
-                                        if (newVal != null) {
-                                          FirebaseFirestore.instance.collection('users').doc(user.uid).update({'address.moreinfo': newVal});
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )),
-                      _whiteBox(Row(
-                        children: [
-                          Expanded(
-                              child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16))),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () async {
-                              String? newVal = await _editDialog("เบอร์โทรศัพท์", phone);
-                              if (newVal != null) {
-                                FirebaseFirestore.instance.collection('users').doc(user.uid).update({'phone': newVal});
-                              }
-                            },
-                          ),
-                        ],
-                      )),
-                      _whiteBox(Row(
-                        children: [
-                          Expanded(child: Text("อีเมล: $email", style: const TextStyle(fontSize: 16))),
-                        ],
-                      )),
-                      // ส่วนอัปโหลดรูปเอกสารและตำแหน่งที่ตั้ง
-                      _whiteBox(Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('รูปบัตรประชาชน', style: TextStyle(fontSize: 18)),
-                          const SizedBox(height: 5),
-                          ElevatedButton.icon(
-                            onPressed: _pickIdCardImage,
-                            icon: const Icon(Icons.upload),
-                            label: const Text('เลือกรูป'),
-                          ),
-                          if (_idCardFile != null) ...[
-                            const SizedBox(height: 10),
-                            Image.file(_idCardFile!, width: 100, height: 100, fit: BoxFit.cover),
-                          ],
-                          const SizedBox(height: 20),
-                          const Text('สัญญาปล่อยเช่า (จำเป็น)', style: TextStyle(fontSize: 18)),
-                          const SizedBox(height: 5),
-                          ElevatedButton.icon(
-                            onPressed: _pickRentalContractImage,
-                            icon: const Icon(Icons.upload),
-                            label: const Text('เลือกรูป'),
-                          ),
-                          if (_rentalContractFile != null) ...[
-                            const SizedBox(height: 10),
-                            Image.file(_rentalContractFile!, width: 100, height: 100, fit: BoxFit.cover),
-                          ],
-                          const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              LocationPermission permission = await Geolocator.checkPermission();
-                              if (permission == LocationPermission.denied) {
-                                permission = await Geolocator.requestPermission();
-                                if (permission == LocationPermission.denied) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("ไม่ได้รับสิทธิ์การเข้าถึงตำแหน่ง")),
-                                  );
-                                  return;
-                                }
-                              }
-                              if (permission == LocationPermission.deniedForever) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("สิทธิ์การเข้าถึงตำแหน่งถูกปฏิเสธอย่างถาวร")),
-                                );
-                                return;
-                              }
-                              Position position = await Geolocator.getCurrentPosition(
-                                desiredAccuracy: LocationAccuracy.high,
-                              );
-                              double latitude = position.latitude;
-                              double longitude = position.longitude;
-                              await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-                                'location': {
-                                  'latitude': latitude,
-                                  'longitude': longitude,
-                                }
-                              }, SetOptions(merge: true));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("อัปเดตตำแหน่งที่ตั้งเรียบร้อย")),
-                              );
-                            },
-                            icon: const Icon(Icons.location_on),
-                            label: const Text("เพิ่มตำแหน่งที่ตั้ง"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                              textStyle: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      )),
-                      const SizedBox(height: 20),
-                      Align(
-                        alignment: Alignment.center,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              if (_profileFile != null) {
-                                if (oldProfileUrl != null &&
-                                    oldProfileUrl != 'null' &&
-                                    oldProfileDeleteHash != null &&
-                                    oldProfileDeleteHash != 'null') {
-                                  await _deleteImageFromImgur(oldProfileDeleteHash);
-                                }
-                                final uploadResult = await _uploadImageToImgur(_profileFile!);
-                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                                  'image.profile': uploadResult['link'],
-                                  'image.deletehashprofil': uploadResult['deletehash'],
-                                });
-                              }
-                              if (_idCardFile != null) {
-                                if (oldIdCardUrl != null &&
-                                    oldIdCardUrl != 'null' &&
-                                    oldIdCardDeleteHash != null &&
-                                    oldIdCardDeleteHash != 'null') {
-                                  await _deleteImageFromImgur(oldIdCardDeleteHash);
-                                }
-                                final uploadResult = await _uploadImageToImgur(_idCardFile!);
-                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                                  'image.id_card': uploadResult['link'],
-                                  'image.deletehash_id_card': uploadResult['deletehash'],
-                                });
-                              }
-                              if (_rentalContractFile != null) {
-                                if (oldRentalUrl != null &&
-                                    oldRentalUrl != 'null' &&
-                                    oldRentalDeleteHash != null &&
-                                    oldRentalDeleteHash != 'null') {
-                                  await _deleteImageFromImgur(oldRentalDeleteHash);
-                                }
-                                final uploadResult = await _uploadImageToImgur(_rentalContractFile!);
-                                await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                                  'image.rental_contract': uploadResult['link'],
-                                  'image.deletehash_rental_contract': uploadResult['deletehash'],
-                                });
-                              }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("บันทึกข้อมูลเรียบร้อย")),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("เกิดข้อผิดพลาด: $e")),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                            child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        final payData = snap.data!.data() as Map<String, dynamic>;
+        final num income = payData['mypayment'] ?? 0;
+        return _incomeBox(income);
       },
+    );
+  }
+
+  Widget _incomeBox(num myPayment) {
+    final incomeText = myPayment.toStringAsFixed(2);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text("รายได้วันนี้", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text("฿ $incomeText", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[700])),
+        ],
+      ),
+    );
+  }
+
+  Widget _whiteBox(Widget child) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // -------------------- เมธอดโค้ดซ้ำซ้อน / Imgur / Geolocator --------------------
+  Future<void> _pickProfileImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _profileFile = File(pickedFile.path));
+    }
+  }
+
+  Future<void> _pickIdCardImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _idCardFile = File(pickedFile.path));
+    }
+  }
+
+  Future<void> _pickRentalContractImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _rentalContractFile = File(pickedFile.path));
+    }
+  }
+
+  Future<Map<String, dynamic>> _uploadImageToImgur(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final response = await http.post(
+      Uri.parse('https://api.imgur.com/3/image'),
+      headers: {'Authorization': 'Client-ID $_imgurClientId'},
+      body: {'image': base64Image, 'type': 'base64'},
+    );
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['success'] == true) {
+      return {
+        'link': data['data']['link'],
+        'deletehash': data['data']['deletehash'],
+      };
+    } else {
+      throw Exception('อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
+    }
+  }
+
+  Future<void> _deleteImageFromImgur(String deleteHash) async {
+    await http.delete(
+      Uri.parse('https://api.imgur.com/3/image/$deleteHash'),
+      headers: {'Authorization': 'Client-ID $_imgurClientId'},
+    );
+  }
+
+  Future<void> _updateCurrentLocation(String userId) async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("ไม่ได้รับสิทธิ์การเข้าถึงตำแหน่ง")),
+        );
+        return;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("สิทธิ์การเข้าถึงตำแหน่งถูกปฏิเสธอย่างถาวร")),
+      );
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    await FirebaseFirestore.instance.collection('users').doc(userId).set(
+      {
+        'location': {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        }
+      },
+      SetOptions(merge: true),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("อัปเดตตำแหน่งที่ตั้งเรียบร้อย")),
+    );
+  }
+
+  // Dialog แก้ไขข้อความ
+  Future<String?> _showEditDialog(String label, String? currentValue) async {
+    final ctrl = TextEditingController(text: currentValue ?? "");
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("แก้ไข $label"),
+        content: TextField(controller: ctrl),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("ยกเลิก"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: const Text("บันทึก"),
+          ),
+        ],
+      ),
     );
   }
 }
