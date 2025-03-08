@@ -7,20 +7,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:geolocator/geolocator.dart'; // สำหรับใช้งานตำแหน่งที่ตั้ง
+import 'package:geolocator/geolocator.dart';
 
 import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'Mycar.dart';
+import 'address_picker.dart'; // AddressPicker ที่รองรับ initial values
 
-// ===== หากมี AddressPicker ในไฟล์อื่น ให้ import มา =====
-import 'address_picker.dart';
-
-/// Sidebar (Drawer) ที่ใช้ใน ProfileLessor
+/// Drawer สำหรับ ProfileLessor
 class MyDrawer extends StatelessWidget {
   final String username;
   final bool isGoogleLogin;
-  final String? profileUrl; // รับรูปโปรไฟล์
+  final String? profileUrl;
 
   const MyDrawer({
     Key? key,
@@ -63,7 +61,7 @@ class MyDrawer extends StatelessWidget {
             title: const Text('รายการปล่อยเช่ารถ'),
             onTap: () {
               Navigator.pop(context);
-              // เพิ่ม Navigator.push(...) ไปหน้ารายการปล่อยเช่ารถที่นี่
+              // TODO: ไปหน้ารายการปล่อยเช่ารถ
             },
           ),
           ListTile(
@@ -81,7 +79,9 @@ class MyDrawer extends StatelessWidget {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
-              if (isGoogleLogin) await GoogleSignIn().signOut();
+              if (isGoogleLogin) {
+                await GoogleSignIn().signOut();
+              }
               await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(
                 context,
@@ -101,7 +101,7 @@ class ProfileLessor extends StatefulWidget {
 }
 
 class _ProfileLessorState extends State<ProfileLessor> {
-  // ----------------- ตัวแปรสำหรับจัดการรูป ------------------
+  // ----------------- ตัวแปรรูปภาพ ------------------
   File? _idCardFile;
   File? _rentalContractFile;
   File? _profileFile;
@@ -110,20 +110,20 @@ class _ProfileLessorState extends State<ProfileLessor> {
   // Imgur Client ID
   final String _imgurClientId = "ed6895b5f1bf3d7";
 
-  // ----------------- ตัวแปร Address สำหรับ AddressPicker ------------------
+  // ----------------- ตัวแปร Address ------------------
   String? _province;
   String? _district;
   String? _subdistrict;
   String? _postalCode;
+
+  // ----------------- TextField แยกสำหรับรายละเอียดเพิ่มเติม ------------------
   String? _moreInfo;
 
-  // ----------------- ตัวแปรพื้นฐานอื่น ๆ ------------------
+  // ----------------- ตัวแปรทั่วไป ------------------
   String? _username;
   String? _email;
   String? _phone;
 
-  // ----------------- เมธอดดึงค่าจาก Firestore -> Local State ------------------
-  /// เราจะเรียกใช้ใน build เพื่อเช็คว่าถ้ายังไม่เคยเซตค่า ก็จะเซตจาก Firestore
   void _initializeLocalData(Map<String, dynamic> data) {
     _username ??= data['username'];
     _email ??= data['email'];
@@ -192,17 +192,10 @@ class _ProfileLessorState extends State<ProfileLessor> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // ส่วน Header (รูปโปรไฟล์ + ชื่อ)
-                _buildProfileHeader(
-                  userId: user.uid,
-                  oldProfileUrl: oldProfileUrl,
-                  oldProfileDeleteHash: oldProfileDeleteHash,
-                ),
-                // ปุ่มสวิตช์โปรไฟล์
+                // Header
+                _buildProfileHeader(user.uid, oldProfileUrl, oldProfileDeleteHash),
                 _buildProfileSwitch(),
-                // ส่วนรายได้
                 _buildIncomeSection(user.uid),
-                // ฟอร์มส่วนหลัก
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
@@ -223,8 +216,12 @@ class _ProfileLessorState extends State<ProfileLessor> {
                       const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
 
-                      // AddressPicker แทนการแก้ทีละฟิลด์
+                      // AddressPicker (ส่งค่าเริ่มต้น)
                       AddressPicker(
+                        initialProvince: _province,
+                        initialDistrict: _district,
+                        initialSubdistrict: _subdistrict,
+                        initialPostalCode: _postalCode,
                         onAddressSelected: (p, d, s, pc) {
                           setState(() {
                             _province = p;
@@ -236,22 +233,20 @@ class _ProfileLessorState extends State<ProfileLessor> {
                       ),
                       const SizedBox(height: 16),
 
-                      // ช่องกรอก moreInfo
+                      // ช่องกรอกข้อมูลเพิ่มเติม
                       _whiteBox(
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text("ข้อมูลเพิ่มเติม : ${_moreInfo ?? "ไม่มีข้อมูล"}"),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () async {
-                                final newVal = await _showEditDialog("รายละเอียดเพิ่มเติม", _moreInfo);
-                                if (newVal != null) {
-                                  setState(() {
-                                    _moreInfo = newVal;
-                                  });
-                                }
+                            const Text("รายละเอียดเพิ่มเติม", style: TextStyle(fontSize: 18)),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              initialValue: _moreInfo ?? "",
+                              decoration: const InputDecoration(labelText: "ข้อมูลเพิ่มเติม"),
+                              onChanged: (val) {
+                                setState(() {
+                                  _moreInfo = val;
+                                });
                               },
                             ),
                           ],
@@ -270,9 +265,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                               onPressed: () async {
                                 final newVal = await _showEditDialog("เบอร์โทรศัพท์", _phone);
                                 if (newVal != null) {
-                                  setState(() {
-                                    _phone = newVal;
-                                  });
+                                  setState(() => _phone = newVal);
                                 }
                               },
                             ),
@@ -284,12 +277,14 @@ class _ProfileLessorState extends State<ProfileLessor> {
                       _whiteBox(
                         Row(
                           children: [
-                            Expanded(child: Text("อีเมล: ${_email ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16))),
+                            Expanded(
+                              child: Text("อีเมล: ${_email ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16)),
+                            ),
                           ],
                         ),
                       ),
 
-                      // รูปเอกสารต่าง ๆ
+                      // รูปเอกสาร
                       _whiteBox(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +315,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                             ],
                             const SizedBox(height: 20),
 
-                            // ปุ่มอัปเดตตำแหน่งที่ตั้ง
+                            // ปุ่มตำแหน่งที่ตั้ง
                             ElevatedButton.icon(
                               onPressed: () async {
                                 await _updateCurrentLocation(user.uid);
@@ -345,7 +340,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                         child: ElevatedButton(
                           onPressed: () async {
                             try {
-                              // อัปเดตฟิลด์ address และฟิลด์อื่น ๆ
+                              // อัปเดต Firestore
                               await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
                                 'username': _username,
                                 'email': _email,
@@ -361,6 +356,8 @@ class _ProfileLessorState extends State<ProfileLessor> {
 
                               // รูปโปรไฟล์
                               if (_profileFile != null) {
+                                // ลบรูปเก่า
+                                // ...
                                 if (oldProfileUrl != null &&
                                     oldProfileUrl != 'null' &&
                                     oldProfileDeleteHash != null &&
@@ -434,17 +431,14 @@ class _ProfileLessorState extends State<ProfileLessor> {
     );
   }
 
-  // -------------------- ส่วนย่อยของ UI --------------------
-  Widget _buildProfileHeader({
-    required String userId,
-    required String? oldProfileUrl,
-    required String? oldProfileDeleteHash,
-  }) {
+  // -------------------- ส่วน UI ย่อย --------------------
+  Widget _buildProfileHeader(String userId, String? oldProfileUrl, String? oldProfileDeleteHash) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
+          // รูปโปรไฟล์
           Stack(
             children: [
               CircleAvatar(
@@ -478,6 +472,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
             ],
           ),
           const SizedBox(width: 16),
+          // ชื่อผู้ใช้
           Expanded(
             child: Text(_username ?? "ไม่มีชื่อ", style: const TextStyle(fontSize: 24)),
           ),
@@ -556,17 +551,17 @@ class _ProfileLessorState extends State<ProfileLessor> {
   Widget _buildIncomeSection(String userId) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('payments').doc(userId).snapshots(),
-      builder: (_, snap) {
-        if (snap.hasError) {
+      builder: (_, paySnap) {
+        if (paySnap.hasError) {
           return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดรายได้"));
         }
-        if (snap.connectionState == ConnectionState.waiting) {
+        if (paySnap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (!snap.hasData || !snap.data!.exists) {
+        if (!paySnap.hasData || !paySnap.data!.exists) {
           return _incomeBox(0);
         }
-        final payData = snap.data!.data() as Map<String, dynamic>;
+        final payData = paySnap.data!.data() as Map<String, dynamic>;
         final num income = payData['mypayment'] ?? 0;
         return _incomeBox(income);
       },
@@ -622,21 +617,21 @@ class _ProfileLessorState extends State<ProfileLessor> {
 
   // -------------------- เมธอดโค้ดซ้ำซ้อน / Imgur / Geolocator --------------------
   Future<void> _pickProfileImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _profileFile = File(pickedFile.path));
     }
   }
 
   Future<void> _pickIdCardImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _idCardFile = File(pickedFile.path));
     }
   }
 
   Future<void> _pickRentalContractImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _rentalContractFile = File(pickedFile.path));
     }
@@ -687,22 +682,18 @@ class _ProfileLessorState extends State<ProfileLessor> {
     }
 
     final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    await FirebaseFirestore.instance.collection('users').doc(userId).set(
-      {
-        'location': {
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-        }
-      },
-      SetOptions(merge: true),
-    );
+    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'location': {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      }
+    }, SetOptions(merge: true));
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("อัปเดตตำแหน่งที่ตั้งเรียบร้อย")),
     );
   }
 
-  // Dialog แก้ไขข้อความ
   Future<String?> _showEditDialog(String label, String? currentValue) async {
     final ctrl = TextEditingController(text: currentValue ?? "");
     return showDialog<String>(
