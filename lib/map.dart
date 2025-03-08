@@ -5,7 +5,6 @@ import 'package:location/location.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-import 'calendar_page.dart';
 import 'account_page.dart';
 
 class MapDetailPage extends StatefulWidget {
@@ -23,14 +22,20 @@ class _MapDetailPageState extends State<MapDetailPage> {
   late final MapController _mapController;
   double _currentZoom = 18.0;
   bool _isManualLocation = false;
-  List<Map<String, dynamic>> nearbyOwners = [];
+  List<Map<String, dynamic>> nearbyUsers = [];
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _requestLocationPermission();
-    _startTracking();
+    _fetchNearbyUsers();
+
+    // 🔥 ติดตามการเปลี่ยนแปลง Firestore และอัปเดตข้อมูลอัตโนมัติ
+    FirebaseFirestore.instance.collection('users').snapshots().listen((snapshot) {
+      print("🔄 Firestore updated, refreshing nearby users...");
+      _fetchNearbyUsers();
+    });
   }
 
   Future<void> _requestLocationPermission() async {
@@ -48,56 +53,66 @@ class _MapDetailPageState extends State<MapDetailPage> {
 
     _locationData = await location.getLocation();
     setState(() {});
-    _fetchNearbyOwners();
+    _fetchNearbyUsers();
   }
 
-  void _startTracking() {
-    location.onLocationChanged.listen((LocationData newLocation) {
-      if (!_isManualLocation) {
-        setState(() {
-          _locationData = newLocation;
-        });
-
-        _mapController.move(
-          LatLng(newLocation.latitude!, newLocation.longitude!),
-          _currentZoom,
-        );
-        _fetchNearbyOwners();
-      }
-    });
-  }
-
-  Future<void> _fetchNearbyOwners() async {
+  Future<void> _fetchNearbyUsers() async {
     if (_locationData == null) return;
 
-    QuerySnapshot usersSnapshot =
-        await FirebaseFirestore.instance.collection('users').get();
+    try {
+      QuerySnapshot usersSnapshot =
+          await FirebaseFirestore.instance.collection('users').get();
+      print("🔍 Firestore returned ${usersSnapshot.docs.length} users");
 
-    List<Map<String, dynamic>> filteredOwners = [];
+      List<Map<String, dynamic>> filteredUsers = [];
+      for (var doc in usersSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        print("📄 Raw User Data: ${data}");
 
-    for (var doc in usersSnapshot.docs) {
-      var data = doc.data() as Map<String, dynamic>;
-      if (data['location'] != null) {
-        double ownerLat = data['location']['latitude'];
-        double ownerLng = data['location']['longitude'];
-        double distance = Geolocator.distanceBetween(
-          _locationData!.latitude!,
-          _locationData!.longitude!,
-          ownerLat,
-          ownerLng,
-        ) / 1000; // แปลงเป็นกิโลเมตร
+        if (data.containsKey('location') && data['location'] != null) {
+          double? userLat = data['location']['latitude']?.toDouble();
+          double? userLng = data['location']['longitude']?.toDouble();
 
-        print("🔍 Owner ${data['username']} ห่าง ${distance.toStringAsFixed(2)} km");
+          if (userLat != null && userLng != null) {
+            double distance = Geolocator.distanceBetween(
+              _locationData!.latitude!,
+              _locationData!.longitude!,
+              userLat,
+              userLng,
+            ) / 1000; // Convert to kilometers
 
-        if (distance <= 5) {
-          filteredOwners.add({...data, 'docId': doc.id});
+            print("📍 Checking ${data['username']} at ($userLat, $userLng) - Distance: ${distance.toStringAsFixed(2)} km");
+
+            if (distance <= 5) {
+              filteredUsers.add({...data, 'docId': doc.id});
+            }
+          } else {
+            print("⚠️ User ${data['username']} has invalid location data: $userLat, $userLng");
+          }
+        } else {
+          print("⚠️ Skipping user ${data['username']} - No location field");
         }
       }
-    }
 
+      print("✅ Nearby users found: ${filteredUsers.length}");
+      setState(() {
+        nearbyUsers = filteredUsers;
+      });
+    } catch (e) {
+      print("❌ Error fetching users: $e");
+    }
+  }
+
+  void _updateLocation(LatLng newLocation) {
     setState(() {
-      nearbyOwners = filteredOwners;
+      _isManualLocation = false;
+      _locationData = LocationData.fromMap({
+        'latitude': newLocation.latitude,
+        'longitude': newLocation.longitude,
+      });
+      _mapController.move(newLocation, _currentZoom);
     });
+    _fetchNearbyUsers();
   }
 
   void _openLocationPicker() async {
@@ -130,15 +145,8 @@ class _MapDetailPageState extends State<MapDetailPage> {
     if (pickedLatLng != null) {
       setState(() {
         _isManualLocation = true;
-        _locationData = LocationData.fromMap({
-          'latitude': pickedLatLng.latitude,
-          'longitude': pickedLatLng.longitude,
-        });
-        _mapController.move(
-          LatLng(pickedLatLng.latitude, pickedLatLng.longitude),
-          _currentZoom,
-        );
       });
+      _updateLocation(pickedLatLng);
     }
   }
 
@@ -175,68 +183,42 @@ class _MapDetailPageState extends State<MapDetailPage> {
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(_locationData!.latitude!,
-                              _locationData!.longitude!),
-                          width: 80,
-                          height: 80,
+                          point: LatLng(
+                              _locationData!.latitude!, _locationData!.longitude!),
+                          width: 50,
+                          height: 50,
                           child: const Icon(Icons.person_pin_circle,
-                              size: 50, color: Colors.green),
+                              size: 40, color: Colors.green),
                         ),
-                        for (var owner in nearbyOwners)
+                        // Marker สำหรับผู้ใช้งานที่อยู่ใกล้เคียง
+                        for (var user in nearbyUsers)
                           Marker(
                             point: LatLng(
-                                owner['location']['latitude'],
-                                owner['location']['longitude']),
-                            width: 80,
-                            height: 80,
+                              user['location']['latitude'],
+                              user['location']['longitude'],
+                            ),
+                            width: 50,
+                            height: 50,
+                            // เมื่อกด Marker ให้ navigate ไปหน้า AccountPage พร้อมส่ง docId
                             child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AccountPage(docId: owner['docId']),
+                                    builder: (context) => AccountPage(
+                                      docId: user['docId'],
+                                    ),
                                   ),
                                 );
                               },
                               child: const Icon(Icons.person,
-                                  size: 50, color: Colors.blue),
+                                  size: 40, color: Colors.blue),
                             ),
                           ),
                       ],
                     ),
                   ],
                 ),
-          Positioned(
-            bottom: 50,
-            right: 10,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  heroTag: "zoomIn",
-                  onPressed: () {
-                    setState(() {
-                      _currentZoom += 1;
-                      _mapController.move(_mapController.center, _currentZoom);
-                    });
-                  },
-                  child: const Icon(Icons.add),
-                  mini: true,
-                ),
-                const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: "zoomOut",
-                  onPressed: () {
-                    setState(() {
-                      _currentZoom -= 1;
-                      _mapController.move(_mapController.center, _currentZoom);
-                    });
-                  },
-                  child: const Icon(Icons.remove),
-                  mini: true,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
