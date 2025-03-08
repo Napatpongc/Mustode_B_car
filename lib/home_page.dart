@@ -476,7 +476,6 @@ class _HomePageState extends State<HomePage> {
               if (distance > 5000) return false;
 
               // เช็ค conflict เวลาการเช่า
-              bool hasConflict = false;
               for (var rental in rentalDocs) {
                 final rentalData = rental.data() as Map<String, dynamic>;
                 if (rentalData["carId"] != doc.id) continue;
@@ -488,13 +487,15 @@ class _HomePageState extends State<HomePage> {
 
                 // ถ้าเวลาที่ผู้ใช้ต้องการซ้อนกับเวลาที่มีการเช่าอยู่
                 if (userPickup.isBefore(rentalEnd) && userReturn.isAfter(rentalStart)) {
-                  if ((rentalData["status"] ?? "").toString().toLowerCase() != "canceled") {
-                    // พบ conflict => รถไม่ว่าง
+                  final status = (rentalData["status"] ?? "").toString().toLowerCase();
+                  // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
+                  if (status != "canceled" && status != "successed") {
+                    // รถไม่ว่าง
                     return false;
                   }
                 }
               }
-              return !hasConflict;
+              return true;
             }).toList();
 
             // อัปเดตตัวแปร carCount
