@@ -11,7 +11,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
-import 'address_picker.dart'; // import AddressPicker
+
+// import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
+import 'address_picker.dart';
 
 class ProfileRenter extends StatefulWidget {
   @override
@@ -23,10 +25,14 @@ class _ProfileRenterState extends State<ProfileRenter> {
   String? username;
   String? email;
   String? phone;
+
+  // ------------------ ตัวแปร Address ------------------
   String? province;
   String? district;
   String? subdistrict;
   String? postalCode;
+
+  // ------------------ ช่องกรอกข้อมูลเพิ่มเติม (TextField แยก) ------------------
   String? moreinfo;
 
   // ------------------ ตัวแปรรูปภาพ ------------------
@@ -37,7 +43,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
   // Client ID ของ Imgur
   final String _imgurClientId = "ed6895b5f1bf3d7";
 
-  // ------------------ ส่วน init / utility ------------------
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -65,7 +70,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        _initializeLocalData(data); // โหลดครั้งแรก (เฉพาะ field เป็น null)
+        _initializeLocalData(data);
 
         final imageData = data['image'] ?? {};
         final oldProfileUrl = imageData['profile'];
@@ -110,24 +115,24 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// โหลดข้อมูลจาก Firestore มาเก็บใน State เฉพาะกรณีค่า State ยังไม่ถูกเซตไว้
+  /// โหลดข้อมูลจาก Firestore -> State ครั้งแรก (กรณี State ยังไม่ถูกเซ็ต)
   void _initializeLocalData(Map<String, dynamic> data) {
-    if (username == null) {
-      username = data['username'] as String?;
-      email = data['email'] as String?;
-      phone = data['phone'] as String?;
-      final address = data['address'] as Map<String, dynamic>?;
-      province = address?['province'] as String?;
-      district = address?['district'] as String?;
-      subdistrict = address?['subdistrict'] as String?;
-      postalCode = address?['postalCode'] as String?;
-      moreinfo = address?['moreinfo'] as String?;
+    username ??= data['username'] as String?;
+    email ??= data['email'] as String?;
+    phone ??= data['phone'] as String?;
+
+    final address = data['address'] as Map<String, dynamic>?;
+    if (address != null) {
+      province ??= address['province'];
+      district ??= address['district'];
+      subdistrict ??= address['subdistrict'];
+      postalCode ??= address['postalCode'];
+      moreinfo ??= address['moreinfo']; 
     }
   }
 
-  // ------------------ ส่วนเมธอดย่อยสำหรับโค้ด UI ------------------
+  // ------------------ UI หลัก ------------------
 
-  /// ส่วน Header: รูปโปรไฟล์ ชื่อ ปุ่มแก้ไข
   Widget _buildHeader(String? oldProfileUrl) {
     return Container(
       width: double.infinity,
@@ -195,7 +200,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// ส่วน Segmented Control (ผู้เช่า / ผู้ปล่อยเช่า)
   Widget _buildProfileSwitch() {
     return Center(
       child: Container(
@@ -256,7 +260,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// ส่วนรายได้วันนี้
   Widget _buildIncomeSection(String userId) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('payments').doc(userId).snapshots(),
@@ -277,7 +280,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// กล่องแสดงยอดรายได้
   Widget _incomeBox(num myPayment) {
     final incomeText = myPayment.toStringAsFixed(2);
     return Container(
@@ -315,7 +317,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// ส่วนฟอร์มหลักที่ประกอบด้วย AddressPicker, ข้อมูลส่วนตัว และปุ่มบันทึก
+  /// ส่วนฟอร์มหลัก
   Widget _buildMainForm(
     String userId,
     String? oldProfileUrl,
@@ -340,14 +342,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "ข้อมูลส่วนตัว",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
+          const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
 
-          // AddressPicker
+          // AddressPicker (ส่งค่าเริ่มต้นที่ดึงจาก Firestore)
           AddressPicker(
+            initialProvince: province,
+            initialDistrict: district,
+            initialSubdistrict: subdistrict,
+            initialPostalCode: postalCode,
             onAddressSelected: (p, d, s, pc) {
               setState(() {
                 province = p;
@@ -359,7 +362,25 @@ class _ProfileRenterState extends State<ProfileRenter> {
           ),
           const SizedBox(height: 16),
 
-          // กล่องแสดงเบอร์โทรศัพท์
+          // ช่องกรอกรายละเอียดเพิ่มเติม
+          _buildWhiteBox(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("ข้อมูลเพิ่มเติม", style: TextStyle(fontSize: 18)),
+                const SizedBox(height: 5),
+                TextFormField(
+                  initialValue: moreinfo ?? "",
+                  decoration: const InputDecoration(labelText: "รายละเอียดเพิ่มเติม"),
+                  onChanged: (val) {
+                    setState(() => moreinfo = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // กล่องแสดงเบอร์โทร
           _buildWhiteBox(
             Row(
               children: [
@@ -382,15 +403,12 @@ class _ProfileRenterState extends State<ProfileRenter> {
             ),
           ),
 
-          // กล่องแสดงอีเมล
+          // อีเมล
           _buildWhiteBox(
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    "อีเมล: $email",
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text("อีเมล: $email", style: const TextStyle(fontSize: 16)),
                 ),
               ],
             ),
@@ -430,13 +448,12 @@ class _ProfileRenterState extends State<ProfileRenter> {
           ),
           const SizedBox(height: 20),
 
-          // ปุ่มบันทึกข้อมูล
+          // ปุ่มบันทึก
           Align(
             alignment: Alignment.center,
             child: ElevatedButton(
               onPressed: () async {
                 try {
-                  // อัปเดตข้อมูลพื้นฐานใน Firestore
                   await FirebaseFirestore.instance.collection('users').doc(userId).update({
                     'username': username,
                     'email': email,
@@ -446,11 +463,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       'district': district,
                       'subdistrict': subdistrict,
                       'postalCode': postalCode,
-                      'moreinfo': moreinfo,
+                      'moreinfo': moreinfo, // บันทึกช่องกรอกเพิ่มเติม
                     },
                   });
 
-                  // จัดการรูป Profile
+                  // อัปโหลดรูปโปรไฟล์
                   if (_profileFile != null) {
                     await _deleteAndUploadImage(
                       userId: userId,
@@ -461,7 +478,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     );
                   }
 
-                  // จัดการรูปใบขับขี่
+                  // อัปโหลดรูปใบขับขี่
                   if (_drivingLicenseFile != null) {
                     await _deleteAndUploadImage(
                       userId: userId,
@@ -496,9 +513,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  // ------------------ ส่วนเมธอดโค้ดซ้ำซ้อน / การอัปโหลดรูป ------------------
+  // ------------------ โค้ดส่วนอัปโหลดรูป / ลบรูป / Dialog ฯลฯ ------------------
 
-  /// แสดง Dialog สำหรับแก้ไขข้อมูล text
   Future<String?> _showEditDialog(String fieldLabel, String? currentValue) {
     final controller = TextEditingController(text: currentValue ?? "");
     return showDialog<String>(
@@ -523,7 +539,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// ลบรูปเก่าใน Imgur (ถ้ามี) และอัปโหลดรูปใหม่ จากนั้นอัปเดต Firestore
   Future<void> _deleteAndUploadImage({
     required String userId,
     required File newFile,
@@ -531,20 +546,16 @@ class _ProfileRenterState extends State<ProfileRenter> {
     required String firestoreField,
     required String firestoreDeleteHashField,
   }) async {
-    // ลบรูปเก่าถ้ามี
     if (oldDeleteHash != null && oldDeleteHash != 'null') {
       await _deleteImageFromImgur(oldDeleteHash);
     }
-    // อัปโหลดรูปใหม่
     final uploadResult = await _uploadImageToImgur(newFile);
-    // อัปเดต Firestore
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
       firestoreField: uploadResult['link'],
       firestoreDeleteHashField: uploadResult['deletehash'],
     });
   }
 
-  // ------------------ ส่วน Pick Image ------------------
   Future<void> _pickDrivingLicenseImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -559,44 +570,34 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
   }
 
-  // ------------------ ส่วนอัปโหลด / ลบรูปบน Imgur ------------------
   Future<Map<String, dynamic>> _uploadImageToImgur(File imageFile) async {
-    try {
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
 
-      final response = await http.post(
-        Uri.parse('https://api.imgur.com/3/image'),
-        headers: {'Authorization': 'Client-ID $_imgurClientId'},
-        body: {'image': base64Image, 'type': 'base64'},
-      );
+    final response = await http.post(
+      Uri.parse('https://api.imgur.com/3/image'),
+      headers: {'Authorization': 'Client-ID $_imgurClientId'},
+      body: {'image': base64Image, 'type': 'base64'},
+    );
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      if (data['success'] == true) {
-        return {
-          'link': data['data']['link'],
-          'deletehash': data['data']['deletehash'],
-        };
-      } else {
-        throw Exception('อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
-      }
-    } catch (e) {
-      rethrow;
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['success'] == true) {
+      return {
+        'link': data['data']['link'],
+        'deletehash': data['data']['deletehash'],
+      };
+    } else {
+      throw Exception('อัปโหลดรูปไป Imgur ไม่สำเร็จ: ${data['data']['error']}');
     }
   }
 
   Future<void> _deleteImageFromImgur(String deleteHash) async {
-    try {
-      await http.delete(
-        Uri.parse('https://api.imgur.com/3/image/$deleteHash'),
-        headers: {'Authorization': 'Client-ID $_imgurClientId'},
-      );
-    } catch (e) {
-      rethrow;
-    }
+    await http.delete(
+      Uri.parse('https://api.imgur.com/3/image/$deleteHash'),
+      headers: {'Authorization': 'Client-ID $_imgurClientId'},
+    );
   }
 
-  // ------------------ Widget เล็ก ๆ ------------------
   Widget _buildWhiteBox(Widget child) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.9,
@@ -650,9 +651,9 @@ class MyDrawerRenter extends StatelessWidget {
                   : null,
             ),
           ),
-          _buildListTile(
-            icon: Icons.home,
-            title: 'หน้าหลัก',
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
@@ -661,25 +662,25 @@ class MyDrawerRenter extends StatelessWidget {
               );
             },
           ),
-          _buildListTile(
-            icon: Icons.map,
-            title: 'แผนที่',
+          ListTile(
+            leading: const Icon(Icons.map),
+            title: const Text('แผนที่'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: ใส่โค้ดนำทางไปหน้าแผนที่
+              // TODO: ไปหน้าแผนที่
             },
           ),
-          _buildListTile(
-            icon: Icons.list,
-            title: 'รายการเช่าทั้งหมด',
+          ListTile(
+            leading: const Icon(Icons.list),
+            title: const Text('รายการเช่าทั้งหมด'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: ใส่โค้ดนำทางไปหน้ารายการเช่า
+              // TODO: ไปหน้าเช่าทั้งหมด
             },
           ),
-          _buildListTile(
-            icon: Icons.settings,
-            title: 'การตั้งค่าบัญชี',
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('การตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
@@ -689,11 +690,9 @@ class MyDrawerRenter extends StatelessWidget {
             },
           ),
           const Spacer(),
-          _buildListTile(
-            icon: Icons.logout,
-            title: 'ออกจากระบบ',
-            iconColor: Colors.red,
-            textColor: Colors.red,
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();
@@ -707,23 +706,6 @@ class MyDrawerRenter extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  ListTile _buildListTile({
-    required IconData icon,
-    required String title,
-    Color? iconColor,
-    Color? textColor,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor ?? Colors.black),
-      title: Text(
-        title,
-        style: TextStyle(color: textColor ?? Colors.black),
-      ),
-      onTap: onTap,
     );
   }
 }
