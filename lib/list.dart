@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'ProfileRenter.dart'; // สำหรับใช้ MyDrawerRenter
 
 class ListPage extends StatefulWidget {
   const ListPage({Key? key}) : super(key: key);
@@ -32,31 +35,51 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
         title: const Text("รายการเช่า"),
         centerTitle: true,
         backgroundColor: const Color(0xFF00377E),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: "ล่าสุด"),
-            Tab(text: "ประวัติ"),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Container(
+            color: Colors.blue.shade100,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.black54,
+              indicator: BoxDecoration(
+                color: Colors.blue.shade300,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              tabs: const [
+                Tab(text: "ล่าสุด"),
+                Tab(text: "ประวัติ"),
+              ],
+            ),
+          ),
         ),
       ),
-      drawer: Drawer(
-        // side bar ที่ยังกดไม่ได้
-        child: ListView(
-          children: const [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                "Side Bar",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-            ),
-            ListTile(
-              title: Text("เมนูยังไม่พร้อมใช้งาน"),
-            ),
-          ],
-        ),
+      // --------------------------------------
+      // เปลี่ยน Sidebar ให้เหมือน ProfileRenter.dart
+      // --------------------------------------
+      drawer: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser?.uid ?? '')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final username = data['username'] ?? 'ไม่มีชื่อ';
+          final profileUrl = (data['image'] != null) ? data['image']['profile'] : null;
+          final isGoogleLogin = FirebaseAuth.instance.currentUser!.providerData
+              .any((p) => p.providerId == 'google.com');
+          return MyDrawerRenter(
+            username: username,
+            isGoogleLogin: isGoogleLogin,
+            profileUrl: profileUrl,
+          );
+        },
       ),
       // --------------------------------------
       // เนื้อหา TabBarView
@@ -64,14 +87,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
       body: TabBarView(
         controller: _tabController,
         children: [
-          // -----------------------
-          // Tab 1: ล่าสุด
-          // -----------------------
           _buildLatestTab(),
-
-          // -----------------------
-          // Tab 2: ประวัติ
-          // -----------------------
           _buildHistoryTab(),
         ],
       ),
@@ -82,10 +98,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
   // ส่วนของ Tab แรก "ล่าสุด"
   // ---------------------------------------------------
   Widget _buildLatestTab() {
-    // ตัวอย่าง ListView รถที่กำลังเช่า
-    // (ปรับตามโครงสร้างจริงของคุณ)
     return ListView.builder(
-      itemCount: 1, // สมมติว่าเรามี 1 รายการ
+      itemCount: 1, // สมมติว่ามี 1 รายการ
       itemBuilder: (context, index) {
         return Card(
           margin: const EdgeInsets.all(16),
@@ -94,7 +108,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             title: const Text("Honda Jazz"),
             subtitle: const Text("สถานะ: กำลังเช่า"),
             onTap: () {
-              // กดเพื่อดูรายละเอียดเพิ่มได้ (ถ้าต้องการ)
+              // กดเพื่อดูรายละเอียดเพิ่มได้
             },
           ),
         );
@@ -106,9 +120,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
   // ส่วนของ Tab สอง "ประวัติ"
   // ---------------------------------------------------
   Widget _buildHistoryTab() {
-    // ตัวอย่าง ListView ประวัติการเช่า
     return ListView.builder(
-      itemCount: 1, // สมมติว่าเรามี 1 รายการ
+      itemCount: 1, // สมมติว่ามี 1 รายการ
       itemBuilder: (context, index) {
         return Card(
           margin: const EdgeInsets.all(16),
@@ -117,7 +130,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             title: const Text("Toyota Yaris"),
             subtitle: const Text("สถานะ: สำเร็จ"),
             onTap: () {
-              // กดเพื่อดูรายละเอียดเพิ่มได้ (ถ้าต้องการ)
+              // กดเพื่อดูรายละเอียดเพิ่มได้
             },
           ),
         );

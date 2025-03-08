@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // import สำหรับ FirebaseAuth
 import 'list.dart'; // อย่าลืม import ไฟล์ list.dart ด้วย
 
 class BookingPage extends StatefulWidget {
@@ -127,7 +128,6 @@ class _BookingPageState extends State<BookingPage> {
         backgroundColor: const Color(0xFF00377E),
         title: const Text("การจอง", style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        // ** ไม่มี actions แล้ว **
       ),
       // -----------------------------------------------------
       // Bottom bar: แสดงจำนวนเงิน + ปุ่ม "ถัดไป"
@@ -176,8 +176,21 @@ class _BookingPageState extends State<BookingPage> {
                   widget.returnTime?.minute ?? 0,
                 );
 
-                // ใช้ renterId จาก Auth หรือใช้ค่าเริ่มต้น
-                final renterId = 'testRenter';
+                // ใช้ renterId เป็น uid ของผู้ใช้ที่ login
+                final currentUser = FirebaseAuth.instance.currentUser;
+                final renterId = currentUser?.uid ?? '';
+
+                // ดึงข้อมูลตำแหน่งของผู้เช่า (renterLocation) จาก collection 'users'
+                final renterDoc = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(renterId)
+                    .get();
+                final renterLocation = renterDoc.data()?['location'] ??
+                    {'latitude': 0.0, 'longitude': 0.0};
+
+                // ดึงข้อมูลตำแหน่งของผู้ให้เช่า (lessorLocation) จาก ownerData ที่ดึงไว้
+                final lessorLocation = ownerData?['location'] ??
+                    {'latitude': 0.0, 'longitude': 0.0};
 
                 // สร้าง document ใน rentals collection
                 await FirebaseFirestore.instance.collection('rentals').add({
@@ -188,14 +201,8 @@ class _BookingPageState extends State<BookingPage> {
                   'rentalEnd': Timestamp.fromDate(returnDateTime),
                   'totalCost': total,
                   'status': 'pending',
-                  'pickupLocation': {
-                    'latitude': 0.0,
-                    'longitude': 0.0,
-                  },
-                  'dropoffLocation': {
-                    'latitude': 0.0,
-                    'longitude': 0.0,
-                  },
+                  'renterLocation': renterLocation,
+                  'lessorLocation': lessorLocation,
                 });
 
                 // Navigate ไปยัง ListPage

@@ -12,6 +12,7 @@ import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
 import 'address_picker.dart'; // import AddressPicker
+import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
 
 class ProfileRenter extends StatefulWidget {
   @override
@@ -674,7 +675,10 @@ class MyDrawerRenter extends StatelessWidget {
             title: 'รายการเช่าทั้งหมด',
             onTap: () {
               Navigator.pop(context);
-              // TODO: ใส่โค้ดนำทางไปหน้ารายการเช่า
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ListPage()),
+              );
             },
           ),
           _buildListTile(
