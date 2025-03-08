@@ -35,7 +35,7 @@ class MyCar extends StatelessWidget {
       }
     }
 
-    // เมื่อเรียกลบรูปจาก Imgur เสร็จแล้ว จึงลบ Document ออกจาก Firestore
+    // เมื่อเรียกลบรูปจาก Imgur เสร็จแล้ว จึงลบ Document จาก Firestore
     await FirebaseFirestore.instance.collection("cars").doc(doc.id).delete();
   }
 
@@ -176,7 +176,6 @@ class MyCar extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-
                                 // ป้ายทะเบียน (ถ้ามี)
                                 if (carRegistration.isNotEmpty)
                                   Padding(
@@ -189,7 +188,6 @@ class MyCar extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-
                                 // วันหมดอายุ
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
@@ -212,8 +210,7 @@ class MyCar extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-
-                                // แถว: เปิด/ปิดรถ + ปุ่มแก้ไข + ปุ่มลบ (รวมอยู่ในแถวเดียวกัน)
+                                // แถว: เปิด/ปิดรถ + ปุ่มแก้ไข + ปุ่มลบ
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Row(
@@ -241,8 +238,7 @@ class MyCar extends StatelessWidget {
                                         },
                                       ),
                                       const SizedBox(width: 8),
-
-                                      // ปุ่มแก้ไข (ใน mycar.dart)
+                                      // ปุ่มแก้ไข
                                       IconButton(
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
@@ -258,23 +254,14 @@ class MyCar extends StatelessWidget {
                                               builder: (context) =>
                                                   EditVehicleRegistration(
                                                 carId: doc.id,
-                                                currentImageUrl: (data[
-                                                                "image"] ??
-                                                            {})[
-                                                        "vehicle registration"] ??
-                                                    "",
-                                                currentDeleteHash: (data[
-                                                                "deletehash"] ??
-                                                            {})[
-                                                        "deletehashvehicle_registration"] ??
-                                                    "",
+                                                currentImageUrl: (data["image"] ?? {})["vehicle registration"] ?? "",
+                                                currentDeleteHash: (data["deletehash"] ?? {})["deletehashvehicle_registration"] ?? "",
                                               ),
                                             ),
                                           );
                                         },
                                       ),
-
-                                      // ปุ่มลบ
+                                      // ปุ่มลบ พร้อมแสดง overlay ยืนยันและ loading
                                       IconButton(
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
@@ -284,9 +271,59 @@ class MyCar extends StatelessWidget {
                                           color: Colors.red,
                                         ),
                                         onPressed: () async {
-                                          const String clientId =
-                                              "ed6895b5f1bf3d7";
-                                          await _deleteCar(doc, clientId);
+                                          // แสดง dialog ยืนยันการลบ
+                                          bool? confirm = await showDialog<bool>(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text("ยืนยันการลบรถ"),
+                                              content: const Text("คุณแน่ใจหรือไม่ว่าต้องการลบรถนี้?"),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(context).pop(false),
+                                                  child: const Text("ยกเลิก"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(context).pop(true),
+                                                  child: const Text("ตกลง"),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true) {
+                                            // แสดง overlay loading
+                                            showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (context) {
+                                                return Container(
+                                                  color: Colors.black.withOpacity(0.5),
+                                                  child: const Center(
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        CircularProgressIndicator(),
+                                                        SizedBox(height: 10),
+                                                        Text(
+                                                          "กำลังดำเนินการลบ...",
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                            try {
+                                              const String clientId = "ed6895b5f1bf3d7";
+                                              await _deleteCar(doc, clientId);
+                                            } finally {
+                                              Navigator.of(context).pop(); // dismiss loading overlay
+                                            }
+                                          }
                                         },
                                       ),
                                     ],

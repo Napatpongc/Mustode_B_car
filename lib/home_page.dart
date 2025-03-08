@@ -147,11 +147,16 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF00377E),
-        title: const Text("หน้าหลัก"),
+        // เปลี่ยน title เป็นรูปจาก assets
+        title: Image.asset(
+          'assets/image/mustodebcarlogo.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
+            icon: const Icon(Icons.menu, color: Colors.white), // ไอคอน sidebar สีขาว
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -516,9 +521,21 @@ class _HomePageState extends State<HomePage> {
 
                 return InkWell(
                   onTap: () {
+                    // ------------------------------------------------
+                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime,
+                    // returnDate, returnTime
+                    // ------------------------------------------------
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => CarInfo(carId: docs[index].id)),
+                      MaterialPageRoute(
+                        builder: (_) => CarInfo(
+                          carId: docs[index].id,
+                          pickupDate: pickupDate,
+                          pickupTime: pickupTime,
+                          returnDate: returnDate,
+                          returnTime: returnTime,
+                        ),
+                      ),
                     );
                   },
                   child: Container(
