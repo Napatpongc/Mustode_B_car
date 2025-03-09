@@ -31,7 +31,6 @@ class _MapDetailPageState extends State<MapDetailPage> {
     _requestLocationPermission();
     _fetchNearbyUsers();
 
-    // 🔥 ติดตามการเปลี่ยนแปลง Firestore และอัปเดตข้อมูลอัตโนมัติ
     FirebaseFirestore.instance.collection('users').snapshots().listen((snapshot) {
       print("🔄 Firestore updated, refreshing nearby users...");
       _fetchNearbyUsers();
@@ -79,12 +78,16 @@ class _MapDetailPageState extends State<MapDetailPage> {
               _locationData!.longitude!,
               userLat,
               userLng,
-            ) / 1000; // Convert to kilometers
+            ) / 1000; // Convert meters to kilometers
 
             print("📍 Checking ${data['username']} at ($userLat, $userLng) - Distance: ${distance.toStringAsFixed(2)} km");
 
             if (distance <= 5) {
-              filteredUsers.add({...data, 'docId': doc.id});
+              filteredUsers.add({
+                ...data,
+                'docId': doc.id,
+                'distance': distance, // Add distance to user data
+              });
             }
           } else {
             print("⚠️ User ${data['username']} has invalid location data: $userLat, $userLng");
@@ -190,29 +193,43 @@ class _MapDetailPageState extends State<MapDetailPage> {
                           child: const Icon(Icons.person_pin_circle,
                               size: 40, color: Colors.green),
                         ),
-                        // Marker สำหรับผู้ใช้งานที่อยู่ใกล้เคียง
                         for (var user in nearbyUsers)
                           Marker(
                             point: LatLng(
                               user['location']['latitude'],
                               user['location']['longitude'],
                             ),
-                            width: 50,
-                            height: 50,
-                            // เมื่อกด Marker ให้ navigate ไปหน้า AccountPage พร้อมส่ง docId
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AccountPage(
-                                      docId: user['docId'],
-                                    ),
+                            width: 100,
+                            height: 90,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min ,
+                              children: [
+                                Text(
+                                  user['distance'] < 1
+                                    ? "${(user['distance'] * 1000).toInt()} m" // 🔥 แสดงเป็นเมตร ถ้าน้อยกว่า 1 กม.
+                                    : "${user['distance'].toStringAsFixed(2)} km", // แสดงเป็นกิโลเมตร ถ้ามากกว่า 1 กม.
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                    backgroundColor: Colors.white,
                                   ),
-                                );
-                              },
-                              child: const Icon(Icons.person,
-                                  size: 40, color: Colors.blue),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AccountPage(
+                                          docId: user['docId'],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Icon(Icons.person,
+                                      size: 40, color: Colors.blue),
+                                ),
+                              ],
                             ),
                           ),
                       ],
