@@ -15,7 +15,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController(); 
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -49,7 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  // ฟังก์ชันแสดงเงื่อนไขใน overlay dialog
+  // ฟังก์ชันแสดงเงื่อนไขใน overlay dialog (เพิ่ม Scrollbar)
   void _showTermsAndConditions() {
     showDialog(
       context: context,
@@ -59,9 +59,11 @@ class _SignUpPageState extends State<SignUpPage> {
           content: Container(
             width: double.maxFinite,
             height: 400, // ปรับความสูงตามที่ต้องการ
-            child: SingleChildScrollView(
-              child: Text(
-                """#### **1. เงื่อนไขการจองรถ**
+            child: Scrollbar(
+              thumbVisibility: true, // ทำให้ scrollbar แสดงให้เห็นเสมอ
+              child: SingleChildScrollView(
+                child: Text(
+                  """#### **1. เงื่อนไขการจองรถ**
 
 1. **คุณสมบัติของผู้เช่า**
    - ผู้เช่าต้องมีอายุอย่างน้อย **20 ปีบริบูรณ์** (ตามกฎหมายการเช่าทรัพย์ในประเทศไทย)
@@ -85,7 +87,7 @@ class _SignUpPageState extends State<SignUpPage> {
 5. **การตรวจสอบเอกสารเมื่อรับรถ**
    - ผู้เช่าต้องแสดงบัตรประชาชนหรือหนังสือเดินทาง, ใบอนุญาตขับขี่ และหลักฐานการชำระเงินในวันรับรถ
 
---- 
+---
 
 #### **2. เงื่อนไขการชำระเงิน**
 
@@ -220,9 +222,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
 5. **การอัปเดตเอกสาร**
    - ระบบจะอัปเดตเอกสารการเช่าและส่งให้ทั้งผู้เช่าและเจ้าของรถ
-
 """,
-                style: TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 14),
+                ),
               ),
             ),
           ),
@@ -281,7 +283,10 @@ class _SignUpPageState extends State<SignUpPage> {
           "rentedCars": [],
           "ownedCars": [],
         });
-        await FirebaseFirestore.instance.collection("payments").doc(cred.user!.uid).set({"mypayment": 0});
+        await FirebaseFirestore.instance
+            .collection("payments")
+            .doc(cred.user!.uid)
+            .set({"mypayment": 0});
         await FirebaseFirestore.instance.collection("otp_codes").doc(formattedPhone).set({
           'otp': "",
           'createdAt': FieldValue.serverTimestamp(),
@@ -315,8 +320,6 @@ class _SignUpPageState extends State<SignUpPage> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {

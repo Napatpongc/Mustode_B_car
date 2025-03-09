@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-// เพิ่มไฟล์ booking_page.dart
+// เพิ่มไฟล์ booking_page.dart และ signup_page.dart
 import 'booking_page.dart';
+import 'signup_page.dart';
 
 class CarInfo extends StatefulWidget {
   final String carId;
 
-// เพิ่ม 4 ตัวแปรด้านล่างสำหรับรับวัน-เวลา
+  // รับวัน-เวลาสำหรับการเช่ารถ
   final DateTime? pickupDate;
   final TimeOfDay? pickupTime;
   final DateTime? returnDate;
@@ -16,8 +18,6 @@ class CarInfo extends StatefulWidget {
   const CarInfo({
     Key? key,
     required this.carId,
-
-    // กำหนด default เป็น null ได้
     this.pickupDate,
     this.pickupTime,
     this.returnDate,
@@ -50,34 +50,28 @@ class _CarInfoState extends State<CarInfo> {
             body: Center(child: Text("ไม่พบข้อมูลรถ")),
           );
         }
-        
+
         var data = snapshot.data!.data() as Map<String, dynamic>;
 
-        // ---------------------------------------------
         // ข้อมูลพื้นฐาน
-        // ---------------------------------------------
         String brand = data["brand"]?.toString() ?? "";
         String model = data["model"]?.toString() ?? "";
         double price = (data["price"] ?? 0).toDouble();
         double deposit = price * 0.15; // มัดจำ 15%
 
-        // ---------------------------------------------
         // detail
-        // ---------------------------------------------
         String vehicle = data["detail"]?["Vehicle"]?.toString() ?? "";
         String baggage = data["detail"]?["baggage"]?.toString() ?? "";
-        int door       = data["detail"]?["door"] ?? 0;
-        String engine  = data["detail"]?["engine"]?.toString() ?? "";
-        String fuel    = data["detail"]?["fuel"]?.toString() ?? "";
-        String gear    = data["detail"]?["gear"]?.toString() ?? "";
-        int seat       = data["detail"]?["seat"] ?? 0;
+        int door = data["detail"]?["door"] ?? 0;
+        String engine = data["detail"]?["engine"]?.toString() ?? "";
+        String fuel = data["detail"]?["fuel"]?.toString() ?? "";
+        String gear = data["detail"]?["gear"]?.toString() ?? "";
+        int seat = data["detail"]?["seat"] ?? 0;
 
-        // ---------------------------------------------
         // รูปภาพ
-        // ---------------------------------------------
-        String carfront  = data["image"]?["carfront"]?.toString()  ?? "";
-        String carside   = data["image"]?["carside"]?.toString()   ?? "";
-        String carback   = data["image"]?["carback"]?.toString()   ?? "";
+        String carfront = data["image"]?["carfront"]?.toString() ?? "";
+        String carside = data["image"]?["carside"]?.toString() ?? "";
+        String carback = data["image"]?["carback"]?.toString() ?? "";
         String carinside = data["image"]?["carinside"]?.toString() ?? "";
 
         carImages = [carfront, carside, carback, carinside]
@@ -94,13 +88,11 @@ class _CarInfoState extends State<CarInfo> {
             backgroundColor: const Color(0xFF00377E),
             title: Text(
               "$brand $model",
-              style: const TextStyle(color: Colors.white), // <-- สีขาว
+              style: const TextStyle(color: Colors.white),
             ),
             centerTitle: true,
           ),
-          // ---------------------------------------------
-          // BottomNavigationBar
-          // ---------------------------------------------
+          // BottomNavigationBar แสดงราคา, มัดจำ และปุ่ม "เช่ารถ"
           bottomNavigationBar: Container(
             height: MediaQuery.of(context).size.height * 0.1,
             color: const Color(0xFF00377E),
@@ -131,24 +123,47 @@ class _CarInfoState extends State<CarInfo> {
                       ),
                     ],
                   ),
-                  // ปุ่มเช่ารถ
+                  // ปุ่ม "เช่ารถ" โดยตรวจสอบสิทธิ์แบบ Anonymous
                   ElevatedButton(
                     onPressed: () {
-                      // ------------------------------
-                      // ไปหน้า BookingPage
-                      // ------------------------------
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookingPage(
-                            carId: widget.carId,
-                            pickupDate: widget.pickupDate,
-                            pickupTime: widget.pickupTime,
-                            returnDate: widget.returnDate,
-                            returnTime: widget.returnTime,
+                      if (FirebaseAuth.instance.currentUser?.isAnonymous ?? true) {
+                        // ถ้าเป็น Anonymous ให้แสดง AlertDialog โดยไม่มีปุ่ม "ย้อนกลับ"
+                        showDialog(
+                          context: context,
+                          builder: (ctx) {
+                            return AlertDialog(
+                              title: const Text("กรุณาสมัครบัญชีเพื่อไปรายการต่อไป"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>  SignUpPage()),
+                                    );
+                                  },
+                                  child: const Text("ไปหน้าสมัครบัญชี"),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else {
+                        // หากไม่เป็น Anonymous ไปหน้า BookingPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingPage(
+                              carId: widget.carId,
+                              pickupDate: widget.pickupDate,
+                              pickupTime: widget.pickupTime,
+                              returnDate: widget.returnDate,
+                              returnTime: widget.returnTime,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -167,16 +182,14 @@ class _CarInfoState extends State<CarInfo> {
               ),
             ),
           ),
-          // ---------------------------------------------
-          // ส่วนรูปภาพ + รายละเอียด
-          // ---------------------------------------------
+          // ส่วน body สำหรับแสดงรูปภาพและรายละเอียดรถ
           body: carImages.isEmpty
               ? const Center(child: Text("ไม่มีรูปภาพรถ"))
               : SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // รูปภาพ
+                      // รูปภาพรถ
                       SizedBox(
                         height: 250,
                         child: Stack(
@@ -187,7 +200,7 @@ class _CarInfoState extends State<CarInfo> {
                               width: double.infinity,
                               height: 250,
                             ),
-                            // ปุ่มก่อนหน้า
+                            // ปุ่มรูปก่อนหน้า
                             Positioned(
                               left: 10,
                               top: 100,
@@ -195,12 +208,13 @@ class _CarInfoState extends State<CarInfo> {
                                 icon: const Icon(Icons.arrow_left, size: 40, color: Colors.white),
                                 onPressed: () {
                                   setState(() {
-                                    currentImageIndex = (currentImageIndex - 1 + carImages.length) % carImages.length;
+                                    currentImageIndex =
+                                        (currentImageIndex - 1 + carImages.length) % carImages.length;
                                   });
                                 },
                               ),
                             ),
-                            // ปุ่มถัดไป
+                            // ปุ่มรูปถัดไป
                             Positioned(
                               right: 10,
                               top: 100,
@@ -208,7 +222,8 @@ class _CarInfoState extends State<CarInfo> {
                                 icon: const Icon(Icons.arrow_right, size: 40, color: Colors.white),
                                 onPressed: () {
                                   setState(() {
-                                    currentImageIndex = (currentImageIndex + 1) % carImages.length;
+                                    currentImageIndex =
+                                        (currentImageIndex + 1) % carImages.length;
                                   });
                                 },
                               ),
@@ -216,9 +231,7 @@ class _CarInfoState extends State<CarInfo> {
                           ],
                         ),
                       ),
-                      // ---------------------------------------------
-                      // จุดบอกหน้า (Page Indicator)
-                      // ---------------------------------------------
+                      // จุดบอกหน้าของรูป (Page Indicator)
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -236,10 +249,7 @@ class _CarInfoState extends State<CarInfo> {
                         }),
                       ),
                       const SizedBox(height: 16),
-
-                      // ---------------------------------------------
                       // รายละเอียดรถ
-                      // ---------------------------------------------
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Column(
@@ -250,7 +260,6 @@ class _CarInfoState extends State<CarInfo> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
-
                             // แถวที่ 1: ประเภทรถ / ระบบเกียร์
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -273,7 +282,6 @@ class _CarInfoState extends State<CarInfo> {
                               ],
                             ),
                             const SizedBox(height: 24),
-
                             // แถวที่ 2: จำนวนที่นั่ง / ระบบเชื้อเพลิง
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -296,7 +304,6 @@ class _CarInfoState extends State<CarInfo> {
                               ],
                             ),
                             const SizedBox(height: 24),
-
                             // แถวที่ 3: จำนวนประตู / ระบบเครื่องยนต์
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,8 +326,7 @@ class _CarInfoState extends State<CarInfo> {
                               ],
                             ),
                             const SizedBox(height: 24),
-
-                            // แถวที่ 4: จำนวนสัมภาระ (เหลืออีก 1 ช่องว่าง)
+                            // แถวที่ 4: จำนวนสัมภาระ
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -347,9 +353,7 @@ class _CarInfoState extends State<CarInfo> {
     );
   }
 
-  // ----------------------------------------------------
-  // Widget สำหรับแสดง (icon) + (label: ตัวบาง) + (value: ตัวหนา)
-  // ----------------------------------------------------
+  // Widget สำหรับแสดง icon + label (ตัวบาง) + value (ตัวหนา)
   Widget _buildInfoItem({
     required IconData icon,
     required String label,
@@ -367,7 +371,7 @@ class _CarInfoState extends State<CarInfo> {
               label,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.normal, // ตัวบาง
+                fontWeight: FontWeight.normal,
                 color: Colors.black,
               ),
             ),
@@ -375,7 +379,7 @@ class _CarInfoState extends State<CarInfo> {
               value,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,  // ตัวหนา
+                fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
