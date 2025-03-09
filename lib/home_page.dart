@@ -96,7 +96,10 @@ class _HomePageState extends State<HomePage> {
   // ฟังก์ชันค้นหารถว่าง
   // --------------------------------------------------
   void _searchCars() {
-    if (pickupDate == null || pickupTime == null || returnDate == null || returnTime == null) {
+    if (pickupDate == null ||
+        pickupTime == null ||
+        returnDate == null ||
+        returnTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("กรุณาเลือกวัน-เวลารับรถ/คืนรถ")),
       );
@@ -137,10 +140,10 @@ class _HomePageState extends State<HomePage> {
   // --------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final screenWidth  = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final double containerWidth = 350;
-    final double containerLeft  = (screenWidth - containerWidth) / 2;
+    final double containerLeft = (screenWidth - containerWidth) / 2;
 
     final pickupText = _formatDateTime(pickupDate, pickupTime);
     final returnText = _formatDateTime(returnDate, returnTime);
@@ -157,7 +160,8 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white), // ไอคอน sidebar สีขาว
+            icon: const Icon(Icons.menu,
+                color: Colors.white), // ไอคอน sidebar สีขาว
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -181,8 +185,7 @@ class _HomePageState extends State<HomePage> {
           if (data['image'] != null) {
             profileUrl = data['image']['profile'];
           }
-          bool isGoogleLogin = FirebaseAuth.instance.currentUser
-                  ?.providerData
+          bool isGoogleLogin = FirebaseAuth.instance.currentUser?.providerData
                   .any((p) => p.providerId == 'google.com') ??
               false;
           return MyDrawerRenter(
@@ -239,19 +242,23 @@ class _HomePageState extends State<HomePage> {
                         // แถว "รับรถ"
                         Row(
                           children: [
-                            const Text("รับรถ", style: TextStyle(fontSize: 16, color: Colors.black54)),
+                            const Text("รับรถ",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black54)),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   pickupText.split(' ')[0],
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -259,14 +266,18 @@ class _HomePageState extends State<HomePage> {
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  pickupText.split(' ').length > 1 ? pickupText.split(' ')[1] : '12:30 น.',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  pickupText.split(' ').length > 1
+                                      ? pickupText.split(' ')[1]
+                                      : '12:30 น.',
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -276,19 +287,23 @@ class _HomePageState extends State<HomePage> {
                         // แถว "คืนรถ"
                         Row(
                           children: [
-                            const Text("คืนรถ", style: TextStyle(fontSize: 16, color: Colors.black54)),
+                            const Text("คืนรถ",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black54)),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   returnText.split(' ')[0],
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -296,14 +311,18 @@ class _HomePageState extends State<HomePage> {
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  returnText.split(' ').length > 1 ? returnText.split(' ')[1] : '15:30 น.',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  returnText.split(' ').length > 1
+                                      ? returnText.split(' ')[1]
+                                      : '15:30 น.',
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -324,15 +343,19 @@ class _HomePageState extends State<HomePage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _searchCars,
-                            icon: const Icon(Icons.directions_car, color: Colors.black),
+                            icon: const Icon(Icons.directions_car,
+                                color: Colors.black),
                             label: const Text(
                               "ค้นหารถว่าง",
-                              style: TextStyle(fontSize: 14, color: Colors.black),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.black),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFC5FF92),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
                           ),
                         ),
@@ -340,15 +363,19 @@ class _HomePageState extends State<HomePage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => debugPrint("ค้นหาบนแผนที่"),
-                            icon: const Icon(Icons.location_on, color: Colors.black),
+                            icon: const Icon(Icons.location_on,
+                                color: Colors.black),
                             label: const Text(
                               "ค้นหาบนแผนที่",
-                              style: TextStyle(fontSize: 14, color: Colors.black),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.black),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFE57D),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
                           ),
                         ),
@@ -378,20 +405,26 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () => debugPrint("กรองผล"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
                               ),
-                              child: const Text("กรองผล", style: TextStyle(color: Colors.black87)),
+                              child: const Text("กรองผล",
+                                  style: TextStyle(color: Colors.black87)),
                             ),
                             const Text(
                               "ผลการค้นหา : รถว่างทั้งหมด",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           "พบรถว่าง $carCount คัน",
-                          style: const TextStyle(fontSize: 14, color: Color(0xFF09C000)),
+                          style: const TextStyle(
+                              fontSize: 14, color: Color(0xFF09C000)),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -481,15 +514,19 @@ class _HomePageState extends State<HomePage> {
                 if (rentalData["carId"] != doc.id) continue;
 
                 final Timestamp rentalStartTs = rentalData["rentalStart"];
-                final Timestamp rentalEndTs   = rentalData["rentalEnd"];
+                final Timestamp rentalEndTs = rentalData["rentalEnd"];
                 final DateTime rentalStart = rentalStartTs.toDate();
-                final DateTime rentalEnd   = rentalEndTs.toDate();
+                final DateTime rentalEnd = rentalEndTs.toDate();
 
                 // ถ้าเวลาที่ผู้ใช้ต้องการซ้อนกับเวลาที่มีการเช่าอยู่
-                if (userPickup.isBefore(rentalEnd) && userReturn.isAfter(rentalStart)) {
-                  final status = (rentalData["status"] ?? "").toString().toLowerCase();
+                if (userPickup.isBefore(rentalEnd) &&
+                    userReturn.isAfter(rentalStart)) {
+                  final status =
+                      (rentalData["status"] ?? "").toString().toLowerCase();
                   // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
-                  if (status != "canceled" && status != "successed") {
+                  if (status != "canceled" &&
+                      status != "successed" &&
+                      status != "done") {
                     // รถไม่ว่าง
                     return false;
                   }
@@ -510,7 +547,8 @@ class _HomePageState extends State<HomePage> {
             }
 
             if (docs.isEmpty) {
-              return const Center(child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+              return const Center(
+                  child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
             }
 
             return ListView.builder(
@@ -563,14 +601,17 @@ class _HomePageState extends State<HomePage> {
                           ),
                         const SizedBox(height: 8),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           child: Row(
                             children: [
-                              const Icon(Icons.circle, color: Colors.green, size: 12),
+                              const Icon(Icons.circle,
+                                  color: Colors.green, size: 12),
                               const SizedBox(width: 8),
                               Text(
                                 "$brand $model",
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -628,7 +669,8 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -655,13 +697,15 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('ตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileRenter()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => ProfileRenter()));
             },
           ),
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title:
+                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();

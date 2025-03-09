@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'ProfileRenter.dart'; // สำหรับใช้ MyDrawerRenter
+import 'ProfileRenter.dart'; // ไฟล์ Drawer (sidebar) ของคุณ
+import 'CarReviewPage.dart'; // import หน้ารีวิวรถ
 
 class ListPage extends StatefulWidget {
   const ListPage({Key? key}) : super(key: key);
@@ -10,7 +11,8 @@ class ListPage extends StatefulWidget {
   State<ListPage> createState() => _ListPageState();
 }
 
-class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin {
+class _ListPageState extends State<ListPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -44,14 +46,9 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
               controller: _tabController,
               labelColor: Colors.black,
               unselectedLabelColor: Colors.black54,
-
-              // ไม่ให้เลื่อน และแต่ละแท็บกินพื้นที่ครึ่งหนึ่งหน้าจอ
               isScrollable: false,
               indicatorSize: TabBarIndicatorSize.tab,
-
-              // ใช้ Custom Indicator เพื่อไฮไลท์ครึ่งจอ
-              indicator: _HalfBarIndicator(), // <--- จุดสำคัญ
-
+              indicator: _HalfBarIndicator(), // ใช้ custom Indicator
               tabs: const [
                 Tab(text: "ล่าสุด"),
                 Tab(text: "ประวัติ"),
@@ -60,9 +57,6 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
           ),
         ),
       ),
-      // --------------------------------------
-      // เปลี่ยน Sidebar ให้เหมือน ProfileRenter.dart
-      // --------------------------------------
       drawer: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -87,9 +81,6 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
           );
         },
       ),
-      // --------------------------------------
-      // เนื้อหา TabBarView
-      // --------------------------------------
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -102,8 +93,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
 
   // ---------------------------------------------------
   // ส่วนของ Tab แรก "ล่าสุด"
-  //    - แสดงเฉพาะ rental ที่ไม่ใช่ canceled / successed
-  //    - เช่น pending, approved, ongoing (ปรับให้ตรงกับระบบจริง)
+  //  - แสดงเฉพาะ status: ['pending', 'approved', 'ongoing']
   // ---------------------------------------------------
   Widget _buildLatestTab() {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -112,8 +102,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
       stream: FirebaseFirestore.instance
           .collection('rentals')
           .where('renterId', isEqualTo: uid)
-          .where('status', whereIn: ['pending', 'approved', 'ongoing'])
-          .snapshots(),
+          .where('status',
+              whereIn: ['pending', 'approved', 'ongoing']).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
@@ -133,19 +123,15 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             final rentalDoc = docs[index];
             final rentalData = rentalDoc.data() as Map<String, dynamic>;
 
-            // ดึงข้อมูลจาก rentals
             final carId = rentalData['carId'] ?? '';
             final status = rentalData['status'] ?? '';
             final rentalStartTS = rentalData['rentalStart'] as Timestamp?;
             final rentalEndTS = rentalData['rentalEnd'] as Timestamp?;
             final rentalStart = rentalStartTS?.toDate();
             final rentalEnd = rentalEndTS?.toDate();
-
-            // ถ้าคุณมีฟิลด์สถานที่รับรถ/คืนรถใน rentals ก็จัดการดึงด้านล่างได้ เช่น
             final pickupLocation = rentalData['pickupLocation'] ?? '';
             final returnLocation = rentalData['returnLocation'] ?? '';
 
-            // ไปเอาข้อมูลรถจาก collection cars ด้วย carId
             return FutureBuilder<DocumentSnapshot>(
               future: FirebaseFirestore.instance
                   .collection('cars')
@@ -176,7 +162,6 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                 final carFront = carData['image']?['carfront'];
                 final carReg = carData['Car registration'] ?? '';
 
-                // สร้าง Card UI ตามตัวอย่างในรูป
                 return Card(
                   margin: const EdgeInsets.all(16),
                   child: Padding(
@@ -187,7 +172,6 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // รูปรถ
                             Container(
                               width: 100,
                               height: 80,
@@ -196,14 +180,10 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: (carFront != null && carFront != '')
-                                  ? Image.network(
-                                      carFront,
-                                      fit: BoxFit.cover,
-                                    )
+                                  ? Image.network(carFront, fit: BoxFit.cover)
                                   : const Icon(Icons.car_rental, size: 40),
                             ),
                             const SizedBox(width: 8),
-                            // ข้อมูลรถ
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,12 +240,12 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // ปุ่ม "ดูรายละเอียด/สถานะ"
+                        // ปุ่ม "ดูรายละเอียด / สถานะ"
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: กดดูรายละเอียด หรือสถานะเพิ่มเติม
+                              // TODO: กดเพื่อดูรายละเอียด / สถานะเพิ่มเติม
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00377E),
@@ -290,8 +270,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
 
   // ---------------------------------------------------
   // ส่วนของ Tab สอง "ประวัติ"
-  //    - แสดงเฉพาะ rental ที่ status == canceled หรือ successed
-  //    - ปุ่มจะเป็น "รีวิว"
+  //  - แสดงเฉพาะ status: ['canceled', 'successed', 'done']
   // ---------------------------------------------------
   Widget _buildHistoryTab() {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -300,8 +279,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
       stream: FirebaseFirestore.instance
           .collection('rentals')
           .where('renterId', isEqualTo: uid)
-          .where('status', whereIn: ['canceled', 'successed'])
-          .snapshots(),
+          .where('status',
+              whereIn: ['canceled', 'successed', 'done']).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
@@ -321,18 +300,15 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             final rentalDoc = docs[index];
             final rentalData = rentalDoc.data() as Map<String, dynamic>;
 
-            // ดึงข้อมูลจาก rentals
             final carId = rentalData['carId'] ?? '';
             final status = rentalData['status'] ?? '';
             final rentalStartTS = rentalData['rentalStart'] as Timestamp?;
             final rentalEndTS = rentalData['rentalEnd'] as Timestamp?;
             final rentalStart = rentalStartTS?.toDate();
             final rentalEnd = rentalEndTS?.toDate();
-
             final pickupLocation = rentalData['pickupLocation'] ?? '';
             final returnLocation = rentalData['returnLocation'] ?? '';
 
-            // ไปเอาข้อมูลรถจาก collection cars ด้วย carId
             return FutureBuilder<DocumentSnapshot>(
               future: FirebaseFirestore.instance
                   .collection('cars')
@@ -363,18 +339,20 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                 final carFront = carData['image']?['carfront'];
                 final carReg = carData['Car registration'] ?? '';
 
-                // สร้าง Card UI ตามตัวอย่างในรูป
+                // ถ้า status เป็น 'done' หรือ 'canceled' => ปุ่มรีวิวจะกดไม่ได้
+                // ถ้า status เป็น 'successed' => ปุ่มรีวิวจะกดได้
+                final isReviewable = (status == 'successed');
+
                 return Card(
                   margin: const EdgeInsets.all(16),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        // แถวบนสุด: รูปรถ + ยี่ห้อ + ทะเบียน + สถานะ
+                        // รูปรถ + ข้อมูลรถ
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // รูปรถ
                             Container(
                               width: 100,
                               height: 80,
@@ -383,14 +361,10 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: (carFront != null && carFront != '')
-                                  ? Image.network(
-                                      carFront,
-                                      fit: BoxFit.cover,
-                                    )
+                                  ? Image.network(carFront, fit: BoxFit.cover)
                                   : const Icon(Icons.car_rental, size: 40),
                             ),
                             const SizedBox(width: 8),
-                            // ข้อมูลรถ
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,7 +386,7 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                           ],
                         ),
                         const Divider(),
-                        // ข้อมูลวันเวลา และสถานที่ รับ/คืน
+                        // วันเวลา และสถานที่ รับ/คืน
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -451,15 +425,32 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {
-                              // TODO: กดเพื่อเขียนรีวิว หรือทำอย่างอื่นที่ต้องการ
-                            },
+                            onPressed: isReviewable
+                                ? () {
+                                    // ถ้า status == 'successed' ถึงจะกดรีวิวได้
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CarReviewPage(
+                                          carDocumentId: carId,
+                                          rentalDocId: rentalDoc.id,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null, // ถ้า status == 'done' หรือ 'canceled' => กดไม่ได้
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00377E),
+                              backgroundColor: isReviewable
+                                  ? const Color(0xFF00377E)
+                                  : Colors.grey,
                             ),
-                            child: const Text(
-                              'รีวิว',
-                              style: TextStyle(color: Colors.white),
+                            child: Text(
+                              (status == 'done')
+                                  ? 'รีวิวแล้ว'
+                                  : (status == 'canceled')
+                                      ? 'ถูกยกเลิก'
+                                      : 'รีวิว',
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
@@ -478,7 +469,6 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
 
 // ---------------------------------------------------------------------
 // คลาส Decoration + Painter สำหรับทำ Indicator กินพื้นที่ "ครึ่งหนึ่งของหน้าจอ"
-// โดยอิงตามค่า offset ของแต่ละแท็บ (ซ้าย=0, ขว=ครึ่งจอ) และขนาด tabSize
 // ---------------------------------------------------------------------
 class _HalfBarIndicator extends Decoration {
   const _HalfBarIndicator();
@@ -499,10 +489,6 @@ class _HalfBarPainter extends BoxPainter {
     final tabWidth = configuration.size!.width;
     final tabHeight = configuration.size!.height;
 
-    // ตำแหน่งซ้ายของแท็บปัจจุบัน (offset.dx)
-    // ถ้าเป็นแท็บแรก (index=0) offset.dx=0
-    // ถ้าเป็นแท็บสอง (index=1) offset.dx=ครึ่งจอ
-    // => ครอบตามตำแหน่งนั้นพอดี ไม่ล้นจอ
     final rect = Rect.fromLTWH(offset.dx, offset.dy, tabWidth, tabHeight);
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(8));
 
