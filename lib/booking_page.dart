@@ -326,7 +326,7 @@ class _BookingPageState extends State<BookingPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      "สนามบินดอนเมือง\n$pickupText",
+                      "$pickupText",
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
@@ -340,7 +340,7 @@ class _BookingPageState extends State<BookingPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      "สนามบินดอนเมือง\n$returnText",
+                      "$returnText",
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),

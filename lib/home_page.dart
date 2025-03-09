@@ -536,6 +536,8 @@ class _HomePageState extends State<HomePage> {
                 carLng,
               );
               if (distance > 5000) return false;
+
+              // เช็ค conflict เวลาการเช่า
               for (var rental in rentalDocs) {
                 final rentalData = rental.data() as Map<String, dynamic>;
                 if (rentalData["carId"] != doc.id) continue;
@@ -544,7 +546,10 @@ class _HomePageState extends State<HomePage> {
                 final DateTime rentalStart = rentalStartTs.toDate();
                 final DateTime rentalEnd = rentalEndTs.toDate();
                 if (userPickup.isBefore(rentalEnd) && userReturn.isAfter(rentalStart)) {
-                  if ((rentalData["status"] ?? "").toString().toLowerCase() != "canceled") {
+                  final status = (rentalData["status"] ?? "").toString().toLowerCase();
+                  // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
+                  if (status != "canceled" && status != "successed") {
+                    // รถไม่ว่าง
                     return false;
                   }
                 }
