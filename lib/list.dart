@@ -104,7 +104,7 @@ class _ListPageState extends State<ListPage>
           .collection('rentals')
           .where('renterId', isEqualTo: uid)
           .where('status',
-              whereIn: ['pending', 'approved', 'ongoing']).snapshots(),
+              whereIn: ['pending', 'waitpayment', 'release','recieve', 'ongoing', 'end']).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
@@ -241,12 +241,11 @@ class _ListPageState extends State<ListPage>
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // ปุ่ม "ดูรายละเอียด / สถานะ"
+                        // ปุ่ม "ดูรายละเอียด / สถานะ" (ไม่เปลี่ยนแปลง UI อื่นๆ)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // นำทางไปยังหน้ารายละเอียดสถานะ
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -429,13 +428,12 @@ class _ListPageState extends State<ListPage>
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // ปุ่ม "รีวิว"
+                        // ปุ่ม "รีวิว" (ใน Tab "ประวัติ")
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: isReviewable
                                 ? () {
-                                    // ถ้า status == 'successed' ถึงจะกดรีวิวได้
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -446,7 +444,7 @@ class _ListPageState extends State<ListPage>
                                       ),
                                     );
                                   }
-                                : null, // ถ้า status == 'done' หรือ 'canceled' => กดไม่ได้
+                                : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isReviewable
                                   ? const Color(0xFF00377E)
@@ -493,7 +491,6 @@ class _HalfBarPainter extends BoxPainter {
     final paint = Paint()..color = Colors.blue.shade300;
 
     // แต่ละแท็บจะมี size เป็นครึ่งจอ (เพราะมี 2 แท็บแบบ isScrollable=false)
-    // ดังนั้น width นี่คือ "ครึ่งหนึ่งของความกว้างทั้งหมด" แล้ว
     final tabWidth = configuration.size!.width;
     final tabHeight = configuration.size!.height;
 
