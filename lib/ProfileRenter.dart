@@ -11,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
+import 'list.dart';
 
 // import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
 import 'address_picker.dart';
@@ -675,7 +676,10 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('รายการเช่าทั้งหมด'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: ไปหน้าเช่าทั้งหมด
+               Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ListPage()),
+              );
             },
           ),
           ListTile(

@@ -29,7 +29,6 @@ class _StatusRenterState extends State<StatusRenter> {
   /// เพิ่มเงื่อนไข:
   ///  - เมื่อ status = successed => ทุกสเต็ปเป็นสีเขียว
   ///  - เมื่อ status = canceled  => ถ้าสต็ปไหนเป็นสีเหลือง ให้เปลี่ยนเป็นสีแดง
-  ///
   List<Map<String, dynamic>> buildSteps(String status) {
     final steps = [
       {"text": "รอติดต่อกลับ", "color": Colors.grey},
@@ -372,7 +371,7 @@ class _StatusRenterState extends State<StatusRenter> {
     final days = (rentalStart != null && rentalEnd != null)
         ? rentalEnd.difference(rentalStart).inDays
         : 1;
-    final deposit = (dailyPrice * 0.15).round();
+    final deposit = (dailyPrice * days * 0.15).round();
     final total = (dailyPrice * days) + deposit;
 
     // เงื่อนไขสำหรับปุ่ม "ยกเลิก"

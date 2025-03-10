@@ -254,8 +254,13 @@ class MyCar extends StatelessWidget {
                                               builder: (context) =>
                                                   EditVehicleRegistration(
                                                 carId: doc.id,
-                                                currentImageUrl: (data["image"] ?? {})["vehicle registration"] ?? "",
-                                                currentDeleteHash: (data["deletehash"] ?? {})["deletehashvehicle_registration"] ?? "",
+                                                currentImageUrl: (data["image"] ?? {})[
+                                                        "vehicle registration"] ??
+                                                    "",
+                                                currentDeleteHash: (data["deletehash"] ??
+                                                        {})[
+                                                    "deletehashvehicle_registration"] ??
+                                                    "",
                                               ),
                                             ),
                                           );
@@ -272,35 +277,47 @@ class MyCar extends StatelessWidget {
                                         ),
                                         onPressed: () async {
                                           // แสดง dialog ยืนยันการลบ
-                                          bool? confirm = await showDialog<bool>(
+                                          bool? confirm =
+                                              await showDialog<bool>(
                                             context: context,
                                             barrierDismissible: false,
                                             builder: (context) => AlertDialog(
-                                              title: const Text("ยืนยันการลบรถ"),
-                                              content: const Text("คุณแน่ใจหรือไม่ว่าต้องการลบรถนี้?"),
+                                              title:
+                                                  const Text("ยืนยันการลบรถ"),
+                                              content: const Text(
+                                                  "คุณแน่ใจหรือไม่ว่าต้องการลบรถนี้?"),
                                               actions: [
                                                 TextButton(
-                                                  onPressed: () => Navigator.of(context).pop(false),
+                                                  onPressed: () => Navigator.of(
+                                                          context)
+                                                      .pop(false),
                                                   child: const Text("ยกเลิก"),
                                                 ),
                                                 TextButton(
-                                                  onPressed: () => Navigator.of(context).pop(true),
+                                                  onPressed: () => Navigator.of(
+                                                          context)
+                                                      .pop(true),
                                                   child: const Text("ตกลง"),
                                                 ),
                                               ],
                                             ),
                                           );
                                           if (confirm == true) {
-                                            // แสดง overlay loading
+                                            // เก็บ BuildContext ของ overlay dialog
+                                            BuildContext? dialogContext;
+                                            // แสดง overlay loading และเก็บ context
                                             showDialog(
                                               context: context,
                                               barrierDismissible: false,
-                                              builder: (context) {
+                                              builder: (BuildContext ctx) {
+                                                dialogContext = ctx;
                                                 return Container(
-                                                  color: Colors.black.withOpacity(0.5),
+                                                  color: Colors.black
+                                                      .withOpacity(0.5),
                                                   child: const Center(
                                                     child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
                                                       children: [
                                                         CircularProgressIndicator(),
                                                         SizedBox(height: 10),
@@ -318,10 +335,14 @@ class MyCar extends StatelessWidget {
                                               },
                                             );
                                             try {
-                                              const String clientId = "ed6895b5f1bf3d7";
+                                              const String clientId =
+                                                  "ed6895b5f1bf3d7";
                                               await _deleteCar(doc, clientId);
                                             } finally {
-                                              Navigator.of(context).pop(); // dismiss loading overlay
+                                              // ใช้ dialogContext ที่เก็บไว้ในการ dismiss overlay
+                                              if (dialogContext != null) {
+                                                Navigator.pop(dialogContext!);
+                                              }
                                             }
                                           }
                                         },
@@ -340,7 +361,8 @@ class MyCar extends StatelessWidget {
               );
             },
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.endFloat,
           floatingActionButton: SizedBox(
             width: 70,
             child: Column(
@@ -358,7 +380,8 @@ class MyCar extends StatelessWidget {
                     );
                   },
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.add, color: Colors.black, size: 30),
+                  child:
+                      const Icon(Icons.add, color: Colors.black, size: 30),
                 ),
               ],
             ),
