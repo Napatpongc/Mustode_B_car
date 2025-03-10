@@ -23,6 +23,11 @@ android {
         jvmTarget = '1.8'
     }
 
+     // สำหรับการตั้งค่า Java compiler options
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:deprecation"
+    }
+
     defaultConfig {
         applicationId "com.example.myproject"
         minSdk 23

@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:myproject/ProfileRenter.dart';
+
+import 'home_page.dart';
 import 'phone_auth_page.dart';
 import 'signup_page.dart';
-
 
 class LoginPage extends StatefulWidget {
   @override
@@ -51,8 +51,8 @@ class _LoginPageState extends State<LoginPage> {
 
   // ฟังก์ชันล็อกอินด้วย Email/Password
   void _login() async {
-    String email = _emailController.text;
-    String password = _passwordController.text;
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileRenter()),
+        MaterialPageRoute(builder: (context) => HomePage()),
       );
     } on FirebaseAuthException catch (e) {
       String errorMessage = "เกิดข้อผิดพลาด";
@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("เกิดข้อผิดพลาด"),
           backgroundColor: Colors.redAccent,
         ),
@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) return; // ผู้ใช้ยกเลิก
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -108,6 +108,7 @@ class _LoginPageState extends State<LoginPage> {
 
         final docSnapshot = await userDoc.get();
         if (!docSnapshot.exists) {
+          // ถ้ายังไม่มีเอกสารผู้ใช้ => สร้าง
           await userDoc.set({
             "username": googleUser.displayName ?? "",
             "email": googleUser.email,
@@ -126,6 +127,7 @@ class _LoginPageState extends State<LoginPage> {
               "deletehash_driving_license": null,
               "rental_contract": null,
               "deletehash_rental_contract": null,
+              "profile": null,
             },
             "location": {
               "latitude": null,
@@ -141,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
         }
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ProfileRenter()),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
     } catch (e) {
@@ -162,6 +164,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
+          // พื้นหลัง
           Container(
             width: screenWidth,
             height: screenHeight,
@@ -264,8 +267,8 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                          PhoneAuthCustomPage()),
+                                    builder: (context) => PhoneAuthCustomPage(),
+                                  ),
                                 );
                               },
                               child: Text(
@@ -323,8 +326,7 @@ class _LoginPageState extends State<LoginPage> {
                                 elevation: 2,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
-                                  side:
-                                      BorderSide(color: Colors.grey.shade300),
+                                  side: BorderSide(color: Colors.grey.shade300),
                                 ),
                                 padding: EdgeInsets.symmetric(vertical: 15),
                               ),
@@ -360,7 +362,8 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => SignUpPage()),
+                                      builder: (context) => SignUpPage(),
+                                    ),
                                   );
                                 },
                                 child: Text(
@@ -379,7 +382,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // ปุ่ม "ข้าม" - Guest Sign-In
+          // ปุ่ม "ข้าม" - Guest Sign-In (Anonymous)
           Visibility(
             visible: _isSkipButtonVisible,
             child: Positioned(
@@ -388,12 +391,10 @@ class _LoginPageState extends State<LoginPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    UserCredential guestUser =
-                        await FirebaseAuth.instance.signInAnonymously();
+                    await FirebaseAuth.instance.signInAnonymously();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => ProfileRenter()),
+                      MaterialPageRoute(builder: (context) => HomePage()),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -407,7 +408,8 @@ class _LoginPageState extends State<LoginPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white.withOpacity(0.8),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 child: Text(
@@ -429,7 +431,7 @@ class _LoginPageState extends State<LoginPage> {
               left: 20,
               right: 20,
               child: Text(
-                "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของมัสโตด บี คาร์",
+                "ฉันยอมรับข้อกำหนดการใช้งาน และ นโยบายความเป็นส่วนตัวของ Mustode B-Car",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.indigoAccent,
