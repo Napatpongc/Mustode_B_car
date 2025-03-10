@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ProfileLessor.dart'; // Import MyDrawer จาก ProfileLessor.dart
+import 'statuslessor.dart'; // Import StatusLessor ที่สร้างไว้
 
 class ListPage extends StatefulWidget {
   const ListPage({Key? key}) : super(key: key);
@@ -255,7 +256,13 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: กดดูรายละเอียดหรือสถานะเพิ่มเติม
+                              // เมื่อกดปุ่ม navigate ไปยัง StatusLessor โดยส่ง rentalId จาก document นี้
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => StatusLessor(rentalId: rentalDoc.id),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00377E),

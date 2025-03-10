@@ -192,7 +192,7 @@ class _BookingPageState extends State<BookingPage> {
                 final lessorLocation = ownerData?['location'] ??
                     {'latitude': 0.0, 'longitude': 0.0};
 
-                // สร้าง document ใน rentals collection
+                // สร้าง document ใน rentals collection พร้อมเพิ่ม field 'pendinguntil'
                 await FirebaseFirestore.instance.collection('rentals').add({
                   'renterId': renterId,
                   'lessorId': carData?['ownerId'] ?? '',
@@ -203,6 +203,7 @@ class _BookingPageState extends State<BookingPage> {
                   'status': 'pending',
                   'renterLocation': renterLocation,
                   'lessorLocation': lessorLocation,
+                  'pendinguntil': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 3))),
                 });
 
                 // Navigate ไปยัง ListPage
