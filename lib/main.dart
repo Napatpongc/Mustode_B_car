@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:myproject/into_app.dart';
+import 'Rentaldetails.dart';
 
 import 'into_app.dart';
 import 'phone_auth_page.dart';

@@ -13,6 +13,7 @@ import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'Mycar.dart';
 import 'address_picker.dart'; // AddressPicker ที่รองรับ initial values
+import 'listLessor.dart';
 
 /// Drawer สำหรับ ProfileLessor
 class MyDrawer extends StatelessWidget {
@@ -60,8 +61,10 @@ class MyDrawer extends StatelessWidget {
             leading: const Icon(Icons.list),
             title: const Text('รายการปล่อยเช่ารถ'),
             onTap: () {
-              Navigator.pop(context);
-              // TODO: ไปหน้ารายการปล่อยเช่ารถ
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ListPage()),
+              );
             },
           ),
           ListTile(
