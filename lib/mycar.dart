@@ -1,15 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'addcar.dart';
+import 'ProfileLessor.dart';
+import 'editmycar.dart';
 
-void main() {
-  runApp(MyApp());
-}
+class MyCar extends StatelessWidget {
+  const MyCar({Key? key}) : super(key: key);
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: CarListScreen(),
+  // ฟังก์ชันลบรูปจาก Imgur โดยใช้ deletehash
+  Future<bool> _deleteImageFromImgur(String deleteHash, String clientId) async {
+    final uri = Uri.parse('https://api.imgur.com/3/image/$deleteHash');
+    final response = await http.delete(
+      uri,
+      headers: {'Authorization': 'Client-ID $clientId'},
     );
     return response.statusCode == 200;
   }
