@@ -99,7 +99,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
               children: [
                 _buildHeader(oldProfileUrl),
                 _buildProfileSwitch(),
-                _buildIncomeSection(currentUser.uid),
                 _buildMainForm(
                   currentUser.uid,
                   oldProfileUrl,
@@ -260,62 +259,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  Widget _buildIncomeSection(String userId) {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('payments').doc(userId).snapshots(),
-      builder: (_, paySnap) {
-        if (paySnap.hasError) {
-          return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดรายได้"));
-        }
-        if (paySnap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!paySnap.hasData || !paySnap.data!.exists) {
-          return _incomeBox(0);
-        }
-        final payData = paySnap.data!.data() as Map<String, dynamic>;
-        final num income = payData['mypayment'] ?? 0;
-        return _incomeBox(income);
-      },
-    );
-  }
+ 
 
-  Widget _incomeBox(num myPayment) {
-    final incomeText = myPayment.toStringAsFixed(2);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "รายได้วันนี้",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          Text(
-            "฿ $incomeText",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[700],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ 
 
   /// ส่วนฟอร์มหลัก
   Widget _buildMainForm(

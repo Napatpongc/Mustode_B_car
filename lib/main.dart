@@ -7,6 +7,7 @@ import 'package:myproject/into_app.dart';
 import 'into_app.dart';
 import 'phone_auth_page.dart';
 import 'home_page.dart';
+import 'ProfileLessor.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +53,7 @@ class MyApp extends StatelessWidget {
       ),
       home:  IntoApp(), // กำหนด navigation flow ของคุณ
       getPages: [
-        // กำหนด GetX routes หากต้องการ
+         GetPage(name: '/profileLessor', page: () => ProfileLessor()), // ✅ เพิ่ม Route
       ],
     );
   }
