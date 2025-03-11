@@ -7,9 +7,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'car_info.dart';
-import 'signup_page.dart';
 import 'vertical_calendar_page.dart';
-import 'list.dart'; // สำหรับ navigate ไปยัง ListPage
+import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
+
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -38,7 +38,9 @@ class _HomePageState extends State<HomePage> {
     _getCurrentLocation();
   }
 
+  // --------------------------------------------------
   // ฟังก์ชันดึงตำแหน่งปัจจุบันจาก GPS
+  // --------------------------------------------------
   Future<void> _getCurrentLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
@@ -53,6 +55,8 @@ class _HomePageState extends State<HomePage> {
         return;
       }
     }
+
+    // ได้รับอนุญาตแล้ว => getCurrentPosition
     final pos = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -62,7 +66,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // --------------------------------------------------
   // เปิดหน้า VerticalCalendarPage เพื่อเลือกวัน-เวลารับรถ/คืนรถ
+  // --------------------------------------------------
   Future<void> _openCalendarPage() async {
     final result = await showDialog(
       context: context,
@@ -76,6 +82,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+
     if (result != null && result is Map<String, dynamic> && mounted) {
       setState(() {
         pickupDate = result['pickupDate'];
@@ -86,9 +93,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // --------------------------------------------------
   // ฟังก์ชันค้นหารถว่าง
+  // --------------------------------------------------
   void _searchCars() {
-    if (pickupDate == null || pickupTime == null || returnDate == null || returnTime == null) {
+    if (pickupDate == null ||
+        pickupTime == null ||
+        returnDate == null ||
+        returnTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("กรุณาเลือกวัน-เวลารับรถ/คืนรถ")),
       );
@@ -100,147 +112,40 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
+
+    // แค่เปิด list ขึ้นมาแสดง
     if (!mounted) return;
     setState(() {
       showCarList = true;
     });
   }
 
+  // --------------------------------------------------
   // ฟังก์ชันแปลง DateTime + TimeOfDay เป็นสตริง
+  // --------------------------------------------------
   String _formatDateTime(DateTime? date, TimeOfDay? time) {
     if (date == null) return "01/01/2025 01:30 น.";
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     final year = date.year;
     final dateStr = "$day/$month/$year";
+
     if (time == null) return "$dateStr 01:30 น.";
     final hh = time.hour.toString().padLeft(2, '0');
     final mm = time.minute.toString().padLeft(2, '0');
     return "$dateStr $hh:$mm น.";
   }
 
-  // สร้าง Drawer สำหรับทุกผู้ใช้ (ทั้ง Anonymous และผู้ใช้ปกติ)
-  Widget _buildDrawer() {
-    final user = FirebaseAuth.instance.currentUser!;
-    final isAnonymous = user.isAnonymous;
-
-    // สำหรับ Anonymous
-    if (isAnonymous) {
-      return Drawer(
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF00377E)),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // CircleAvatar แสดงรูปแอป
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundImage: AssetImage('assets/icon/app_icon.png'),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Mustode B-Car",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Anonymous User",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('หน้าหลัก'),
-              onTap: () {
-                Navigator.pop(context);
-                // อยู่ในหน้า HomePage อยู่แล้ว
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.map),
-              title: const Text('แผนที่'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: นำทางไปหน้าแผนที่
-              },
-            ),
-            // เมนู "รายการเช่าทั้งหมด" สำหรับ Anonymous
-            ListTile(
-              leading: const Icon(Icons.list),
-              title: const Text('รายการเช่าทั้งหมด'),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) {
-                    return AlertDialog(
-                      title: const Text("กรุณาสมัครบัญชีหากจะทำรายการนี้"),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) =>  SignUpPage()),
-                            );
-                          },
-                          child: const Text("ไปหน้าสมัครบัญชี"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-            const Spacer(),
-            // เปลี่ยนเมนู "ออกจากระบบ" เป็น "ไปหน้าล็อคอิน" (ตัวสีแดง) สำหรับ Anonymous
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('ไปหน้าล็อคอิน', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => LoginPage()),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    // สำหรับผู้ใช้ที่ล็อคอินด้วย Email/Google (ไม่ Anonymous)
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const Drawer(child: Center(child: CircularProgressIndicator()));
-        }
-        final data = snapshot.data!.data() as Map<String, dynamic>;
-        final username = data['username'] ?? "ไม่มีชื่อ";
-        final isGoogleLogin = user.providerData.any((p) => p.providerId == 'google.com');
-        return MyDrawerRenter(
-          username: username,
-          isGoogleLogin: isGoogleLogin,
-          profileUrl: data['image']?['profile'],
-        );
-      },
-    );
-  }
-
+  // --------------------------------------------------
+  // build
+  // --------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    final screenWidth  = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final double containerWidth = 350;
-    final double containerLeft  = (screenWidth - containerWidth) / 2;
+    final double containerLeft = (screenWidth - containerWidth) / 2;
+
     final pickupText = _formatDateTime(pickupDate, pickupTime);
     final returnText = _formatDateTime(returnDate, returnTime);
 
@@ -256,14 +161,42 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: const Icon(Icons.menu,
+                color: Colors.white), // ไอคอน sidebar สีขาว
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
           ),
         ),
       ),
-      drawer: _buildDrawer(), // เรียกใช้ฟังก์ชันสร้าง Drawer
+      drawer: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final username = data['username'] ?? "ไม่มีชื่อ";
+          String? profileUrl;
+          if (data['image'] != null) {
+            profileUrl = data['image']['profile'];
+          }
+          bool isGoogleLogin = FirebaseAuth.instance.currentUser?.providerData
+                  .any((p) => p.providerId == 'google.com') ??
+              false;
+          return MyDrawerRenter(
+            username: username,
+            isGoogleLogin: isGoogleLogin,
+            profileUrl: profileUrl,
+          );
+        },
+      ),
+      // ไล่เฉดสีพื้นหลัง
       body: Container(
         width: screenWidth,
         height: screenHeight,
@@ -310,19 +243,23 @@ class _HomePageState extends State<HomePage> {
                         // แถว "รับรถ"
                         Row(
                           children: [
-                            const Text("รับรถ", style: TextStyle(fontSize: 16, color: Colors.black54)),
+                            const Text("รับรถ",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black54)),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   pickupText.split(' ')[0],
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -330,14 +267,18 @@ class _HomePageState extends State<HomePage> {
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  pickupText.split(' ').length > 1 ? pickupText.split(' ')[1] : '12:30 น.',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  pickupText.split(' ').length > 1
+                                      ? pickupText.split(' ')[1]
+                                      : '12:30 น.',
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -347,19 +288,23 @@ class _HomePageState extends State<HomePage> {
                         // แถว "คืนรถ"
                         Row(
                           children: [
-                            const Text("คืนรถ", style: TextStyle(fontSize: 16, color: Colors.black54)),
+                            const Text("คืนรถ",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black54)),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   returnText.split(' ')[0],
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -367,14 +312,18 @@ class _HomePageState extends State<HomePage> {
                             GestureDetector(
                               onTap: _openCalendarPage,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF9CD9FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  returnText.split(' ').length > 1 ? returnText.split(' ')[1] : '15:30 น.',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  returnText.split(' ').length > 1
+                                      ? returnText.split(' ')[1]
+                                      : '15:30 น.',
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -395,15 +344,19 @@ class _HomePageState extends State<HomePage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _searchCars,
-                            icon: const Icon(Icons.directions_car, color: Colors.black),
+                            icon: const Icon(Icons.directions_car,
+                                color: Colors.black),
                             label: const Text(
                               "ค้นหารถว่าง",
-                              style: TextStyle(fontSize: 14, color: Colors.black),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.black),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFC5FF92),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
                           ),
                         ),
@@ -411,15 +364,19 @@ class _HomePageState extends State<HomePage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => debugPrint("ค้นหาบนแผนที่"),
-                            icon: const Icon(Icons.location_on, color: Colors.black),
+                            icon: const Icon(Icons.location_on,
+                                color: Colors.black),
                             label: const Text(
                               "ค้นหาบนแผนที่",
-                              style: TextStyle(fontSize: 14, color: Colors.black),
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.black),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFE57D),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
                           ),
                         ),
@@ -449,20 +406,26 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () => debugPrint("กรองผล"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
                               ),
-                              child: const Text("กรองผล", style: TextStyle(color: Colors.black87)),
+                              child: const Text("กรองผล",
+                                  style: TextStyle(color: Colors.black87)),
                             ),
                             const Text(
                               "ผลการค้นหา : รถว่างทั้งหมด",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           "พบรถว่าง $carCount คัน",
-                          style: const TextStyle(fontSize: 14, color: Color(0xFF09C000)),
+                          style: const TextStyle(
+                              fontSize: 14, color: Color(0xFF09C000)),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -487,7 +450,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --------------------------------------------------
   // ฟังก์ชันสร้าง List รถ
+  // --------------------------------------------------
   Widget _buildCarList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection("rentals").snapshots(),
@@ -502,6 +467,7 @@ class _HomePageState extends State<HomePage> {
             if (!carSnapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
+
             final userPickup = DateTime(
               pickupDate!.year,
               pickupDate!.month,
@@ -516,39 +482,52 @@ class _HomePageState extends State<HomePage> {
               returnTime!.hour,
               returnTime!.minute,
             );
+
             final docs = carSnapshot.data!.docs.where((doc) {
               final data = doc.data() as Map<String, dynamic>;
+              // ถ้า statuscar เป็น "no" ให้ไม่แสดง
               if ((data["statuscar"]?.toString().toLowerCase() ?? "") == "no") {
                 return false;
               }
+              // ตรวจสอบข้อมูลตำแหน่ง
               if (data["location"] == null ||
                   data["location"]["latitude"] == null ||
                   data["location"]["longitude"] == null) {
                 return false;
               }
+
               final double carLat = data["location"]["latitude"];
               final double carLng = data["location"]["longitude"];
               if (currentPosition == null) return false;
+
               final double distance = Geolocator.distanceBetween(
                 currentPosition!.latitude,
                 currentPosition!.longitude,
                 carLat,
                 carLng,
               );
+              // สมมติค้นหาในรัศมี 5km
               if (distance > 5000) return false;
 
               // เช็ค conflict เวลาการเช่า
               for (var rental in rentalDocs) {
                 final rentalData = rental.data() as Map<String, dynamic>;
                 if (rentalData["carId"] != doc.id) continue;
+
                 final Timestamp rentalStartTs = rentalData["rentalStart"];
                 final Timestamp rentalEndTs = rentalData["rentalEnd"];
                 final DateTime rentalStart = rentalStartTs.toDate();
                 final DateTime rentalEnd = rentalEndTs.toDate();
-                if (userPickup.isBefore(rentalEnd) && userReturn.isAfter(rentalStart)) {
-                  final status = (rentalData["status"] ?? "").toString().toLowerCase();
+
+                // ถ้าเวลาที่ผู้ใช้ต้องการซ้อนกับเวลาที่มีการเช่าอยู่
+                if (userPickup.isBefore(rentalEnd) &&
+                    userReturn.isAfter(rentalStart)) {
+                  final status =
+                      (rentalData["status"] ?? "").toString().toLowerCase();
                   // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
-                  if (status != "canceled" && status != "successed") {
+                  if (status != "canceled" &&
+                      status != "successed" &&
+                      status != "done") {
                     // รถไม่ว่าง
                     return false;
                   }
@@ -556,6 +535,8 @@ class _HomePageState extends State<HomePage> {
               }
               return true;
             }).toList();
+
+            // อัปเดตตัวแปร carCount
             if (carCount != docs.length && mounted) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
@@ -565,9 +546,12 @@ class _HomePageState extends State<HomePage> {
                 }
               });
             }
+
             if (docs.isEmpty) {
-              return const Center(child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+              return const Center(
+                  child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
             }
+
             return ListView.builder(
               itemCount: docs.length,
               itemBuilder: (context, index) {
@@ -575,8 +559,13 @@ class _HomePageState extends State<HomePage> {
                 final String brand = data["brand"] ?? "";
                 final String model = data["model"] ?? "";
                 final String imageUrl = data["image"]?["carside"] ?? "";
+
                 return InkWell(
                   onTap: () {
+                    // ------------------------------------------------
+                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime,
+                    // returnDate, returnTime
+                    // ------------------------------------------------
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -613,14 +602,17 @@ class _HomePageState extends State<HomePage> {
                           ),
                         const SizedBox(height: 8),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           child: Row(
                             children: [
-                              const Icon(Icons.circle, color: Colors.green, size: 12),
+                              const Icon(Icons.circle,
+                                  color: Colors.green, size: 12),
                               const SizedBox(width: 8),
                               Text(
                                 "$brand $model",
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -640,7 +632,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 // --------------------------------------------------
-// Drawer สำหรับผู้ใช้ที่ล็อคอินด้วย Email/Google (ไม่ Anonymous)
+// Drawer สำหรับผู้เช่า
 // --------------------------------------------------
 class MyDrawerRenter extends StatelessWidget {
   final String username;
@@ -679,9 +671,7 @@ class MyDrawerRenter extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              );
+                  context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -689,7 +679,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('แผนที่'),
             onTap: () {
               Navigator.pop(context);
-              // TODO: นำทางไปหน้าแผนที่
+             
             },
           ),
           ListTile(
@@ -709,15 +699,14 @@ class MyDrawerRenter extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => ProfileRenter()),
-              );
+                  context, MaterialPageRoute(builder: (_) => ProfileRenter()));
             },
           ),
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title:
+                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();
