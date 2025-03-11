@@ -212,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                           // โลโก้
                           Image.asset(
                             "assets/icon/app_icon.png",
-                            height: screenHeight * 0.15,
+                            height: screenHeight * 0.20,
                           ),
                           SizedBox(height: 20),
                           // ช่อง Email

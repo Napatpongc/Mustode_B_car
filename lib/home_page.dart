@@ -154,8 +154,8 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color(0xFF00377E),
         // เปลี่ยน title เป็นรูปจาก assets
         title: Image.asset(
-          'assets/image/mustodebcarlogo.png',
-          height: 40,
+          'assets/image/Mustode.png',
+          height: 80,
           fit: BoxFit.contain,
         ),
         centerTitle: true,

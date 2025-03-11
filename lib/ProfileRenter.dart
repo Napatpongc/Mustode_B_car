@@ -11,7 +11,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
-import 'list.dart';
 
 // import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
 import 'address_picker.dart';
@@ -82,7 +81,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF00377E),
-            title: const Text("บัญชี (ผู้เช่า)"),
+            title: const Text(
+              "บัญชี (ผู้เช่า)",
+              style: TextStyle(color: Colors.white),
+            ),
             leading: Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -260,10 +262,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
- 
-
- 
-
   /// ส่วนฟอร์มหลัก
   Widget _buildMainForm(
     String userId,
@@ -291,7 +289,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
         children: [
           const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-
           // AddressPicker (ส่งค่าเริ่มต้นที่ดึงจาก Firestore)
           AddressPicker(
             initialProvince: province,
@@ -308,7 +305,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
             },
           ),
           const SizedBox(height: 16),
-
           // ช่องกรอกรายละเอียดเพิ่มเติม
           _buildWhiteBox(
             Column(
@@ -326,7 +322,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
               ],
             ),
           ),
-
           // กล่องแสดงเบอร์โทร
           _buildWhiteBox(
             Row(
@@ -349,7 +344,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
               ],
             ),
           ),
-
           // อีเมล
           _buildWhiteBox(
             Row(
@@ -361,7 +355,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
             ),
           ),
           const SizedBox(height: 20),
-
           // ส่วนอัปโหลดรูปใบขับขี่
           _buildWhiteBox(
             Column(
@@ -394,7 +387,6 @@ class _ProfileRenterState extends State<ProfileRenter> {
             ),
           ),
           const SizedBox(height: 20),
-
           // ปุ่มบันทึก
           Align(
             alignment: Alignment.center,
@@ -614,7 +606,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('แผนที่'),
             onTap: () {
               Navigator.pop(context);
-              
+              // TODO: ไปหน้าแผนที่
             },
           ),
           ListTile(
@@ -622,10 +614,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('รายการเช่าทั้งหมด'),
             onTap: () {
               Navigator.pop(context);
-               Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const ListPage()),
-              );
+              // TODO: ไปหน้าเช่าทั้งหมด
             },
           ),
           ListTile(
