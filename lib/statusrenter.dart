@@ -770,6 +770,7 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
         const Text("โปรดชำระเงินภายใน 3 ชั่วโมง",
             style: TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
+<<<<<<< HEAD
         Text("เวลาที่เหลือ: ${formatDuration(remaining)}",
             style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
@@ -783,6 +784,12 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
               ),
             );
           },
+=======
+        Text("เวลาที่เหลือ: ${formatDuration(remaining)}", style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 8),
+        ElevatedButton(
+          onPressed: () {},
+>>>>>>> 60284edf034d4202be073bbb83df7b05a6361413
           child: const Text("ชำระเงิน", style: TextStyle(fontSize: 16)),
         ),
       ],
