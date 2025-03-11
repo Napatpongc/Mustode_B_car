@@ -123,10 +123,31 @@ class _StatusLessorState extends State<StatusLessor> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('rentals')
-                    .doc(widget.rentalId)
-                    .update({'status': 'recieve'});
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("ยืนยันการปล่อยเช่ารถ"),
+                      content: const Text("กดตกลง เพื่อยืนยันการปล่อยเช่ารถ"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("ยกเลิก"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("ตกลง"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (confirm == true) {
+                  await FirebaseFirestore.instance
+                      .collection('rentals')
+                      .doc(widget.rentalId)
+                      .update({'status': 'recieve'});
+                }
               },
               child: const Text("ยืนยันการปล่อยรถ", style: TextStyle(fontSize: 16)),
             ),
@@ -165,10 +186,31 @@ class _StatusLessorState extends State<StatusLessor> {
           children: [
             ElevatedButton(
               onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('rentals')
-                    .doc(widget.rentalId)
-                    .update({'status': 'successed'});
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("ยืนยันการได้รับรถคืน"),
+                      content: const Text("กดตกลง เพื่อยืนยันการได้รับรถคืน"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("ยกเลิก"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("ตกลง"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (confirm == true) {
+                  await FirebaseFirestore.instance
+                      .collection('rentals')
+                      .doc(widget.rentalId)
+                      .update({'status': 'successed'});
+                }
               },
               child: const Text("ยืนยันการได้รับรถคืน", style: TextStyle(fontSize: 16)),
             ),
@@ -308,12 +350,10 @@ class _StatusLessorState extends State<StatusLessor> {
     DateTime? rentalStart,
     DateTime? rentalEnd,
   }) {
-    final renterName = renterData['username'] ?? '---';
-    final renterEmail = renterData['email'] ?? '---';
-    final renterPhone = renterData['phone'] ?? '---';
-    final renterProfile = (renterData['image'] != null)
-        ? renterData['image']['profile']
-        : null;
+    final lessorName = rentalData['lessorName'] ?? '---'; // สมมติว่ามีข้อมูลผู้ให้เช่า
+    final lessorEmail = rentalData['lessorEmail'] ?? '---';
+    final lessorPhone = rentalData['lessorPhone'] ?? '---';
+    final lessorProfile = rentalData['lessorProfile'];
 
     final brand = carData['brand'] ?? '---';
     final model = carData['model'] ?? '';
@@ -328,7 +368,7 @@ class _StatusLessorState extends State<StatusLessor> {
     final baggage = detail['baggage'] ?? '---';
 
     final dailyPrice = carData['price'] ?? 0;
-    // เปลี่ยนการคำนวณจำนวนวันที่เช่าให้เหมือนไฟล์ที่แล้ว (นับทั้งวันเริ่มและวันสิ้นสุด)
+    // คำนวณจำนวนวันโดยนับรวมวันเริ่มต้นและวันสิ้นสุด (+1)
     final days = (rentalStart != null && rentalEnd != null)
         ? rentalEnd.difference(rentalStart).inDays + 1
         : 1;
@@ -381,10 +421,12 @@ class _StatusLessorState extends State<StatusLessor> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey[300],
-                  backgroundImage: (renterProfile != null && renterProfile != '')
-                      ? NetworkImage(renterProfile)
+                  backgroundImage: (renterData['image'] != null &&
+                          renterData['image']['profile'] != '')
+                      ? NetworkImage(renterData['image']['profile'])
                       : null,
-                  child: (renterProfile == null || renterProfile == '')
+                  child: (renterData['image'] == null ||
+                          renterData['image']['profile'] == '')
                       ? const Icon(Icons.person, size: 30, color: Colors.grey)
                       : null,
                 ),
@@ -393,11 +435,11 @@ class _StatusLessorState extends State<StatusLessor> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _iconText(Icons.person, renterName),
+                      _iconText(Icons.person, renterData['username'] ?? '---'),
                       const SizedBox(height: 5),
-                      _iconText(Icons.email, renterEmail),
+                      _iconText(Icons.email, renterData['email'] ?? '---'),
                       const SizedBox(height: 5),
-                      _iconText(Icons.phone, renterPhone),
+                      _iconText(Icons.phone, renterData['phone'] ?? '---'),
                     ],
                   ),
                 ),
@@ -473,15 +515,12 @@ class _StatusLessorState extends State<StatusLessor> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('$brand $model',
-                        style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                    Text('- รายต่อวัน ฿$dailyPrice x $days วัน',
-                        style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                  ],
-                ),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('$brand $model',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text('- รายต่อวัน ฿$dailyPrice x $days วัน',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                ]),
                 Text(
                   '฿${dailyPrice * days}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -665,7 +704,6 @@ class _StatusLessorState extends State<StatusLessor> {
   }
 }
 
-/// PendingComponent สำหรับสถานะ "pending"
 class PendingComponent extends StatefulWidget {
   final String rentalId;
   const PendingComponent({Key? key, required this.rentalId}) : super(key: key);
@@ -784,7 +822,6 @@ class _PendingComponentState extends State<PendingComponent> {
   }
 }
 
-/// WaitPaymentComponent สำหรับสถานะ "waitpayment"
 class WaitPaymentComponent extends StatefulWidget {
   final String rentalId;
   const WaitPaymentComponent({Key? key, required this.rentalId}) : super(key: key);
@@ -876,7 +913,6 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
   }
 }
 
-/// RecieveComponent สำหรับสถานะ "recieve"
 class RecieveComponent extends StatefulWidget {
   final String rentalId;
   const RecieveComponent({Key? key, required this.rentalId}) : super(key: key);
