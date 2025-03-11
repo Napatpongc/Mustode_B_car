@@ -328,8 +328,9 @@ class _StatusLessorState extends State<StatusLessor> {
     final baggage = detail['baggage'] ?? '---';
 
     final dailyPrice = carData['price'] ?? 0;
+    // เปลี่ยนการคำนวณจำนวนวันที่เช่าให้เหมือนไฟล์ที่แล้ว (นับทั้งวันเริ่มและวันสิ้นสุด)
     final days = (rentalStart != null && rentalEnd != null)
-        ? rentalEnd.difference(rentalStart).inDays
+        ? rentalEnd.difference(rentalStart).inDays + 1
         : 1;
     final deposit = (dailyPrice * days * 0.15).round();
     final total = (dailyPrice * days) + deposit;
