@@ -48,8 +48,13 @@ class _TrueWallState extends State<TrueWall> {
           print("[DEBUG] lessorDoc.exists = ${lessorDoc.exists}");
           if (lessorDoc.exists) {
             var lessorData = lessorDoc.data() as Map<String, dynamic>;
+            String phone = lessorData["phone"] ?? "ไม่มีข้อมูล";
+            // ถ้าเบอร์โทรขึ้นต้นด้วย "+66" ให้แทนที่ด้วย "0"
+            if (phone.startsWith('+66')) {
+              phone = '0' + phone.substring(3);
+            }
             setState(() {
-              _phoneController.text = lessorData["phone"] ?? "ไม่มีข้อมูล";
+              _phoneController.text = phone;
               isLoading = false;
             });
             print("[DEBUG] phone = ${_phoneController.text}");
@@ -152,11 +157,14 @@ class _TrueWallState extends State<TrueWall> {
               lessorPhone = lessorData["phone"] ?? "";
             }
             try {
-              print("[DEBUG] กำลัง update Firestore => status = release");
-              await _firestore
-                  .collection('rentals')
-                  .doc(widget.rentalId)
-                  .update({
+              print("[DEBUG] กำลัง update Firestore");
+              // อัปเดตค่า mypayment ใน collection payments โดยใช้ lessorId เป็น document id
+              int costInt = totalCost.round();
+              await _firestore.collection('payments').doc(lessorId).update({
+                "mypayment": FieldValue.increment(costInt),
+              });
+              // อัปเดตสถานะในเอกสาร rentals
+              await _firestore.collection('rentals').doc(widget.rentalId).update({
                 "status": "release",
                 "transferPhone": lessorPhone,
               });

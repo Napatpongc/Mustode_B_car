@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
-// เพิ่ม import สำหรับหน้า TrueWall
+// เพิ่ม import สำหรับหน้า TrueWall และ CarReviewPage
 import 'truewall.dart';
+import 'CarReviewPage.dart';
 
 class StatusRenter extends StatefulWidget {
   final String rentalId;
@@ -16,6 +17,8 @@ class StatusRenter extends StatefulWidget {
 }
 
 class _StatusRenterState extends State<StatusRenter> {
+  String? _carId; // เก็บ carId ที่ดึงมาจาก rentalData
+
   /// กำหนดขั้นตอน (Steps) ตามสถานะการเช่า
   List<Map<String, dynamic>> buildSteps(String status) {
     final steps = [
@@ -194,7 +197,24 @@ class _StatusRenterState extends State<StatusRenter> {
         );
       case 'successed':
         return ElevatedButton(
-          onPressed: null,
+          onPressed: () {
+            // เมื่อกดรีวิว ให้ไปยังหน้า CarReviewPage โดยส่ง carDocumentId และ rentalDocId
+            if (_carId != null && _carId!.isNotEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CarReviewPage(
+                    carDocumentId: _carId!,
+                    rentalDocId: widget.rentalId,
+                  ),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("ข้อมูลรถไม่พร้อมใช้งาน")),
+              );
+            }
+          },
           child: const Text("รีวิว", style: TextStyle(fontSize: 16)),
         );
       case 'canceled':
@@ -243,6 +263,8 @@ class _StatusRenterState extends State<StatusRenter> {
             rentalSnap.data!.data() as Map<String, dynamic>? ?? {};
         final status = rentalData['status'] ?? 'pending';
         final lessorId = rentalData['lessorId'] ?? '';
+        // ดึง carId และเก็บไว้ในตัวแปร _carId
+        _carId = rentalData['carId'] ?? '';
         final carId = rentalData['carId'] ?? '';
         final steps = buildSteps(status);
 
@@ -342,7 +364,7 @@ class _StatusRenterState extends State<StatusRenter> {
     final detail = carData['detail'] ?? {};
     final vehicleType = detail['Vehicle'] ?? '---';
     final gear = detail['gear'] ?? '---';
-    final seat = detail['seat']?.toString() ?? '---';
+    final seat = carData['seat']?.toString() ?? '---';
     final fuel = detail['fuel'] ?? '---';
     final door = detail['door']?.toString() ?? '---';
     final engine = detail['engine'] ?? '---';
@@ -770,7 +792,6 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
         const Text("โปรดชำระเงินภายใน 3 ชั่วโมง",
             style: TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
-<<<<<<< HEAD
         Text("เวลาที่เหลือ: ${formatDuration(remaining)}",
             style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
@@ -784,12 +805,6 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
               ),
             );
           },
-=======
-        Text("เวลาที่เหลือ: ${formatDuration(remaining)}", style: const TextStyle(fontSize: 16)),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: () {},
->>>>>>> 60284edf034d4202be073bbb83df7b05a6361413
           child: const Text("ชำระเงิน", style: TextStyle(fontSize: 16)),
         ),
       ],
