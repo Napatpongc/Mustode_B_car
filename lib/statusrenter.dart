@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
+// เพิ่ม import สำหรับหน้า TrueWall
+import 'truewall.dart';
+
 class StatusRenter extends StatefulWidget {
   final String rentalId;
 
@@ -13,22 +16,7 @@ class StatusRenter extends StatefulWidget {
 }
 
 class _StatusRenterState extends State<StatusRenter> {
-  /// -----------------------------------------------------------------
-  /// ฟังก์ชันกำหนดลำดับขั้นตอน (Steps) ตาม status
-  /// -----------------------------------------------------------------
-  /// มี 5 สเต็ป:
-  ///  1) รอติดต่อกลับ  (pending)
-  ///  2) ชำระเงิน       (waitpayment)
-  ///  3) อยู่ระหว่างการใช้รถ (release, recieve => index=2) -> ongoing => index=3
-  ///  4) รอยืนยันเสร็จสิ้นใช้รถ (end => index=4)
-  ///  5) เสร็จสิ้นการใช้รถ
-  ///
-  /// ขั้นที่ผ่านแล้ว -> สีเขียว
-  /// ขั้นปัจจุบัน -> สีเหลือง
-  ///
-  /// เพิ่มเงื่อนไข:
-  ///  - เมื่อ status = successed => ทุกสเต็ปเป็นสีเขียว
-  ///  - เมื่อ status = canceled  => ถ้าสต็ปไหนเป็นสีเหลือง ให้เปลี่ยนเป็นสีแดง
+  /// กำหนดขั้นตอน (Steps) ตามสถานะการเช่า
   List<Map<String, dynamic>> buildSteps(String status) {
     final steps = [
       {"text": "รอติดต่อกลับ", "color": Colors.grey},
@@ -38,15 +26,13 @@ class _StatusRenterState extends State<StatusRenter> {
       {"text": "เสร็จสิ้นการใช้รถ", "color": Colors.grey},
     ];
 
-    // ฟังก์ชันเพื่อไฮไลท์ขั้นปัจจุบันเป็นสีเหลือง และขั้นก่อนหน้าทั้งหมดเป็นสีเขียว
     void markStepActive(int indexActive) {
       for (int i = 0; i < indexActive; i++) {
-        steps[i]["color"] = Colors.green; // ขั้นที่ผ่านแล้วเป็นสีเขียว
+        steps[i]["color"] = Colors.green;
       }
-      steps[indexActive]["color"] = Colors.yellow; // ขั้นปัจจุบันเป็นสีเหลือง
+      steps[indexActive]["color"] = Colors.yellow;
     }
 
-    // ---- กรณี status = successed => ทุกสเต็ปเป็นสีเขียว ----
     if (status == "successed") {
       for (int i = 0; i < steps.length; i++) {
         steps[i]["color"] = Colors.green;
@@ -54,9 +40,8 @@ class _StatusRenterState extends State<StatusRenter> {
       return steps;
     }
 
-    // ---- กรณี status = canceled => ทำ logic ตามปกติก่อน แล้วค่อยเปลี่ยนเหลืองเป็นแดง ----
     if (status == "canceled") {
-      final originalStatus = getOriginalStatusBeforeCancel(); // สมมติ
+      final originalStatus = getOriginalStatusBeforeCancel();
       switch (originalStatus) {
         case "pending":
           markStepActive(0);
@@ -86,7 +71,6 @@ class _StatusRenterState extends State<StatusRenter> {
       return steps;
     }
 
-    // ---- กรณีสถานะอื่น ๆ ตาม logic เดิม ----
     switch (status) {
       case "pending":
         markStepActive(0);
@@ -111,13 +95,12 @@ class _StatusRenterState extends State<StatusRenter> {
     return steps;
   }
 
-  /// ฟังก์ชันสมมติไว้ว่า ถ้า canceled มาจากขั้น pending
-  /// (ถ้าอยากให้ตรงตามจริง อาจต้องเก็บ oldStatus ไว้ก่อนเปลี่ยนเป็น canceled)
+  /// ฟังก์ชันสมมติสำหรับเก็บสถานะก่อนยกเลิก
   String getOriginalStatusBeforeCancel() {
     return "pending";
   }
 
-  /// ฟังก์ชันสร้าง UI แบบ Dynamic ตามค่า status
+  /// สร้างส่วน UI ที่เปลี่ยนไปตามสถานะ
   Widget buildDynamicComponent(String status) {
     switch (status) {
       case 'pending':
@@ -135,11 +118,12 @@ class _StatusRenterState extends State<StatusRenter> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("เมื่อถึงวัน-เวลารับรถ กรุณามาถึงเวลาตามนัดที่กำหนด", style: TextStyle(fontSize: 14)),
+            const Text("เมื่อถึงวัน-เวลารับรถ กรุณามาถึงตามนัด",
+                style: TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
-            const Text("เมื่อผู้ปล่อยเช่ายืนยันส่งมอบรถ กรุณากดปุ่มยืนยันรับรถ", style: TextStyle(fontSize: 13)),
+            const Text("เมื่อผู้ปล่อยเช่ายืนยันส่งมอบรถ กรุณากดปุ่มยืนยันรับรถ",
+                style: TextStyle(fontSize: 13)),
             const SizedBox(height: 8),
-            // ปุ่มยืนยันรับรถในกรณี release ยังคงแสดงปุ่ม disabled
             ElevatedButton(
               onPressed: null,
               child: const Text("ยืนยันรับรถ", style: TextStyle(fontSize: 16)),
@@ -147,10 +131,8 @@ class _StatusRenterState extends State<StatusRenter> {
           ],
         );
       case 'recieve':
-        // เมื่อกดปุ่ม "ยืนยันรับรถ" ให้แสดง overlay dialog เพื่อยืนยันอีกครั้ง
         return RecieveComponent(rentalId: widget.rentalId);
       case 'ongoing':
-        // เมื่อกดปุ่ม "ขอสิ้นสุดการเช่ารถ" ให้แสดง overlay dialog
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -164,7 +146,8 @@ class _StatusRenterState extends State<StatusRenter> {
                       builder: (context) {
                         return AlertDialog(
                           title: const Text("ยืนยันการสิ้นสุดการเช่า"),
-                          content: const Text("กดตกลงอีกครั้งเพื่อยืนยันการสิ้นสุดการเช่ารถ"),
+                          content: const Text(
+                              "กดตกลงเพื่อยืนยันการสิ้นสุดการเช่ารถ"),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -185,13 +168,15 @@ class _StatusRenterState extends State<StatusRenter> {
                           .update({'status': 'end'});
                     }
                   },
-                  child: const Text("ขอสิ้นสุดการเช่ารถ", style: TextStyle(fontSize: 16)),
+                  child: const Text("ขอสิ้นสุดการเช่ารถ",
+                      style: TextStyle(fontSize: 16)),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // ปุ่มที่สอง (เช่น "ติดต่อเจ้าหน้าที่") ไม่ได้ทำอะไร
+                    // ปุ่ม "ติดต่อเจ้าหน้าที่" ไม่ได้ทำงานในที่นี้
                   },
-                  child: const Text("ติดต่อเจ้าหน้าที่", style: TextStyle(fontSize: 16)),
+                  child: const Text("ติดต่อเจ้าหน้าที่",
+                      style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),
@@ -203,7 +188,8 @@ class _StatusRenterState extends State<StatusRenter> {
           children: [
             CircularProgressIndicator(),
             const SizedBox(height: 8),
-            const Text("กำลังยืนยันสิ้นสุดการใช้รถ...", style: TextStyle(fontSize: 16)),
+            const Text("กำลังยืนยันสิ้นสุดการใช้รถ...",
+                style: TextStyle(fontSize: 16)),
           ],
         );
       case 'successed':
@@ -215,10 +201,7 @@ class _StatusRenterState extends State<StatusRenter> {
         return const Text(
           "ยกเลิก",
           style: TextStyle(
-            fontSize: 20,
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
+              fontSize: 20, color: Colors.red, fontWeight: FontWeight.bold),
         );
       default:
         return Container();
@@ -282,7 +265,8 @@ class _StatusRenterState extends State<StatusRenter> {
                   backgroundColor: const Color(0xFF00377E),
                 ),
                 body: Center(
-                  child: Text("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ให้เช่า: ${lessorSnap.error}"),
+                  child: Text(
+                      "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ให้เช่า: ${lessorSnap.error}"),
                 ),
               );
             }
@@ -307,7 +291,8 @@ class _StatusRenterState extends State<StatusRenter> {
                       backgroundColor: const Color(0xFF00377E),
                     ),
                     body: Center(
-                      child: Text("เกิดข้อผิดพลาดในการดึงข้อมูลรถ: ${carSnap.error}"),
+                      child: Text(
+                          "เกิดข้อผิดพลาดในการดึงข้อมูลรถ: ${carSnap.error}"),
                     ),
                   );
                 }
@@ -335,7 +320,7 @@ class _StatusRenterState extends State<StatusRenter> {
     );
   }
 
-  /// สร้าง UI หลัก เมื่อได้ rentalData, lessorData, carData ครบ
+  /// สร้าง UI หลัก เมื่อข้อมูลครบ
   Widget buildStatusUI({
     required BuildContext context,
     required Map<String, dynamic> rentalData,
@@ -345,15 +330,12 @@ class _StatusRenterState extends State<StatusRenter> {
     DateTime? rentalStart,
     DateTime? rentalEnd,
   }) {
-    // ข้อมูลผู้ให้เช่า
     final lessorName = lessorData['username'] ?? '---';
     final lessorEmail = lessorData['email'] ?? '---';
     final lessorPhone = lessorData['phone'] ?? '---';
-    final lessorProfile = (lessorData['image'] != null)
-        ? lessorData['image']['profile']
-        : null;
+    final lessorProfile =
+        (lessorData['image'] != null) ? lessorData['image']['profile'] : null;
 
-    // ข้อมูลรถ
     final brand = carData['brand'] ?? '---';
     final model = carData['model'] ?? '';
     final carfront = carData['image']?['carfront'];
@@ -366,7 +348,6 @@ class _StatusRenterState extends State<StatusRenter> {
     final engine = detail['engine'] ?? '---';
     final baggage = detail['baggage'] ?? '---';
 
-    // คำนวณราคา
     final dailyPrice = carData['price'] ?? 0;
     final days = (rentalStart != null && rentalEnd != null)
         ? rentalEnd.difference(rentalStart).inDays + 1
@@ -374,8 +355,6 @@ class _StatusRenterState extends State<StatusRenter> {
     final deposit = (dailyPrice * days * 0.15).round();
     final total = (dailyPrice * days) + deposit;
 
-    // เงื่อนไขสำหรับปุ่ม "ยกเลิก"
-    // ปุ่ม "ยกเลิก" จะ active ได้เฉพาะเมื่อ status เป็น pending, waitpayment, release
     final allowedCancelStatuses = ['pending', 'waitpayment', 'release'];
     final canCancel = allowedCancelStatuses.contains(rentalData['status']);
 
@@ -390,24 +369,19 @@ class _StatusRenterState extends State<StatusRenter> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ------------------------------
-            // สถานะ (Steps)
-            // ------------------------------
             const Text(
               'สถานะ',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(
+                width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 8),
             for (int i = 0; i < steps.length; i++)
               _buildStepItem(steps[i]['text'], steps[i]['color']),
             const SizedBox(height: 16),
-            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
-
-            // ------------------------------
-            // ส่วน Dynamic (เปลี่ยนตาม status)
-            // ------------------------------
+            Container(
+                width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 20),
             Container(
               width: double.infinity,
@@ -417,15 +391,12 @@ class _StatusRenterState extends State<StatusRenter> {
                 child: buildDynamicComponent(rentalData['status'] ?? 'pending'),
               ),
             ),
-
-            // ------------------------------
-            // รายละเอียดผู้ให้เช่า
-            // ------------------------------
             const SizedBox(height: 20),
             const Text('รายละเอียดผู้ให้เช่า',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 5),
-            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(
+                width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -457,16 +428,11 @@ class _StatusRenterState extends State<StatusRenter> {
               ],
             ),
             const SizedBox(height: 10),
-            Container(width: double.infinity, height: 9, color: Colors.grey[300]),
-
-            // ------------------------------
-            // ข้อมูลการเช่ารถ
-            // ------------------------------
+            Container(
+                width: double.infinity, height: 9, color: Colors.grey[300]),
             const SizedBox(height: 10),
-            const Text(
-              'ข้อมูลการเช่ารถ',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
+            const Text('ข้อมูลการเช่ารถ',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -502,31 +468,25 @@ class _StatusRenterState extends State<StatusRenter> {
             const Text('รายละเอียดการรับ-คืนรถ',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 5),
-            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(
+                width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildRentalInfo(
-                  "รับรถ",
-                  rentalStart,
-                  rentalData['pickupLocation'] ?? '---',
-                ),
+                _buildRentalInfo("รับรถ", rentalStart,
+                    rentalData['pickupLocation'] ?? '---'),
                 Container(width: 1, height: 100, color: Colors.grey[400]),
                 _buildRentalInfo(
-                  "คืนรถ",
-                  rentalEnd,
-                  rentalData['returnLocation'] ?? '---',
-                ),
+                    "คืนรถ", rentalEnd, rentalData['returnLocation'] ?? '---'),
               ],
             ),
             const SizedBox(height: 20),
-            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(
+                width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 20),
-            const Text(
-              'ค่าเช่ารถ',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            const Text('ค่าเช่ารถ',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -539,7 +499,8 @@ class _StatusRenterState extends State<StatusRenter> {
                 ]),
                 Text(
                   '฿${dailyPrice * days}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -554,7 +515,8 @@ class _StatusRenterState extends State<StatusRenter> {
                     style: TextStyle(color: Colors.grey, fontSize: 14)),
                 Text(
                   '฿$deposit',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -576,10 +538,9 @@ class _StatusRenterState extends State<StatusRenter> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'ทั้งหมด',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
+                  const Text('ทั้งหมด',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   Text(
                     '฿$total',
                     style: const TextStyle(
@@ -591,7 +552,6 @@ class _StatusRenterState extends State<StatusRenter> {
               ),
             ),
             const SizedBox(height: 20),
-            // ปุ่มยกเลิก (Cancel)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -605,10 +565,12 @@ class _StatusRenterState extends State<StatusRenter> {
                           builder: (context) {
                             return AlertDialog(
                               title: const Text("ยืนยันการยกเลิก"),
-                              content: const Text("กรุณากดตกลงเพื่อยืนยันการยกเลิก"),
+                              content:
+                                  const Text("กรุณากดตกลงเพื่อยืนยันการยกเลิก"),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text("ย้อนกลับ"),
                                 ),
                                 TextButton(
@@ -627,7 +589,8 @@ class _StatusRenterState extends State<StatusRenter> {
                         }
                       }
                     : null,
-                child: const Text('ยกเลิก', style: TextStyle(color: Colors.white)),
+                child:
+                    const Text('ยกเลิก', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -636,7 +599,6 @@ class _StatusRenterState extends State<StatusRenter> {
     );
   }
 
-  /// แสดงแต่ละ step พร้อมสี
   Widget _buildStepItem(String text, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -650,21 +612,16 @@ class _StatusRenterState extends State<StatusRenter> {
     );
   }
 
-  /// สร้าง widget แสดง icon + text
   Widget _iconText(IconData icon, String value) {
     return Row(
       children: [
         Icon(icon, size: 16, color: Colors.black),
         const SizedBox(width: 5),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 14, color: Colors.black),
-        ),
+        Text(value, style: const TextStyle(fontSize: 14, color: Colors.black)),
       ],
     );
   }
 
-  /// แสดง feature ของรถ (icon + label + value)
   Widget _carFeature(IconData icon, String label, String value) {
     return SizedBox(
       width: 160,
@@ -686,14 +643,11 @@ class _StatusRenterState extends State<StatusRenter> {
               Text(label,
                   style:
                       const TextStyle(color: Color(0xFF8F8F8F), fontSize: 14)),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(value,
+                  style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         ],
@@ -701,7 +655,6 @@ class _StatusRenterState extends State<StatusRenter> {
     );
   }
 
-  /// แสดงข้อมูลวันเวลา + สถานที่ รับ/คืน
   Widget _buildRentalInfo(String label, DateTime? dateTime, String location) {
     String dateStr = '---';
     String timeStr = '---';
@@ -716,22 +669,24 @@ class _StatusRenterState extends State<StatusRenter> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 5),
-        Text(dateStr, style: const TextStyle(color: Colors.black, fontSize: 14)),
+        Text(dateStr,
+            style: const TextStyle(color: Colors.black, fontSize: 14)),
         const SizedBox(height: 2),
-        Text(timeStr, style: const TextStyle(color: Colors.black, fontSize: 14)),
+        Text(timeStr,
+            style: const TextStyle(color: Colors.black, fontSize: 14)),
         const SizedBox(height: 2),
-        Text(location, style: const TextStyle(color: Colors.black, fontSize: 14)),
+        Text(location,
+            style: const TextStyle(color: Colors.black, fontSize: 14)),
       ],
     );
   }
 }
 
-/// Widget สำหรับสถานะ "waitpayment" โดยมี countdown timer 3 ชั่วโมง
-/// เมื่อเอกสาร rentals/{rentalId} ไม่มี field 'waitUntil' จะบันทึก waitUntil = currentTime + 3 ชั่วโมง
-/// เมื่อเวลาถอยหลังหมดและหาก status ยังคงเป็น 'waitpayment' จะอัปเดต status เป็น 'canceled'
+/// Widget สำหรับสถานะ "waitpayment" พร้อม Countdown Timer
 class WaitPaymentComponent extends StatefulWidget {
   final String rentalId;
-  const WaitPaymentComponent({Key? key, required this.rentalId}) : super(key: key);
+  const WaitPaymentComponent({Key? key, required this.rentalId})
+      : super(key: key);
 
   @override
   _WaitPaymentComponentState createState() => _WaitPaymentComponentState();
@@ -765,7 +720,8 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
           }
         });
       } else {
-        final DateTime newWaitUntil = DateTime.now().add(const Duration(hours: 3));
+        final DateTime newWaitUntil =
+            DateTime.now().add(const Duration(hours: 3));
         await docRef.update({'waitUntil': Timestamp.fromDate(newWaitUntil)});
         setState(() {
           remaining = const Duration(hours: 3);
@@ -782,8 +738,9 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
         });
         if (remaining.inSeconds <= 0) {
           timer?.cancel();
-          final docRef =
-              FirebaseFirestore.instance.collection('rentals').doc(widget.rentalId);
+          final docRef = FirebaseFirestore.instance
+              .collection('rentals')
+              .doc(widget.rentalId);
           final doc = await docRef.get();
           final currentStatus = doc.data()?['status'];
           if (currentStatus == 'waitpayment') {
@@ -810,16 +767,30 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text("โปรดชำระเงินภายใน 3 ชั่วโมง", style: TextStyle(fontSize: 16)),
+        const Text("โปรดชำระเงินภายใน 3 ชั่วโมง",
+            style: TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
-        Text("เวลาที่เหลือ: ${formatDuration(remaining)}", style: const TextStyle(fontSize: 16)),
+        Text("เวลาที่เหลือ: ${formatDuration(remaining)}",
+            style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 8),
+        ElevatedButton(
+          // เมื่อกดปุ่ม "ชำระเงิน" จะนำทางไปยังหน้า TrueWall พร้อมส่ง rentalId ไปด้วย
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TrueWall(rentalId: widget.rentalId),
+              ),
+            );
+          },
+          child: const Text("ชำระเงิน", style: TextStyle(fontSize: 16)),
+        ),
       ],
     );
   }
 }
 
-/// Widget สำหรับสถานะ "recieve" ที่มีปุ่มเริ่มต้น disabled แล้วค่อย enable เพื่อรับรถ
-/// เมื่อกดปุ่ม ให้แสดง Alert Dialog overlay เพื่อยืนยันการรับรถ
+/// Widget สำหรับสถานะ "recieve" ให้กดยืนยันรับรถ
 class RecieveComponent extends StatefulWidget {
   final String rentalId;
   const RecieveComponent({Key? key, required this.rentalId}) : super(key: key);
@@ -856,7 +827,7 @@ class _RecieveComponentState extends State<RecieveComponent> {
                     builder: (context) {
                       return AlertDialog(
                         title: const Text("ยืนยันการรับรถ"),
-                        content: const Text("กดตกลงอีกครั้งเพื่อยืนยันรับรถ"),
+                        content: const Text("กดตกลงเพื่อยืนยันการรับรถ"),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
