@@ -55,11 +55,8 @@ class _AddCarState extends State<AddCar> {
     'รถอเนกประสงค์ (SUV)',
     'รถกระบะ (Pickup Truck)',
     'รถตู้ (Van/Minivan)',
-    'รถหรู (Luxury Car)',
     'รถสปอร์ต (Sports Car)',
     'รถจักรยานยนต์ (Motorcycle)',
-    'รถบรรทุกขนาดเล็ก (Small Truck)',
-    'รถบรรทุกขนาดใหญ่ (Heavy Truck)',
     'รถไฟฟ้า (Electric Vehicle - EV)',
     'รถไฮบริด (Hybrid Car)',
     'รถมอเตอร์ไซค์ไฟฟ้า (Electric Motorcycle)',
@@ -74,11 +71,8 @@ class _AddCarState extends State<AddCar> {
     'รถอเนกประสงค์': 7,
     'รถกระบะ': 5,
     'รถตู้': 8,
-    'รถหรู': 5,
     'รถสปอร์ต': 2,
     'รถจักรยานยนต์': 2,
-    'รถบรรทุกขนาดเล็ก': 2,
-    'รถบรรทุกขนาดใหญ่': 2,
     'รถไฟฟ้า': 5,
     'รถไฮบริด': 5,
     'รถมอเตอร์ไซค์ไฟฟ้า': 2,
@@ -93,11 +87,8 @@ class _AddCarState extends State<AddCar> {
     'รถอเนกประสงค์': 5,
     'รถกระบะ': 4,
     'รถตู้': 5,
-    'รถหรู': 4,
     'รถสปอร์ต': 2,
     'รถจักรยานยนต์': 0,
-    'รถบรรทุกขนาดเล็ก': 2,
-    'รถบรรทุกขนาดใหญ่': 2,
     'รถไฟฟ้า': 4,
     'รถไฮบริด': 4,
     'รถมอเตอร์ไซค์ไฟฟ้า': 0,
@@ -357,19 +348,11 @@ class _AddCarState extends State<AddCar> {
         'เกียร์ธรรมดา (Manual Transmission)',
         'เกียร์อัตโนมัติ (Automatic Transmission)'
       ],
-      "รถหรู": [
-        'เกียร์ธรรมดา (Manual Transmission)',
-        'เกียร์อัตโนมัติ (Automatic Transmission)'
-      ],
       "รถสปอร์ต": [
         'เกียร์ธรรมดา (Manual Transmission)',
         'เกียร์อัตโนมัติ (Automatic Transmission)'
       ],
-      "รถบรรทุกขนาดเล็ก": [
-        'เกียร์ธรรมดา (Manual Transmission)',
-        'เกียร์อัตโนมัติ (Automatic Transmission)'
-      ],
-      "รถบรรทุกขนาดใหญ่": [
+      "รถจักรยานยนต์": [
         'เกียร์ธรรมดา (Manual Transmission)',
         'เกียร์อัตโนมัติ (Automatic Transmission)'
       ],
@@ -385,7 +368,6 @@ class _AddCarState extends State<AddCar> {
         'เกียร์ธรรมดา (Manual Transmission)',
         'เกียร์อัตโนมัติ (Automatic Transmission)'
       ],
-      // อื่น ๆ => 'ไม่มี'
     };
 
     return gearOptionsMap.containsKey(thaiType)
@@ -465,22 +447,12 @@ class _AddCarState extends State<AddCar> {
         'เครื่องยนต์ไฮบริด (Hybrid Engine)',
         'เครื่องยนต์ไฟฟ้า (Electric Engine)'
       ],
-      "รถหรู": [
-        'เครื่องยนต์เบนซิน (Gasoline Engine)',
-        'เครื่องยนต์ดีเซล (Diesel Engine)',
-        'เครื่องยนต์ไฮบริด (Hybrid Engine)',
-        'เครื่องยนต์ไฟฟ้า (Electric Engine)'
-      ],
       "รถสปอร์ต": [
         'เครื่องยนต์เบนซิน (Gasoline Engine)',
         'เครื่องยนต์ไฟฟ้า (Electric Engine)'
       ],
-      "รถบรรทุกขนาดเล็ก": [
-        'เครื่องยนต์ดีเซล (Diesel Engine)',
+      "รถจักรยานยนต์": [
         'เครื่องยนต์เบนซิน (Gasoline Engine)'
-      ],
-      "รถบรรทุกขนาดใหญ่": [
-        'เครื่องยนต์ดีเซล (Diesel Engine)'
       ],
       "รถไฟฟ้า": [
         'เครื่องยนต์ไฟฟ้า (Electric Engine)'
@@ -492,9 +464,6 @@ class _AddCarState extends State<AddCar> {
       "รถบ้าน": [
         'เครื่องยนต์เบนซิน (Gasoline Engine)',
         'เครื่องยนต์ดีเซล (Diesel Engine)'
-      ],
-      "รถจักรยานยนต์": [
-        'เครื่องยนต์เบนซิน (Gasoline Engine)'
       ],
       "รถมอเตอร์ไซค์ไฟฟ้า": [
         'เครื่องยนต์ไฟฟ้า (Electric Engine)'
@@ -562,11 +531,8 @@ class _AddCarState extends State<AddCar> {
       "รถอเนกประสงค์": ['น้อย (Small)', 'ปานกลาง (Medium)', 'มาก (Large)'],
       "รถกระบะ": ['น้อย (Small)', 'มาก (Large)'],
       "รถตู้": ['น้อย (Small)', 'ปานกลาง (Medium)', 'มาก (Large)'],
-      "รถหรู": ['น้อย (Small)', 'ปานกลาง (Medium)'],
       "รถสปอร์ต": [none],
       "รถจักรยานยนต์": [none],
-      "รถบรรทุกขนาดเล็ก": ['น้อย (Small)', 'ปานกลาง (Medium)'],
-      "รถบรรทุกขนาดใหญ่": ['น้อย (Small)', 'ปานกลาง (Medium)'],
       "รถไฟฟ้า": ['น้อย (Small)', 'ปานกลาง (Medium)', 'มาก (Large)'],
       "รถไฮบริด": ['น้อย (Small)', 'ปานกลาง (Medium)'],
       "รถมอเตอร์ไซค์ไฟฟ้า": [none],
@@ -643,19 +609,11 @@ class _AddCarState extends State<AddCar> {
       ],
       "รถกระบะ": ['เบนซิน (Gasoline)', 'ดีเซล (Diesel)'],
       "รถตู้": ['เบนซิน (Gasoline)', 'ดีเซล (Diesel)', 'ไฮบริด (Hybrid)'],
-      "รถหรู": [
-        'เบนซิน (Gasoline)',
-        'ดีเซล (Diesel)',
-        'ไฮบริด (Hybrid)',
-        'ไฟฟ้า (Electric)'
-      ],
       "รถสปอร์ต": ['เบนซิน (Gasoline)', 'ไฟฟ้า (Electric)'],
-      "รถบรรทุกขนาดเล็ก": ['ดีเซล (Diesel)', 'เบนซิน (Gasoline)'],
-      "รถบรรทุกขนาดใหญ่": ['ดีเซล (Diesel)'],
+      "รถจักรยานยนต์": ['เบนซิน (Gasoline)'],
       "รถไฟฟ้า": ['ไฟฟ้า (Electric)'],
       "รถไฮบริด": ['ไฮบริด (Hybrid)', 'ไฟฟ้า (Electric)'],
       "รถบ้าน": ['เบนซิน (Gasoline)', 'ดีเซล (Diesel)'],
-      "รถจักรยานยนต์": ['เบนซิน (Gasoline)'],
       "รถมอเตอร์ไซค์ไฟฟ้า": ['ไฟฟ้า (Electric)'],
       "รถจักรยาน": [none],
       "สกู๊ตเตอร์ไฟฟ้า": ['ไฟฟ้า (Electric)'],

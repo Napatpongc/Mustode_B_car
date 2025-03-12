@@ -646,7 +646,7 @@ class _StatusRenterState extends State<StatusRenter> {
 
   Widget _carFeature(IconData icon, String label, String value) {
     return SizedBox(
-      width: 160,
+      width: 190,
       child: Row(
         children: [
           Container(

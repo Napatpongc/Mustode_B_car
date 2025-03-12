@@ -11,6 +11,7 @@ import 'car_info.dart';
 import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
 import 'map_forsidebar.dart';
+import 'filter.dart'; // import สำหรับ FilterPage
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -32,6 +33,9 @@ class _HomePageState extends State<HomePage> {
   // ควบคุมการแสดงรายการรถและจำนวนรถที่ค้นพบ
   bool showCarList = false;
   int carCount = 0;
+
+  // ตัวกรองที่ได้รับจาก FilterPage
+  Map<String, dynamic>? _filters;
 
   @override
   void initState() {
@@ -435,7 +439,27 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
-                              onPressed: () => debugPrint("กรองผล"),
+                              onPressed: () async {
+                                // ตรวจสอบว่ามีการเลือกวัน-เวลา รับรถ/คืนรถหรือไม่
+                                if (pickupDate == null ||
+                                    pickupTime == null ||
+                                    returnDate == null ||
+                                    returnTime == null) {
+                                  _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                  return;
+                                }
+                                final filterResult = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const FilterPage()),
+                                );
+                                if (filterResult != null) {
+                                  debugPrint("Filter applied: $filterResult");
+                                  setState(() {
+                                    _filters = filterResult;
+                                  });
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
                                 shape: RoundedRectangleBorder(
@@ -454,6 +478,7 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const SizedBox(height: 8),
+                        // แสดงจำนวนรถที่ผ่านการกรอง
                         Text(
                           "พบรถว่าง $carCount คัน",
                           style: const TextStyle(
@@ -556,8 +581,61 @@ class _HomePageState extends State<HomePage> {
                   }
                 }
               }
+
+              // Apply additional filters if available
+              if (_filters != null) {
+                // Price filter
+                if (_filters!['maxPrice'] != null) {
+                  final maxPrice = _filters!['maxPrice'] as double;
+                  if (data["price"] == null ||
+                      (data["price"] as num).toDouble() > maxPrice) {
+                    return false;
+                  }
+                }
+                // Vehicle types filter
+                if (_filters!['vehicleTypes'] != null &&
+                    (_filters!['vehicleTypes'] as List).isNotEmpty) {
+                  final List<dynamic> vehicleTypes = _filters!['vehicleTypes'];
+                  if (data["detail"] == null ||
+                      data["detail"]["Vehicle"] == null ||
+                      !vehicleTypes.contains(data["detail"]["Vehicle"])) {
+                    return false;
+                  }
+                }
+                // Gear types filter
+                if (_filters!['gearTypes'] != null &&
+                    (_filters!['gearTypes'] as List).isNotEmpty) {
+                  final List<dynamic> gearTypes = _filters!['gearTypes'];
+                  if (data["detail"] == null ||
+                      data["detail"]["gear"] == null ||
+                      !gearTypes.contains(data["detail"]["gear"])) {
+                    return false;
+                  }
+                }
+                // Baggage options filter
+                if (_filters!['baggageOptions'] != null &&
+                    (_filters!['baggageOptions'] as List).isNotEmpty) {
+                  final List<dynamic> baggageOptions = _filters!['baggageOptions'];
+                  if (data["detail"] == null ||
+                      data["detail"]["baggage"] == null ||
+                      !baggageOptions.contains(data["detail"]["baggage"])) {
+                    return false;
+                  }
+                }
+              }
+
               return true;
             }).toList();
+
+            // อัปเดตจำนวนรถที่กรองได้แบบไม่เรียก setState ใน build โดยใช้ addPostFrameCallback
+            final int filteredCount = docs.length;
+            if (carCount != filteredCount) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                setState(() {
+                  carCount = filteredCount;
+                });
+              });
+            }
 
             if (docs.isEmpty) {
               return const Center(
@@ -690,8 +768,8 @@ class MyDrawerRenter extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>  MapScreen(
-                            // ไม่จำเป็นต้องส่ง parameterอีกครั้งถ้าเรียกจาก Drawer
+                      builder: (context) => MapScreen(
+                            // ไม่จำเป็นต้องส่ง parameter อีกครั้งถ้าเรียกจาก Drawer
                           )));
             },
           ),
