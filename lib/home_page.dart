@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'map.dart';
 import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'car_info.dart';
@@ -363,7 +364,12 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => debugPrint("ค้นหาบนแผนที่"),
+                            onPressed: (){
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => MapDetailPage())
+                              );
+                            },
                             icon: const Icon(Icons.location_on,
                                 color: Colors.black),
                             label: const Text(
@@ -678,7 +684,7 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MapDetailPage()));
              
             },
           ),
