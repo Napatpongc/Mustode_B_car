@@ -54,6 +54,7 @@ dependencies:
   
   
   syncfusion_flutter_datepicker: ^28.2.9
+  validators: ^3.0.0
 
 
 

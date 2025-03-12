@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'list.dart'; // เพิ่ม import ไฟล์ list.dart
 
 class CarReviewPage extends StatefulWidget {
   final String carDocumentId; // document ID ของ Firestore ที่เก็บรถ
@@ -93,11 +94,15 @@ class _CarReviewPageState extends State<CarReviewPage> {
           .doc(widget.rentalDocId)
           .update({'status': 'done'});
 
-      // 3) แจ้งเตือนแล้วกลับหน้าเดิม
+      // 3) แจ้งเตือนแล้วนำทางกลับไปยัง ListPage
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("รีวิวถูกส่งเรียบร้อย!")),
       );
-      Navigator.pop(context);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => ListPage()),
+        (route) => false,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("เกิดข้อผิดพลาดในการส่งรีวิว: $e")),

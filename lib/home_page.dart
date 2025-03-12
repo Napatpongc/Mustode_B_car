@@ -11,6 +11,7 @@ import 'car_info.dart';
 import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
 
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -683,10 +684,8 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder:(context) => MapDetailPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => MapDetailPage()));
+             
             },
           ),
           ListTile(
