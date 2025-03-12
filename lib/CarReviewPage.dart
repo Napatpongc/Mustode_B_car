@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'list.dart'; // เพิ่ม import ไฟล์ list.dart
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CarReviewPage extends StatefulWidget {
-  final String carDocumentId; // document ID ของ Firestore ที่เก็บรถ
-  final String rentalDocId; // document ID ของ Firestore ที่เก็บ rental
+  final String carDocumentId;
+  final String rentalDocId;
 
   CarReviewPage({
     required this.carDocumentId,
@@ -19,17 +19,19 @@ class _CarReviewPageState extends State<CarReviewPage> {
   String carName = "";
   String carImageUrl = "";
   bool isLoading = true;
-  int rating = 0; // ⭐ คะแนนรีวิว
-  int cleanliness = 0; // ✨ ความสะอาด
+  int rating = 0;
+  int cleanliness = 0;
   TextEditingController commentController = TextEditingController();
+  String? userId;
 
   @override
   void initState() {
     super.initState();
     fetchCarData();
+    getCurrentUser();
   }
 
-  /// ดึงข้อมูลรถจาก Firestore เพื่อแสดงรูป/ชื่อรถ
+  /// ดึงข้อมูลรถจาก Firestore
   void fetchCarData() async {
     try {
       DocumentSnapshot carDoc = await FirebaseFirestore.instance
@@ -61,7 +63,17 @@ class _CarReviewPageState extends State<CarReviewPage> {
     }
   }
 
-  /// ฟังก์ชันบันทึกรีวิวลง Firestore (รองรับภาษาไทย) และอัปเดต rentals เป็น "done"
+  /// ดึงข้อมูล user ID ของผู้ที่กำลังรีวิว
+  void getCurrentUser() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        userId = user.uid;
+      });
+    }
+  }
+
+  /// ฟังก์ชันบันทึกรีวิวลง Firestore และอัปเดต rentals เป็น "done"
   void submitReview() async {
     if (rating == 0 || cleanliness == 0 || commentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,39 +82,35 @@ class _CarReviewPageState extends State<CarReviewPage> {
       return;
     }
 
-    // บังคับใช้ UTF-8 กับข้อความ
-    String commentText = commentController.text.trim();
-    List<int> utf8Bytes = commentText.runes.toList();
-    String utf8String = String.fromCharCodes(utf8Bytes);
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("เกิดข้อผิดพลาด: ไม่พบข้อมูลผู้ใช้")),
+      );
+      return;
+    }
 
     try {
-      // 1) เพิ่มข้อมูลคอมเมนต์ลงใน cars/{carDocumentId}/carComments
       await FirebaseFirestore.instance
           .collection("cars")
           .doc(widget.carDocumentId)
           .collection("carComments")
           .add({
-        'rating': rating, // คะแนนดาว
-        'cleanliness': cleanliness, // คะแนนความสะอาด
-        'comment': utf8String, // ข้อความรีวิว
+        'userId': userId, // ✅ เก็บ userId ของผู้ที่ให้คอมเมนต์
+        'rating': rating,
+        'cleanliness': cleanliness,
+        'comment': commentController.text,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // 2) อัปเดต status ของ rentalDocId ให้เป็น "done"
       await FirebaseFirestore.instance
           .collection("rentals")
           .doc(widget.rentalDocId)
           .update({'status': 'done'});
 
-      // 3) แจ้งเตือนแล้วนำทางกลับไปยัง ListPage
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("รีวิวถูกส่งเรียบร้อย!")),
       );
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => ListPage()),
-        (route) => false,
-      );
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("เกิดข้อผิดพลาดในการส่งรีวิว: $e")),
@@ -110,7 +118,6 @@ class _CarReviewPageState extends State<CarReviewPage> {
     }
   }
 
-  /// Widget สร้างแถบให้คะแนน (ดาว)
   Widget buildStarRating() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -131,7 +138,6 @@ class _CarReviewPageState extends State<CarReviewPage> {
     );
   }
 
-  /// Widget สร้างแถบให้คะแนนความสะอาด
   Widget buildCleanlinessIcons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +163,7 @@ class _CarReviewPageState extends State<CarReviewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // ป้องกัน Bottom Overflow
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text("รีวิวรถ"),
         backgroundColor: Color(0xFF00377E),
@@ -179,23 +185,14 @@ class _CarReviewPageState extends State<CarReviewPage> {
                     carImageUrl.isNotEmpty
                         ? Image.network(carImageUrl,
                             height: 200, fit: BoxFit.cover)
-                        : Container(
-                            height: 200, color: Colors.grey), // กรณีไม่มีรูป
+                        : Container(height: 200, color: Colors.grey),
                     SizedBox(height: 20),
-
-                    // ให้คะแนนรีวิว
                     Text("ให้คะแนนรีวิว", style: TextStyle(fontSize: 18)),
                     buildStarRating(),
-
                     SizedBox(height: 20),
-
-                    // ให้คะแนนความสะอาด
                     Text("ความสะอาด", style: TextStyle(fontSize: 18)),
                     buildCleanlinessIcons(),
-
                     SizedBox(height: 20),
-
-                    // กล่องป้อนคอมเมนต์ (รองรับภาษาไทย)
                     TextField(
                       controller: commentController,
                       decoration: InputDecoration(
@@ -204,14 +201,11 @@ class _CarReviewPageState extends State<CarReviewPage> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      keyboardType: TextInputType.multiline, // รองรับหลายบรรทัด
-                      textInputAction: TextInputAction.newline, // รองรับ Enter
-                      maxLines: null, // ให้พิมพ์ได้ไม่จำกัดบรรทัด
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      maxLines: null,
                     ),
-
                     SizedBox(height: 20),
-
-                    // ปุ่มส่งรีวิว
                     ElevatedButton(
                       onPressed: submitReview,
                       style: ElevatedButton.styleFrom(
