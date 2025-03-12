@@ -10,7 +10,7 @@ import 'login_page.dart';
 import 'car_info.dart';
 import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
-
+import 'map_forsidebar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -39,6 +39,25 @@ class _HomePageState extends State<HomePage> {
     _getCurrentLocation();
   }
 
+  // ฟังก์ชันแสดง Alert Dialog แจ้งเตือน
+  void _showAlertDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("แจ้งเตือน"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: const Text("ตกลง"),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --------------------------------------------------
   // ฟังก์ชันดึงตำแหน่งปัจจุบันจาก GPS
   // --------------------------------------------------
@@ -50,9 +69,7 @@ class _HomePageState extends State<HomePage> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("ไม่สามารถเข้าถึงตำแหน่งได้")),
-        );
+        _showAlertDialog("ไม่สามารถเข้าถึงตำแหน่งได้");
         return;
       }
     }
@@ -102,15 +119,11 @@ class _HomePageState extends State<HomePage> {
         pickupTime == null ||
         returnDate == null ||
         returnTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("กรุณาเลือกวัน-เวลารับรถ/คืนรถ")),
-      );
+      _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
       return;
     }
     if (currentPosition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("ไม่พบตำแหน่งปัจจุบัน")),
-      );
+      _showAlertDialog("ไม่พบตำแหน่งปัจจุบัน");
       return;
     }
 
@@ -162,8 +175,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu,
-                color: Colors.white), // ไอคอน sidebar สีขาว
+            icon: const Icon(Icons.menu, color: Colors.white),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -364,10 +376,24 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: (){
+                            onPressed: () {
+                              if (pickupDate == null ||
+                                  pickupTime == null ||
+                                  returnDate == null ||
+                                  returnTime == null) {
+                                _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                return;
+                              }
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => MapDetailPage())
+                                MaterialPageRoute(
+                                  builder: (context) => MapDetailPage(
+                                    pickupDate: pickupDate,
+                                    pickupTime: pickupTime,
+                                    returnDate: returnDate,
+                                    returnTime: returnTime,
+                                  ),
+                                ),
                               );
                             },
                             icon: const Icon(Icons.location_on,
@@ -456,9 +482,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --------------------------------------------------
-  // ฟังก์ชันสร้าง List รถ
-  // --------------------------------------------------
+  // ฟังก์ชันสร้าง List รถ (เดิมใช้ใน HomePage)
   Widget _buildCarList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection("rentals").snapshots(),
@@ -501,11 +525,9 @@ class _HomePageState extends State<HomePage> {
                   data["location"]["longitude"] == null) {
                 return false;
               }
-
               final double carLat = data["location"]["latitude"];
               final double carLng = data["location"]["longitude"];
               if (currentPosition == null) return false;
-
               final double distance = Geolocator.distanceBetween(
                 currentPosition!.latitude,
                 currentPosition!.longitude,
@@ -519,39 +541,23 @@ class _HomePageState extends State<HomePage> {
               for (var rental in rentalDocs) {
                 final rentalData = rental.data() as Map<String, dynamic>;
                 if (rentalData["carId"] != doc.id) continue;
-
                 final Timestamp rentalStartTs = rentalData["rentalStart"];
                 final Timestamp rentalEndTs = rentalData["rentalEnd"];
                 final DateTime rentalStart = rentalStartTs.toDate();
                 final DateTime rentalEnd = rentalEndTs.toDate();
-
-                // ถ้าเวลาที่ผู้ใช้ต้องการซ้อนกับเวลาที่มีการเช่าอยู่
                 if (userPickup.isBefore(rentalEnd) &&
                     userReturn.isAfter(rentalStart)) {
                   final status =
                       (rentalData["status"] ?? "").toString().toLowerCase();
-                  // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
                   if (status != "canceled" &&
                       status != "successed" &&
                       status != "done") {
-                    // รถไม่ว่าง
                     return false;
                   }
                 }
               }
               return true;
             }).toList();
-
-            // อัปเดตตัวแปร carCount
-            if (carCount != docs.length && mounted) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    carCount = docs.length;
-                  });
-                }
-              });
-            }
 
             if (docs.isEmpty) {
               return const Center(
@@ -568,10 +574,7 @@ class _HomePageState extends State<HomePage> {
 
                 return InkWell(
                   onTap: () {
-                    // ------------------------------------------------
-                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime,
-                    // returnDate, returnTime
-                    // ------------------------------------------------
+                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -684,8 +687,12 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => MapDetailPage()));
-             
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>  MapScreen(
+                            // ไม่จำเป็นต้องส่ง parameterอีกครั้งถ้าเรียกจาก Drawer
+                          )));
             },
           ),
           ListTile(
@@ -711,8 +718,7 @@ class MyDrawerRenter extends StatelessWidget {
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title:
-                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();

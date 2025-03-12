@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'addcar.dart';
 import 'ProfileLessor.dart';
 import 'editmycar.dart';
+import 'Mycar.dart'; // If needed for drawer
 
 class MyCar extends StatelessWidget {
   const MyCar({Key? key}) : super(key: key);
@@ -162,7 +163,6 @@ class MyCar extends StatelessWidget {
                                   ),
                           ),
                           const SizedBox(width: 12),
-
                           // ข้อมูลรถ
                           Expanded(
                             child: Column(
@@ -373,7 +373,43 @@ class MyCar extends StatelessWidget {
                   child: Text('เพิ่มรถ', style: TextStyle(fontSize: 14)),
                 ),
                 FloatingActionButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // ตรวจสอบว่ามี field location หรือไม่
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser != null) {
+                      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+                          .collection("users")
+                          .doc(currentUser.uid)
+                          .get();
+                      if (userDoc.exists &&
+                          (userDoc.data() as Map<String, dynamic>)["location"] ==
+                              null) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext ctx) {
+                            return AlertDialog(
+                              title: const Text('ตำแหน่งที่ตั้งไม่พบ'),
+                              content: const Text(
+                                  'โปรด เพิ่มตำแหน่งที่ตั้งในหน้าโปรไฟล์ผู้เช่า ก่อนเช่ารถ'),
+                              actions: [
+                                TextButton(
+                                  child: const Text('OK'),
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => ProfileLessor()),
+                                    );
+                                  },
+                                )
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const AddCar()),

@@ -8,13 +8,13 @@ import 'package:geolocator/geolocator.dart';
 import 'account_page.dart';
 import 'vertical_calendar_page.dart';
 
-class MapDetailPage extends StatefulWidget {
+class MapScreen extends StatefulWidget {
   final DateTime? pickupDate;
   final TimeOfDay? pickupTime;
   final DateTime? returnDate;
   final TimeOfDay? returnTime;
 
-  const MapDetailPage({
+  const MapScreen({
     Key? key,
     this.pickupDate,
     this.pickupTime,
@@ -23,10 +23,10 @@ class MapDetailPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _MapDetailPageState createState() => _MapDetailPageState();
+  _MapScreenState createState() => _MapScreenState();
 }
 
-class _MapDetailPageState extends State<MapDetailPage> {
+class _MapScreenState extends State<MapScreen> {
   final Location location = Location();
   bool _serviceEnabled = false;
   PermissionStatus? _permissionGranted;
@@ -36,7 +36,7 @@ class _MapDetailPageState extends State<MapDetailPage> {
   bool _isManualLocation = false;
   List<Map<String, dynamic>> nearbyUsers = [];
 
-  // เพิ่มตัวแปรสำหรับเก็บวัน-เวลาใน MapDetailPage
+  // ตัวแปรสำหรับเก็บวัน-เวลาใน MapScreen
   DateTime? _pickupDate;
   TimeOfDay? _pickupTime;
   DateTime? _returnDate;
@@ -207,7 +207,8 @@ class _MapDetailPageState extends State<MapDetailPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
@@ -242,30 +243,25 @@ class _MapDetailPageState extends State<MapDetailPage> {
                                 ),
                                 GestureDetector(
                                   onTap: () async {
-                                    // หากวัน-เวลา รับรถ/คืนรถ ยังไม่ได้เลือก
-                                    if (_pickupDate == null ||
-                                        _pickupTime == null ||
-                                        _returnDate == null ||
-                                        _returnTime == null) {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => VerticalCalendarPage(
-                                            initialPickupDate: _pickupDate,
-                                            initialPickupTime: _pickupTime,
-                                            initialReturnDate: _returnDate,
-                                            initialReturnTime: _returnTime,
-                                          ),
+                                    // เลือกปฏิทินทุกครั้งที่กดที่ marker
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => VerticalCalendarPage(
+                                          initialPickupDate: _pickupDate,
+                                          initialPickupTime: _pickupTime,
+                                          initialReturnDate: _returnDate,
+                                          initialReturnTime: _returnTime,
                                         ),
-                                      );
-                                      if (result != null && result is Map<String, dynamic>) {
-                                        setState(() {
-                                          _pickupDate = result['pickupDate'];
-                                          _pickupTime = result['pickupTime'];
-                                          _returnDate = result['returnDate'];
-                                          _returnTime = result['returnTime'];
-                                        });
-                                      }
+                                      ),
+                                    );
+                                    if (result != null && result is Map<String, dynamic>) {
+                                      setState(() {
+                                        _pickupDate = result['pickupDate'];
+                                        _pickupTime = result['pickupTime'];
+                                        _returnDate = result['returnDate'];
+                                        _returnTime = result['returnTime'];
+                                      });
                                     }
                                     // หลังจากเลือกวันแล้ว ให้ navigate ไป AccountPage
                                     Navigator.push(

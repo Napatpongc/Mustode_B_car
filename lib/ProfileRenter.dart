@@ -12,6 +12,8 @@ import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
 import 'list.dart';
+import 'map_forsidebar.dart';
+
 
 // import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
 import 'address_picker.dart';
@@ -667,7 +669,13 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>  MapScreen(
+                            // ไม่จำเป็นต้องส่ง parameterอีกครั้งถ้าเรียกจาก Drawer
+                          )));
+              
               
             },
           ),
