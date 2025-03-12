@@ -157,11 +157,16 @@ class _MapDetailPageState extends State<MapDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.teal,
-        title: const Text('Map Detail'),
+        backgroundColor: Color(0xFF00377E),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back,color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.map),
+            icon: const Icon(Icons.map),color: Colors.white,
             onPressed: _openLocationPicker,
           ),
         ],

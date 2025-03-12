@@ -683,8 +683,10 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.pop(context);
-              // TODO: นำทางไปหน้าแผนที่
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder:(context) => MapDetailPage()),
+              );
             },
           ),
           ListTile(
