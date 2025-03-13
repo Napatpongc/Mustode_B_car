@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'map.dart';
 import 'ProfileRenter.dart';
 import 'login_page.dart';
 import 'car_info.dart';
 import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
+import 'map_forsidebar.dart';
+import 'filter.dart'; // import สำหรับ FilterPage
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -31,10 +34,32 @@ class _HomePageState extends State<HomePage> {
   bool showCarList = false;
   int carCount = 0;
 
+  // ตัวกรองที่ได้รับจาก FilterPage
+  Map<String, dynamic>? _filters;
+
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+  }
+
+  // ฟังก์ชันแสดง Alert Dialog แจ้งเตือน
+  void _showAlertDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("แจ้งเตือน"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: const Text("ตกลง"),
+          ),
+        ],
+      ),
+    );
   }
 
   // --------------------------------------------------
@@ -48,9 +73,7 @@ class _HomePageState extends State<HomePage> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("ไม่สามารถเข้าถึงตำแหน่งได้")),
-        );
+        _showAlertDialog("ไม่สามารถเข้าถึงตำแหน่งได้");
         return;
       }
     }
@@ -100,15 +123,11 @@ class _HomePageState extends State<HomePage> {
         pickupTime == null ||
         returnDate == null ||
         returnTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("กรุณาเลือกวัน-เวลารับรถ/คืนรถ")),
-      );
+      _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
       return;
     }
     if (currentPosition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("ไม่พบตำแหน่งปัจจุบัน")),
-      );
+      _showAlertDialog("ไม่พบตำแหน่งปัจจุบัน");
       return;
     }
 
@@ -136,124 +155,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   // --------------------------------------------------
-  // ฟังก์ชันเปิดหน้ากรองผล (Overlay) โดยใช้ showModalBottomSheet
+  // Helper function: คำนวณค่าเฉลี่ยคะแนนดาวจาก subcollection "carComments"
   // --------------------------------------------------
-  void _openFilterOverlay() {
-    // กำหนดค่าเริ่มต้นของตัวกรอง
-    double priceFilter = 50.0; // ค่าสมมุติราคา
-    double cleanlinessFilter = 50.0; // ค่าสมมุติความสะอาด
-    double ratingFilter = 3.0; // ค่าสมมุติคะแนนรถ
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(16),
-              height: 320,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(
-                    child: Text(
-                      "กรองผล",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Price Filter
-                  const Text("ราคา", style: TextStyle(fontSize: 16)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("\$0"),
-                      Text("\$${priceFilter.toStringAsFixed(0)}"),
-                      const Text("\$100"),
-                    ],
-                  ),
-                  Slider(
-                    value: priceFilter,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    label: priceFilter.toStringAsFixed(0),
-                    onChanged: (value) {
-                      setModalState(() {
-                        priceFilter = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  // Cleanliness Filter
-                  const Text("ความสะอาด", style: TextStyle(fontSize: 16)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("0%"),
-                      Text("${cleanlinessFilter.toStringAsFixed(0)}%"),
-                      const Text("100%"),
-                    ],
-                  ),
-                  Slider(
-                    value: cleanlinessFilter,
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    label: cleanlinessFilter.toStringAsFixed(0),
-                    onChanged: (value) {
-                      setModalState(() {
-                        cleanlinessFilter = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  // Car Rating Filter
-                  const Text("คะแนนรถ", style: TextStyle(fontSize: 16)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("0"),
-                      Text(ratingFilter.toStringAsFixed(1)),
-                      const Text("5"),
-                    ],
-                  ),
-                  Slider(
-                    value: ratingFilter,
-                    min: 0,
-                    max: 5,
-                    divisions: 10,
-                    label: ratingFilter.toStringAsFixed(1),
-                    onChanged: (value) {
-                      setModalState(() {
-                        ratingFilter = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: ปรับ logic การกรองรถตามตัวแปรที่เลือก
-                        // ตัวอย่าง: ส่งค่าตัวกรองไปประมวลผล และปิด overlay
-                        Navigator.pop(context);
-                      },
-                      child: const Text("Apply Filters"),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  Future<List<QueryDocumentSnapshot>> _filterDocsByRating(
+      List<QueryDocumentSnapshot> docs) async {
+    List<QueryDocumentSnapshot> filtered = [];
+    int filterRating = _filters!['rating'] as int;
+    for (var doc in docs) {
+      QuerySnapshot commentSnapshot = await FirebaseFirestore.instance
+          .collection("cars")
+          .doc(doc.id)
+          .collection("carComments")
+          .get();
+      double average = 0;
+      if (commentSnapshot.docs.isNotEmpty) {
+        double total = 0;
+        for (var commentDoc in commentSnapshot.docs) {
+          var commentData = commentDoc.data() as Map<String, dynamic>;
+          if (commentData.containsKey("rating") &&
+              commentData["rating"] != null) {
+            total += (commentData["rating"] as num).toDouble();
+          }
+        }
+        average = total / commentSnapshot.docs.length;
+      }
+      int roundedAverage = average.round();
+      // ถ้าค่าเฉลี่ย (ปัดเศษ) ตรงกับตัวกรองที่เลือก ให้เก็บ doc นี้
+      if (roundedAverage == filterRating) {
+        filtered.add(doc);
+      }
+    }
+    return filtered;
   }
 
   // --------------------------------------------------
@@ -281,8 +213,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu,
-                color: Colors.white), // ไอคอน sidebar สีขาว
+            icon: const Icon(Icons.menu, color: Colors.white),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -483,7 +414,26 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => debugPrint("ค้นหาบนแผนที่"),
+                            onPressed: () {
+                              if (pickupDate == null ||
+                                  pickupTime == null ||
+                                  returnDate == null ||
+                                  returnTime == null) {
+                                _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                return;
+                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MapDetailPage(
+                                    pickupDate: pickupDate,
+                                    pickupTime: pickupTime,
+                                    returnDate: returnDate,
+                                    returnTime: returnTime,
+                                  ),
+                                ),
+                              );
+                            },
                             icon: const Icon(Icons.location_on,
                                 color: Colors.black),
                             label: const Text(
@@ -523,7 +473,27 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
-                              onPressed: _openFilterOverlay,
+                              onPressed: () async {
+                                // ตรวจสอบว่ามีการเลือกวัน-เวลา รับรถ/คืนรถหรือไม่
+                                if (pickupDate == null ||
+                                    pickupTime == null ||
+                                    returnDate == null ||
+                                    returnTime == null) {
+                                  _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                  return;
+                                }
+                                final filterResult = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const FilterPage()),
+                                );
+                                if (filterResult != null) {
+                                  debugPrint("Filter applied: $filterResult");
+                                  setState(() {
+                                    _filters = filterResult;
+                                  });
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
                                 shape: RoundedRectangleBorder(
@@ -542,6 +512,7 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const SizedBox(height: 8),
+                        // แสดงจำนวนรถที่ผ่านการกรอง
                         Text(
                           "พบรถว่าง $carCount คัน",
                           style: const TextStyle(
@@ -570,9 +541,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --------------------------------------------------
-  // ฟังก์ชันสร้าง List รถ
-  // --------------------------------------------------
+  // ฟังก์ชันสร้าง List รถ (เดิมใช้ใน HomePage) พร้อมการกรองคะแนนดาว
   Widget _buildCarList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection("rentals").snapshots(),
@@ -615,11 +584,9 @@ class _HomePageState extends State<HomePage> {
                   data["location"]["longitude"] == null) {
                 return false;
               }
-
               final double carLat = data["location"]["latitude"];
               final double carLng = data["location"]["longitude"];
               if (currentPosition == null) return false;
-
               final double distance = Geolocator.distanceBetween(
                 currentPosition!.latitude,
                 currentPosition!.longitude,
@@ -633,117 +600,246 @@ class _HomePageState extends State<HomePage> {
               for (var rental in rentalDocs) {
                 final rentalData = rental.data() as Map<String, dynamic>;
                 if (rentalData["carId"] != doc.id) continue;
-
                 final Timestamp rentalStartTs = rentalData["rentalStart"];
                 final Timestamp rentalEndTs = rentalData["rentalEnd"];
                 final DateTime rentalStart = rentalStartTs.toDate();
                 final DateTime rentalEnd = rentalEndTs.toDate();
-
-                // ถ้าเวลาที่ผู้ใช้ต้องการซ้อนกับเวลาที่มีการเช่าอยู่
                 if (userPickup.isBefore(rentalEnd) &&
                     userReturn.isAfter(rentalStart)) {
                   final status =
                       (rentalData["status"] ?? "").toString().toLowerCase();
-                  // ถ้า status ไม่ใช่ canceled และไม่ใช่ successed => ถือว่าชน
                   if (status != "canceled" &&
                       status != "successed" &&
                       status != "done") {
-                    // รถไม่ว่าง
                     return false;
                   }
                 }
               }
+
+              // Apply additional filters if available
+              if (_filters != null) {
+                // Price filter
+                if (_filters!['maxPrice'] != null) {
+                  final maxPrice = _filters!['maxPrice'] as double;
+                  if (data["price"] == null ||
+                      (data["price"] as num).toDouble() > maxPrice) {
+                    return false;
+                  }
+                }
+                // Vehicle types filter
+                if (_filters!['vehicleTypes'] != null &&
+                    (_filters!['vehicleTypes'] as List).isNotEmpty) {
+                  final List<dynamic> vehicleTypes = _filters!['vehicleTypes'];
+                  if (data["detail"] == null ||
+                      data["detail"]["Vehicle"] == null ||
+                      !vehicleTypes.contains(data["detail"]["Vehicle"])) {
+                    return false;
+                  }
+                }
+                // Gear types filter
+                if (_filters!['gearTypes'] != null &&
+                    (_filters!['gearTypes'] as List).isNotEmpty) {
+                  final List<dynamic> gearTypes = _filters!['gearTypes'];
+                  if (data["detail"] == null ||
+                      data["detail"]["gear"] == null ||
+                      !gearTypes.contains(data["detail"]["gear"])) {
+                    return false;
+                  }
+                }
+                // Baggage options filter
+                if (_filters!['baggageOptions'] != null &&
+                    (_filters!['baggageOptions'] as List).isNotEmpty) {
+                  final List<dynamic> baggageOptions = _filters!['baggageOptions'];
+                  if (data["detail"] == null ||
+                      data["detail"]["baggage"] == null ||
+                      !baggageOptions.contains(data["detail"]["baggage"])) {
+                    return false;
+                  }
+                }
+              }
+
               return true;
             }).toList();
 
-            // อัปเดตตัวแปร carCount
-            if (carCount != docs.length && mounted) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  setState(() {
-                    carCount = docs.length;
-                  });
-                }
-              });
-            }
+            // ถ้ามีการกรองคะแนนดาว (rating > 0) ให้คำนวณค่าเฉลี่ยจาก subcollection "carComments"
+            if (_filters != null && (_filters!['rating'] as int) > 0) {
+              return FutureBuilder<List<QueryDocumentSnapshot>>(
+                future: _filterDocsByRating(docs),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final filteredDocs = snapshot.data ?? [];
+                  final int filteredCount = filteredDocs.length;
+                  if (carCount != filteredCount) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        carCount = filteredCount;
+                      });
+                    });
+                  }
+                  if (filteredDocs.isEmpty) {
+                    return const Center(
+                        child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+                  }
+                  return ListView.builder(
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final data =
+                          filteredDocs[index].data() as Map<String, dynamic>;
+                      final String brand = data["brand"] ?? "";
+                      final String model = data["model"] ?? "";
+                      final String imageUrl = data["image"]?["carside"] ?? "";
 
-            if (docs.isEmpty) {
-              return const Center(
-                  child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
-            }
-
-            return ListView.builder(
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final data = docs[index].data() as Map<String, dynamic>;
-                final String brand = data["brand"] ?? "";
-                final String model = data["model"] ?? "";
-                final String imageUrl = data["image"]?["carside"] ?? "";
-
-                return InkWell(
-                  onTap: () {
-                    // ------------------------------------------------
-                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime,
-                    // returnDate, returnTime
-                    // ------------------------------------------------
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CarInfo(
-                          carId: docs[index].id,
-                          pickupDate: pickupDate,
-                          pickupTime: pickupTime,
-                          returnDate: returnDate,
-                          returnTime: returnTime,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (imageUrl.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              imageUrl,
-                              width: double.infinity,
-                              height: 180,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        else
-                          Container(
-                            width: double.infinity,
-                            height: 180,
-                            color: Colors.grey,
-                          ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.circle,
-                                  color: Colors.green, size: 12),
-                              const SizedBox(width: 8),
-                              Text(
-                                "$brand $model",
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                      return InkWell(
+                        onTap: () {
+                          // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CarInfo(
+                                carId: filteredDocs[index].id,
+                                pickupDate: pickupDate,
+                                pickupTime: pickupTime,
+                                returnDate: returnDate,
+                                returnTime: returnTime,
                               ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (imageUrl.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    height: 180,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                Container(
+                                  width: double.infinity,
+                                  height: 180,
+                                  color: Colors.grey,
+                                ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.circle,
+                                        color: Colors.green, size: 12),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "$brand $model",
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                      ],
+                      );
+                    },
+                  );
+                },
+              );
+            } else {
+              // หากไม่มีการกรองคะแนนดาว ให้แสดงผลตาม docs ที่คำนวณได้
+              final int filteredCount = docs.length;
+              if (carCount != filteredCount) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() {
+                    carCount = filteredCount;
+                  });
+                });
+              }
+              if (docs.isEmpty) {
+                return const Center(
+                    child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+              }
+              return ListView.builder(
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final data = docs[index].data() as Map<String, dynamic>;
+                  final String brand = data["brand"] ?? "";
+                  final String model = data["model"] ?? "";
+                  final String imageUrl = data["image"]?["carside"] ?? "";
+
+                  return InkWell(
+                    onTap: () {
+                      // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CarInfo(
+                            carId: docs[index].id,
+                            pickupDate: pickupDate,
+                            pickupTime: pickupTime,
+                            returnDate: returnDate,
+                            returnTime: returnTime,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (imageUrl.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                imageUrl,
+                                width: double.infinity,
+                                height: 180,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          else
+                            Container(
+                              width: double.infinity,
+                              height: 180,
+                              color: Colors.grey,
+                            ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.circle,
+                                    color: Colors.green, size: 12),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "$brand $model",
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
+                  );
+                },
+              );
+            }
           },
         );
       },
@@ -798,8 +894,12 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.pop(context);
-              // TODO: ไปหน้าแผนที่
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MapScreen(
+                            // ไม่จำเป็นต้องส่ง parameter อีกครั้งถ้าเรียกจาก Drawer
+                          )));
             },
           ),
           ListTile(
@@ -827,8 +927,7 @@ class MyDrawerRenter extends StatelessWidget {
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title:
-                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();

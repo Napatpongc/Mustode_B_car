@@ -24,6 +24,7 @@ class _TrueWallState extends State<TrueWall> {
   final TrueWalletService _walletService = TrueWalletService();
 
   bool isLoading = true;
+  double? _totalCost; // ตัวแปรสำหรับเก็บ totalCost
 
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _TrueWallState extends State<TrueWall> {
     _fetchLessorPhone();
   }
 
-  // ดึงเบอร์โทรศัพท์ของผู้ให้เช่า (lessor) จากเอกสารการเช่าและ collection users
+  // ดึงเบอร์โทรศัพท์ของผู้ให้เช่า (lessor) และ totalCost จากเอกสารการเช่าและ collection users
   Future<void> _fetchLessorPhone() async {
     print("[DEBUG] _fetchLessorPhone: start");
     try {
@@ -40,6 +41,9 @@ class _TrueWallState extends State<TrueWall> {
       print("[DEBUG] rentalDoc.exists = ${rentalDoc.exists}");
       if (rentalDoc.exists) {
         var rentalData = rentalDoc.data() as Map<String, dynamic>;
+        // ดึง totalCost และเก็บลง state
+        _totalCost = double.tryParse(rentalData["totalCost"].toString()) ?? 0.0;
+
         String lessorId = rentalData["lessorId"] ?? "";
         print("[DEBUG] lessorId = $lessorId");
         if (lessorId.isNotEmpty) {
@@ -276,6 +280,13 @@ class _TrueWallState extends State<TrueWall> {
                       : const Text("🎁 รับเงินจากซองของขวัญ"),
                 ),
               ),
+              const SizedBox(height: 16),
+              // แสดงยอดเงินที่ต้องชำระ ถ้ามีข้อมูล
+              if (_totalCost != null)
+                Text(
+                  "ยอดเงินที่ต้องชำระ: ${_totalCost!.toStringAsFixed(2)} บาท",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
             ],
           ),
         ),

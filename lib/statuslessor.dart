@@ -646,7 +646,7 @@ class _StatusLessorState extends State<StatusLessor> {
 
   Widget _carFeature(IconData icon, String label, String value) {
     return SizedBox(
-      width: 160,
+      width: 190,
       child: Row(
         children: [
           Container(
