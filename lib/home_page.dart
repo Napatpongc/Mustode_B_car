@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'map.dart';
 import 'ProfileRenter.dart';
@@ -19,6 +18,14 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
+// ------------------------------
+// กำหนดค่าสี (Color Palette) ไว้เป็นตัวแปร
+// ------------------------------
+const Color kDarkBlue = Color(0xFF050C9C); // #050c9c
+const Color kMidBlue = Color(0xFF3572EF); // #3572EF
+const Color kLightBlue = Color(0xFF3ABEF9); // #3ABEF9
+const Color kLighterBlue = Color(0xFFA7E6FF); // #A7E6FF
 
 class _HomePageState extends State<HomePage> {
   // เก็บวัน-เวลารับรถ/คืนรถ
@@ -203,7 +210,8 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00377E),
+        // ใช้สี Palette ที่กำหนด (ตัวอย่าง: สี kDarkBlue)
+        backgroundColor: kDarkBlue,
         // เปลี่ยน title เป็นรูปจาก assets
         title: Image.asset(
           'assets/image/Mustode.png',
@@ -247,7 +255,7 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-      // ไล่เฉดสีพื้นหลัง
+      // ไล่เฉดสีพื้นหลังด้วย Palette
       body: Container(
         width: screenWidth,
         height: screenHeight,
@@ -256,8 +264,10 @@ class _HomePageState extends State<HomePage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFB3E5FC),
-              Color(0xFFE1F5FE),
+              kDarkBlue,
+              kMidBlue,
+              kLightBlue,
+              kLighterBlue,
             ],
           ),
         ),
@@ -267,7 +277,7 @@ class _HomePageState extends State<HomePage> {
             height: screenHeight,
             child: Stack(
               children: [
-                // กล่องเลือกวัน-เวลา รับรถ/คืนรถ
+                // ตำแหน่งกล่องเลือกวัน-เวลา
                 Positioned(
                   left: containerLeft,
                   top: 30,
@@ -275,9 +285,19 @@ class _HomePageState extends State<HomePage> {
                     width: containerWidth,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF8FF),
+                      // เปลี่ยนสีพื้นหลังให้เป็นสีขาวทึบขึ้น หรือใส่สีใกล้เคียงธีมที่เข้มขึ้น
+                      color: Colors.white.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.shade100),
+                      // เพิ่มเส้นขอบเข้มขึ้น
+                      border: Border.all(color: Colors.blue.shade300, width: 2),
+                      // หรือเพิ่มเงา (shadow) เพื่อให้เด่นขึ้น
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                         const Text(
                           "เลือกวัน-เวลา รับรถ/คืนรถ",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 20, // ปรับขนาดใหญ่ขึ้น
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
@@ -294,9 +314,11 @@ class _HomePageState extends State<HomePage> {
                         // แถว "รับรถ"
                         Row(
                           children: [
-                            const Text("รับรถ",
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.black54)),
+                            const Text(
+                              "รับรถ",
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.black54),
+                            ),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
@@ -304,7 +326,8 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF9CD9FF),
+                                  // ใช้สีที่เข้มขึ้นจากธีม เพื่อให้ contrast ดีกว่า
+                                  color: Colors.blueAccent.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -321,7 +344,7 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF9CD9FF),
+                                  color: Colors.blueAccent.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -339,9 +362,11 @@ class _HomePageState extends State<HomePage> {
                         // แถว "คืนรถ"
                         Row(
                           children: [
-                            const Text("คืนรถ",
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.black54)),
+                            const Text(
+                              "คืนรถ",
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.black54),
+                            ),
                             const Spacer(),
                             GestureDetector(
                               onTap: _openCalendarPage,
@@ -349,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF9CD9FF),
+                                  color: Colors.blueAccent.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -366,7 +391,7 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF9CD9FF),
+                                  color: Colors.blueAccent.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -419,7 +444,8 @@ class _HomePageState extends State<HomePage> {
                                   pickupTime == null ||
                                   returnDate == null ||
                                   returnTime == null) {
-                                _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                _showAlertDialog(
+                                    "กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
                                 return;
                               }
                               Navigator.push(
@@ -462,24 +488,25 @@ class _HomePageState extends State<HomePage> {
                     width: containerWidth,
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.blue.shade100),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ปุ่มกรอง + แสดง "ผลการค้นหา"
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
                               onPressed: () async {
-                                // ตรวจสอบว่ามีการเลือกวัน-เวลา รับรถ/คืนรถหรือไม่
                                 if (pickupDate == null ||
                                     pickupTime == null ||
                                     returnDate == null ||
                                     returnTime == null) {
-                                  _showAlertDialog("กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
+                                  _showAlertDialog(
+                                      "กรุณาเลือกวัน-เวลา รับรถ/คืนรถ");
                                   return;
                                 }
                                 final filterResult = await Navigator.push(
@@ -541,7 +568,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ฟังก์ชันสร้าง List รถ (เดิมใช้ใน HomePage) พร้อมการกรองคะแนนดาว
+  // ฟังก์ชันสร้าง List รถ (เหมือนในโค้ดเดิม)
   Widget _buildCarList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection("rentals").snapshots(),
@@ -649,7 +676,8 @@ class _HomePageState extends State<HomePage> {
                 // Baggage options filter
                 if (_filters!['baggageOptions'] != null &&
                     (_filters!['baggageOptions'] as List).isNotEmpty) {
-                  final List<dynamic> baggageOptions = _filters!['baggageOptions'];
+                  final List<dynamic> baggageOptions =
+                      _filters!['baggageOptions'];
                   if (data["detail"] == null ||
                       data["detail"]["baggage"] == null ||
                       !baggageOptions.contains(data["detail"]["baggage"])) {
@@ -756,7 +784,7 @@ class _HomePageState extends State<HomePage> {
                 },
               );
             } else {
-              // หากไม่มีการกรองคะแนนดาว ให้แสดงผลตาม docs ที่คำนวณได้
+              // หากไม่มีการกรองคะแนนดาว
               final int filteredCount = docs.length;
               if (carCount != filteredCount) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -779,7 +807,6 @@ class _HomePageState extends State<HomePage> {
 
                   return InkWell(
                     onTap: () {
-                      // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -868,7 +895,8 @@ class MyDrawerRenter extends StatelessWidget {
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF00377E)),
+            // สามารถเปลี่ยนมาใช้สี Palette ได้เช่นกัน
+            decoration: const BoxDecoration(color: kDarkBlue),
             accountName: Text(username, style: const TextStyle(fontSize: 16)),
             accountEmail: null,
             currentAccountPicture: CircleAvatar(
@@ -894,12 +922,8 @@ class MyDrawerRenter extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('แผนที่'),
             onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => MapScreen(
-                            // ไม่จำเป็นต้องส่ง parameter อีกครั้งถ้าเรียกจาก Drawer
-                          )));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => MapScreen()));
             },
           ),
           ListTile(
@@ -927,7 +951,8 @@ class MyDrawerRenter extends StatelessWidget {
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title:
+                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();
