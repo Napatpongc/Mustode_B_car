@@ -19,7 +19,7 @@ class IntoApp extends StatelessWidget {
           height: 389,
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage("assets/icon/app_icon.png"),
+              image: AssetImage("assets/icon/Mustode.gif"),
               fit: BoxFit.fill,
             ),
           ),

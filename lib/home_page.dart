@@ -10,7 +10,6 @@ import 'car_info.dart';
 import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
 
-
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -134,6 +133,127 @@ class _HomePageState extends State<HomePage> {
     final hh = time.hour.toString().padLeft(2, '0');
     final mm = time.minute.toString().padLeft(2, '0');
     return "$dateStr $hh:$mm น.";
+  }
+
+  // --------------------------------------------------
+  // ฟังก์ชันเปิดหน้ากรองผล (Overlay) โดยใช้ showModalBottomSheet
+  // --------------------------------------------------
+  void _openFilterOverlay() {
+    // กำหนดค่าเริ่มต้นของตัวกรอง
+    double priceFilter = 50.0; // ค่าสมมุติราคา
+    double cleanlinessFilter = 50.0; // ค่าสมมุติความสะอาด
+    double ratingFilter = 3.0; // ค่าสมมุติคะแนนรถ
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              height: 320,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Center(
+                    child: Text(
+                      "กรองผล",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Price Filter
+                  const Text("ราคา", style: TextStyle(fontSize: 16)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("\$0"),
+                      Text("\$${priceFilter.toStringAsFixed(0)}"),
+                      const Text("\$100"),
+                    ],
+                  ),
+                  Slider(
+                    value: priceFilter,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    label: priceFilter.toStringAsFixed(0),
+                    onChanged: (value) {
+                      setModalState(() {
+                        priceFilter = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  // Cleanliness Filter
+                  const Text("ความสะอาด", style: TextStyle(fontSize: 16)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("0%"),
+                      Text("${cleanlinessFilter.toStringAsFixed(0)}%"),
+                      const Text("100%"),
+                    ],
+                  ),
+                  Slider(
+                    value: cleanlinessFilter,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    label: cleanlinessFilter.toStringAsFixed(0),
+                    onChanged: (value) {
+                      setModalState(() {
+                        cleanlinessFilter = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  // Car Rating Filter
+                  const Text("คะแนนรถ", style: TextStyle(fontSize: 16)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("0"),
+                      Text(ratingFilter.toStringAsFixed(1)),
+                      const Text("5"),
+                    ],
+                  ),
+                  Slider(
+                    value: ratingFilter,
+                    min: 0,
+                    max: 5,
+                    divisions: 10,
+                    label: ratingFilter.toStringAsFixed(1),
+                    onChanged: (value) {
+                      setModalState(() {
+                        ratingFilter = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // TODO: ปรับ logic การกรองรถตามตัวแปรที่เลือก
+                        // ตัวอย่าง: ส่งค่าตัวกรองไปประมวลผล และปิด overlay
+                        Navigator.pop(context);
+                      },
+                      child: const Text("Apply Filters"),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   // --------------------------------------------------
@@ -403,7 +523,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton(
-                              onPressed: () => debugPrint("กรองผล"),
+                              onPressed: _openFilterOverlay,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
                                 shape: RoundedRectangleBorder(
@@ -679,7 +799,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('แผนที่'),
             onTap: () {
               Navigator.pop(context);
-             
+              // TODO: ไปหน้าแผนที่
             },
           ),
           ListTile(
@@ -699,7 +819,9 @@ class MyDrawerRenter extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (_) => ProfileRenter()));
+                context,
+                MaterialPageRoute(builder: (_) => ProfileRenter()),
+              );
             },
           ),
           const Spacer(),

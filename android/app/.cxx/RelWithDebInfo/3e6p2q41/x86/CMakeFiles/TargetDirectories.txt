@@ -1,0 +1,2 @@
+C:/Users/Kitsanaphong/Desktop/Project_SE/Frontend/Mustode_B_car/android/app/.cxx/RelWithDebInfo/3e6p2q41/x86/CMakeFiles/edit_cache.dir
+C:/Users/Kitsanaphong/Desktop/Project_SE/Frontend/Mustode_B_car/android/app/.cxx/RelWithDebInfo/3e6p2q41/x86/CMakeFiles/rebuild_cache.dir
