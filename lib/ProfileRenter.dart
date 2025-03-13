@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert'; // สำหรับ base64Encode
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
@@ -11,8 +10,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'ProfileLessor.dart';
-
-// import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
 import 'address_picker.dart';
 
 class ProfileRenter extends StatefulWidget {
@@ -32,7 +29,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
   String? subdistrict;
   String? postalCode;
 
-  // ------------------ ช่องกรอกข้อมูลเพิ่มเติม (TextField แยก) ------------------
+  // ------------------ ตัวแปรสำหรับข้อมูลเพิ่มเติม (moreinfo) ------------------
+  // เก็บที่ top-level ของ Firestore doc (ไม่อยู่ใน address หรือ location)
   String? moreinfo;
 
   // ------------------ ตัวแปรรูปภาพ ------------------
@@ -53,11 +51,9 @@ class _ProfileRenterState extends State<ProfileRenter> {
     }
     bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
 
+    // ใช้ StreamBuilder เพื่อดึงข้อมูลผู้ใช้แบบเรียลไทม์
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Scaffold(body: Center(child: Text("เกิดข้อผิดพลาด")));
@@ -81,10 +77,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF00377E),
-            title: const Text(
-              "บัญชี (ผู้เช่า)",
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text("บัญชี (ผู้เช่า)", style: TextStyle(color: Colors.white)),
             leading: Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -117,19 +110,21 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  /// โหลดข้อมูลจาก Firestore -> State ครั้งแรก (กรณี State ยังไม่ถูกเซ็ต)
+  /// โหลดข้อมูลจาก Firestore -> State ครั้งแรก (กรณี state ยังไม่ถูกเซ็ต)
   void _initializeLocalData(Map<String, dynamic> data) {
+    // อ่านค่าจาก top-level fields
     username ??= data['username'] as String?;
     email ??= data['email'] as String?;
     phone ??= data['phone'] as String?;
+    moreinfo ??= data['moreinfo'] as String?;
 
+    // ส่วน address
     final address = data['address'] as Map<String, dynamic>?;
     if (address != null) {
       province ??= address['province'];
       district ??= address['district'];
       subdistrict ??= address['subdistrict'];
       postalCode ??= address['postalCode'];
-      moreinfo ??= address['moreinfo']; 
     }
   }
 
@@ -224,22 +219,13 @@ class _ProfileRenterState extends State<ProfileRenter> {
                   color: Colors.blue,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text(
-                  "ผู้เช่า",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text("ผู้เช่า", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
             // ปุ่มผู้ปล่อยเช่า (non-selected)
             GestureDetector(
               onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => ProfileLessor()),
-                );
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileLessor()));
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -247,13 +233,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text(
-                  "ผู้ปล่อยเช่า",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text("ผู้ปล่อยเช่า", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -277,11 +257,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
         color: const Color(0xFFB3E5FC),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+          BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
         ],
       ),
       child: Column(
@@ -305,32 +281,15 @@ class _ProfileRenterState extends State<ProfileRenter> {
             },
           ),
           const SizedBox(height: 16),
-          // ช่องกรอกรายละเอียดเพิ่มเติม
-          _buildWhiteBox(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("ข้อมูลเพิ่มเติม", style: TextStyle(fontSize: 18)),
-                const SizedBox(height: 5),
-                TextFormField(
-                  initialValue: moreinfo ?? "",
-                  decoration: const InputDecoration(labelText: "รายละเอียดเพิ่มเติม"),
-                  onChanged: (val) {
-                    setState(() => moreinfo = val);
-                  },
-                ),
-              ],
-            ),
-          ),
+          // ส่วน "รายละเอียดที่อยู่เพิ่มเติม" (moreinfo อยู่ใน top-level)
+          _buildMoreInfoSection(userId),
+          const SizedBox(height: 16),
           // กล่องแสดงเบอร์โทร
           _buildWhiteBox(
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    "เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}",
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16)),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
@@ -338,19 +297,21 @@ class _ProfileRenterState extends State<ProfileRenter> {
                     final newVal = await _showEditDialog("เบอร์โทรศัพท์", phone);
                     if (newVal != null && newVal.isNotEmpty) {
                       setState(() => phone = newVal);
+                      // อัปเดท phone ลง Firestore
+                      FirebaseFirestore.instance.collection('users').doc(userId).update({
+                        'phone': newVal,
+                      });
                     }
                   },
                 ),
               ],
             ),
           ),
-          // อีเมล
+          // อีเมล (มักไม่ให้แก้ไข)
           _buildWhiteBox(
             Row(
               children: [
-                Expanded(
-                  child: Text("อีเมล: $email", style: const TextStyle(fontSize: 16)),
-                ),
+                Expanded(child: Text("อีเมล: $email", style: const TextStyle(fontSize: 16))),
               ],
             ),
           ),
@@ -393,16 +354,18 @@ class _ProfileRenterState extends State<ProfileRenter> {
             child: ElevatedButton(
               onPressed: () async {
                 try {
+                  // อัปเดทข้อมูล top-level
                   await FirebaseFirestore.instance.collection('users').doc(userId).update({
                     'username': username,
                     'email': email,
                     'phone': phone,
+                    // moreinfo เป็น top-level field
+                    'moreinfo': moreinfo,
                     'address': {
                       'province': province,
                       'district': district,
                       'subdistrict': subdistrict,
                       'postalCode': postalCode,
-                      'moreinfo': moreinfo, // บันทึกช่องกรอกเพิ่มเติม
                     },
                   });
 
@@ -452,7 +415,60 @@ class _ProfileRenterState extends State<ProfileRenter> {
     );
   }
 
-  // ------------------ โค้ดส่วนอัปโหลดรูป / ลบรูป / Dialog ฯลฯ ------------------
+  /// แสดงข้อมูล moreinfo (top-level) แบบเรียลไทม์ ด้วย StreamBuilder
+  Widget _buildMoreInfoSection(String userId) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดข้อมูล"));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return _buildWhiteBox(const Text("ไม่มีข้อมูล"));
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        // ดึง moreinfo จาก top-level field
+        final String moreinfoFromDB = data['moreinfo'] ?? "ไม่มีข้อมูล";
+
+        return _buildWhiteBox(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // แสดงข้อมูล moreinfo
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("รายละเอียดที่อยู่เพิ่มเติม", style: TextStyle(fontSize: 18)),
+                    const SizedBox(height: 8),
+                    Text(moreinfoFromDB, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () async {
+                  final newVal = await _showEditDialog("รายละเอียดเพิ่มเติม", moreinfoFromDB);
+                  if (newVal != null) {
+                    // อัปเดทค่าใน Firestore ทันที
+                    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+                      'moreinfo': newVal,
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ------------------ ฟังก์ชันส่วนอัปโหลดรูป / ลบรูป / Dialog ------------------
 
   Future<String?> _showEditDialog(String fieldLabel, String? currentValue) {
     final controller = TextEditingController(text: currentValue ?? "");
@@ -465,14 +481,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
           decoration: InputDecoration(hintText: "กรอก $fieldLabel"),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("ยกเลิก"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text("บันทึก"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("ยกเลิก")),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text("บันทึก")),
         ],
       ),
     );
@@ -512,13 +522,11 @@ class _ProfileRenterState extends State<ProfileRenter> {
   Future<Map<String, dynamic>> _uploadImageToImgur(File imageFile) async {
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
-
     final response = await http.post(
       Uri.parse('https://api.imgur.com/3/image'),
       headers: {'Authorization': 'Client-ID $_imgurClientId'},
       body: {'image': base64Image, 'type': 'base64'},
     );
-
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (data['success'] == true) {
       return {
@@ -546,11 +554,7 @@ class _ProfileRenterState extends State<ProfileRenter> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+          BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
         ],
       ),
       child: child,
@@ -595,10 +599,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -622,10 +623,7 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('การตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => ProfileRenter()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileRenter()));
             },
           ),
           const Spacer(),
@@ -637,10 +635,7 @@ class MyDrawerRenter extends StatelessWidget {
                 await GoogleSignIn().disconnect();
               }
               await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginPage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()));
             },
           ),
         ],

@@ -243,7 +243,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text("รายละเอียดเพิ่มเติม", style: TextStyle(fontSize: 18)),
+                                  const Text("รายละเอียดที่อยู่เพิ่มเติม", style: TextStyle(fontSize: 18)),
                                   const SizedBox(height: 8),
                                   Text(
                                     _moreInfo?.isNotEmpty == true ? _moreInfo! : "ไม่มีข้อมูล",
