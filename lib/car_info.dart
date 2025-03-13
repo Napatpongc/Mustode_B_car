@@ -345,6 +345,122 @@ class _CarInfoState extends State<CarInfo> {
                           ],
                         ),
                       ),
+
+                      // ----------------------------------------------------------------------------
+                      // ส่วนแสดง "รีวิวรถ" + คะแนนเฉลี่ยดาว และคะแนนเฉลี่ยความสะอาด
+                      // ----------------------------------------------------------------------------
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "รีวิวรถ",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            FutureBuilder<QuerySnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('cars')
+                                  .doc(widget.carId)
+                                  .collection('carComments')
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                // ถ้าไม่มีรีวิวใด ๆ
+                                if (snapshot.data!.docs.isEmpty) {
+                                  return const Text("ยังไม่มีรีวิว");
+                                }
+
+                                double totalRating = 0;
+                                double totalCleanliness = 0;
+                                for (var doc in snapshot.data!.docs) {
+                                  var commentData = doc.data() as Map<String, dynamic>;
+                                  totalRating += (commentData['rating'] ?? 0).toDouble();
+                                  totalCleanliness += (commentData['cleanliness'] ?? 0).toDouble();
+                                }
+
+                                double avgRating = totalRating / snapshot.data!.docs.length;
+                                double avgCleanliness =
+                                    totalCleanliness / snapshot.data!.docs.length;
+
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.grey),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.star, color: Colors.amber),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  avgRating.toStringAsFixed(1),
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            const Text(
+                                              "ดาว",
+                                              style: TextStyle(color: Colors.grey),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.grey),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.cleaning_services,
+                                                    color: Colors.blue),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  avgCleanliness.toStringAsFixed(1),
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            const Text(
+                                              "สะอาด",
+                                              style: TextStyle(color: Colors.grey),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
