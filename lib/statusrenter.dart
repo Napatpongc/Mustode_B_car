@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'phone.dart';
 
 // เพิ่ม import สำหรับหน้า TrueWall และ CarReviewPage
 import 'truewall.dart';
@@ -176,9 +177,15 @@ class _StatusRenterState extends State<StatusRenter> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // ปุ่ม "ติดต่อเจ้าหน้าที่" ไม่ได้ทำงานในที่นี้
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PhonePage(rentalId: widget.rentalId),
+                      ),
+                    );
                   },
-                  child: const Text("ติดต่อเจ้าหน้าที่",
+                  child: const Text("เบอร์ฉุกเฉิน",
                       style: TextStyle(fontSize: 16)),
                 ),
               ],
@@ -191,8 +198,7 @@ class _StatusRenterState extends State<StatusRenter> {
           children: [
             CircularProgressIndicator(),
             const SizedBox(height: 8),
-            const Text("กำลังยืนยันสิ้นสุดการใช้รถ...",
-                style: TextStyle(fontSize: 16)),
+            const Text("กำลังยืนยันสิ้นสุดการใช้รถ...", style: TextStyle(fontSize: 16)),
           ],
         );
       case 'successed':
@@ -313,8 +319,7 @@ class _StatusRenterState extends State<StatusRenter> {
                       backgroundColor: const Color(0xFF00377E),
                     ),
                     body: Center(
-                      child: Text(
-                          "เกิดข้อผิดพลาดในการดึงข้อมูลรถ: ${carSnap.error}"),
+                      child: Text("เกิดข้อผิดพลาดในการดึงข้อมูลรถ: ${carSnap.error}"),
                     ),
                   );
                 }
@@ -396,14 +401,12 @@ class _StatusRenterState extends State<StatusRenter> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Container(
-                width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 8),
             for (int i = 0; i < steps.length; i++)
               _buildStepItem(steps[i]['text'], steps[i]['color']),
             const SizedBox(height: 16),
-            Container(
-                width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 20),
             Container(
               width: double.infinity,
@@ -417,8 +420,7 @@ class _StatusRenterState extends State<StatusRenter> {
             const Text('รายละเอียดผู้ให้เช่า',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 5),
-            Container(
-                width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -450,8 +452,7 @@ class _StatusRenterState extends State<StatusRenter> {
               ],
             ),
             const SizedBox(height: 10),
-            Container(
-                width: double.infinity, height: 9, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 9, color: Colors.grey[300]),
             const SizedBox(height: 10),
             const Text('ข้อมูลการเช่ารถ',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
@@ -490,8 +491,7 @@ class _StatusRenterState extends State<StatusRenter> {
             const Text('รายละเอียดการรับ-คืนรถ',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 5),
-            Container(
-                width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -504,8 +504,7 @@ class _StatusRenterState extends State<StatusRenter> {
               ],
             ),
             const SizedBox(height: 20),
-            Container(
-                width: double.infinity, height: 1, color: Colors.grey[300]),
+            Container(width: double.infinity, height: 1, color: Colors.grey[300]),
             const SizedBox(height: 20),
             const Text('ค่าเช่ารถ',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
@@ -521,8 +520,7 @@ class _StatusRenterState extends State<StatusRenter> {
                 ]),
                 Text(
                   '฿${dailyPrice * days}',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -537,8 +535,7 @@ class _StatusRenterState extends State<StatusRenter> {
                     style: TextStyle(color: Colors.grey, fontSize: 14)),
                 Text(
                   '฿$deposit',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -704,7 +701,6 @@ class _StatusRenterState extends State<StatusRenter> {
   }
 }
 
-/// Widget สำหรับสถานะ "waitpayment" พร้อม Countdown Timer
 class WaitPaymentComponent extends StatefulWidget {
   final String rentalId;
   const WaitPaymentComponent({Key? key, required this.rentalId})
@@ -796,7 +792,6 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
             style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
         ElevatedButton(
-          // เมื่อกดปุ่ม "ชำระเงิน" จะนำทางไปยังหน้า TrueWall พร้อมส่ง rentalId ไปด้วย
           onPressed: () {
             Navigator.push(
               context,
@@ -812,7 +807,6 @@ class _WaitPaymentComponentState extends State<WaitPaymentComponent> {
   }
 }
 
-/// Widget สำหรับสถานะ "recieve" ให้กดยืนยันรับรถ
 class RecieveComponent extends StatefulWidget {
   final String rentalId;
   const RecieveComponent({Key? key, required this.rentalId}) : super(key: key);
