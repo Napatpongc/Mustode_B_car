@@ -155,6 +155,40 @@ class _HomePageState extends State<HomePage> {
   }
 
   // --------------------------------------------------
+  // Helper function: คำนวณค่าเฉลี่ยคะแนนดาวจาก subcollection "carComments"
+  // --------------------------------------------------
+  Future<List<QueryDocumentSnapshot>> _filterDocsByRating(
+      List<QueryDocumentSnapshot> docs) async {
+    List<QueryDocumentSnapshot> filtered = [];
+    int filterRating = _filters!['rating'] as int;
+    for (var doc in docs) {
+      QuerySnapshot commentSnapshot = await FirebaseFirestore.instance
+          .collection("cars")
+          .doc(doc.id)
+          .collection("carComments")
+          .get();
+      double average = 0;
+      if (commentSnapshot.docs.isNotEmpty) {
+        double total = 0;
+        for (var commentDoc in commentSnapshot.docs) {
+          var commentData = commentDoc.data() as Map<String, dynamic>;
+          if (commentData.containsKey("rating") &&
+              commentData["rating"] != null) {
+            total += (commentData["rating"] as num).toDouble();
+          }
+        }
+        average = total / commentSnapshot.docs.length;
+      }
+      int roundedAverage = average.round();
+      // ถ้าค่าเฉลี่ย (ปัดเศษ) ตรงกับตัวกรองที่เลือก ให้เก็บ doc นี้
+      if (roundedAverage == filterRating) {
+        filtered.add(doc);
+      }
+    }
+    return filtered;
+  }
+
+  // --------------------------------------------------
   // build
   // --------------------------------------------------
   @override
@@ -507,7 +541,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ฟังก์ชันสร้าง List รถ (เดิมใช้ใน HomePage)
+  // ฟังก์ชันสร้าง List รถ (เดิมใช้ใน HomePage) พร้อมการกรองคะแนนดาว
   Widget _buildCarList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection("rentals").snapshots(),
@@ -627,90 +661,185 @@ class _HomePageState extends State<HomePage> {
               return true;
             }).toList();
 
-            // อัปเดตจำนวนรถที่กรองได้แบบไม่เรียก setState ใน build โดยใช้ addPostFrameCallback
-            final int filteredCount = docs.length;
-            if (carCount != filteredCount) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                setState(() {
-                  carCount = filteredCount;
-                });
-              });
-            }
+            // ถ้ามีการกรองคะแนนดาว (rating > 0) ให้คำนวณค่าเฉลี่ยจาก subcollection "carComments"
+            if (_filters != null && (_filters!['rating'] as int) > 0) {
+              return FutureBuilder<List<QueryDocumentSnapshot>>(
+                future: _filterDocsByRating(docs),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final filteredDocs = snapshot.data ?? [];
+                  final int filteredCount = filteredDocs.length;
+                  if (carCount != filteredCount) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        carCount = filteredCount;
+                      });
+                    });
+                  }
+                  if (filteredDocs.isEmpty) {
+                    return const Center(
+                        child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+                  }
+                  return ListView.builder(
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final data =
+                          filteredDocs[index].data() as Map<String, dynamic>;
+                      final String brand = data["brand"] ?? "";
+                      final String model = data["model"] ?? "";
+                      final String imageUrl = data["image"]?["carside"] ?? "";
 
-            if (docs.isEmpty) {
-              return const Center(
-                  child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
-            }
-
-            return ListView.builder(
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final data = docs[index].data() as Map<String, dynamic>;
-                final String brand = data["brand"] ?? "";
-                final String model = data["model"] ?? "";
-                final String imageUrl = data["image"]?["carside"] ?? "";
-
-                return InkWell(
-                  onTap: () {
-                    // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CarInfo(
-                          carId: docs[index].id,
-                          pickupDate: pickupDate,
-                          pickupTime: pickupTime,
-                          returnDate: returnDate,
-                          returnTime: returnTime,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (imageUrl.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              imageUrl,
-                              width: double.infinity,
-                              height: 180,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        else
-                          Container(
-                            width: double.infinity,
-                            height: 180,
-                            color: Colors.grey,
-                          ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.circle,
-                                  color: Colors.green, size: 12),
-                              const SizedBox(width: 8),
-                              Text(
-                                "$brand $model",
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                      return InkWell(
+                        onTap: () {
+                          // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CarInfo(
+                                carId: filteredDocs[index].id,
+                                pickupDate: pickupDate,
+                                pickupTime: pickupTime,
+                                returnDate: returnDate,
+                                returnTime: returnTime,
                               ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (imageUrl.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    height: 180,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                Container(
+                                  width: double.infinity,
+                                  height: 180,
+                                  color: Colors.grey,
+                                ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.circle,
+                                        color: Colors.green, size: 12),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "$brand $model",
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                      ],
+                      );
+                    },
+                  );
+                },
+              );
+            } else {
+              // หากไม่มีการกรองคะแนนดาว ให้แสดงผลตาม docs ที่คำนวณได้
+              final int filteredCount = docs.length;
+              if (carCount != filteredCount) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() {
+                    carCount = filteredCount;
+                  });
+                });
+              }
+              if (docs.isEmpty) {
+                return const Center(
+                    child: Text("ไม่พบรถในรัศมี 5km หรือรถถูกจองแล้ว"));
+              }
+              return ListView.builder(
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final data = docs[index].data() as Map<String, dynamic>;
+                  final String brand = data["brand"] ?? "";
+                  final String model = data["model"] ?? "";
+                  final String imageUrl = data["image"]?["carside"] ?? "";
+
+                  return InkWell(
+                    onTap: () {
+                      // ไปหน้า CarInfo พร้อมส่ง pickupDate, pickupTime, returnDate, returnTime
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CarInfo(
+                            carId: docs[index].id,
+                            pickupDate: pickupDate,
+                            pickupTime: pickupTime,
+                            returnDate: returnDate,
+                            returnTime: returnTime,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (imageUrl.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                imageUrl,
+                                width: double.infinity,
+                                height: 180,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          else
+                            Container(
+                              width: double.infinity,
+                              height: 180,
+                              color: Colors.grey,
+                            ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.circle,
+                                    color: Colors.green, size: 12),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "$brand $model",
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
+                  );
+                },
+              );
+            }
           },
         );
       },
