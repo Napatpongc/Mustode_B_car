@@ -243,7 +243,7 @@ class _StatusLessorState extends State<StatusLessor> {
         if (rentalSnap.hasError) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text("รายละเอียด / สถานะ"),
+              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white),),
               centerTitle: true,
               backgroundColor: const Color(0xFF00377E),
             ),
@@ -255,7 +255,7 @@ class _StatusLessorState extends State<StatusLessor> {
         if (!rentalSnap.hasData || !rentalSnap.data!.exists) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text("รายละเอียด / สถานะ"),
+              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white),),
               centerTitle: true,
               backgroundColor: const Color(0xFF00377E),
             ),
