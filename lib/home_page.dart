@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'MyDrawerAnonymous.dart';
 import 'map.dart';
 import 'ProfileRenter.dart';
 import 'login_page.dart';
@@ -11,6 +12,7 @@ import 'vertical_calendar_page.dart';
 import 'list.dart'; // import สำหรับ navigate ไปยัง ListPage
 import 'map_forsidebar.dart';
 import 'filter.dart'; // import สำหรับ FilterPage
+
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -229,32 +231,56 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(FirebaseAuth.instance.currentUser!.uid)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Drawer(
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final username = data['username'] ?? "ไม่มีชื่อ";
-          String? profileUrl;
-          if (data['image'] != null) {
-            profileUrl = data['image']['profile'];
-          }
-          bool isGoogleLogin = FirebaseAuth.instance.currentUser?.providerData
-                  .any((p) => p.providerId == 'google.com') ??
-              false;
-          return MyDrawerRenter(
-            username: username,
-            isGoogleLogin: isGoogleLogin,
-            profileUrl: profileUrl,
-          );
-        },
-      ),
+  stream: FirebaseFirestore.instance
+      .collection('users')
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .snapshots(),
+  builder: (context, snapshot) {
+    // ดึงสถานะ Anonymous ก่อน
+    bool isAnonymous = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+
+    // ถ้าเป็น Anonymous => ไม่ต้องโหลดข้อมูล Firestore เลย
+    if (isAnonymous) {
+      return const MyDrawerAnonymous();
+    }
+
+    // ปกติ
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      // รอโหลดสักครู่
+      return const Drawer(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // หากโหลดมาแล้ว แต่ไม่มีข้อมูล (doc ไม่ exist)
+    if (!snapshot.hasData || snapshot.data == null || !snapshot.data!.exists) {
+      // อาจจะใส่โค้ดให้สร้าง doc ใหม่ หรือแสดงข้อความแจ้ง ฯลฯ
+      return const Drawer(
+        child: Center(child: Text("ไม่พบข้อมูลผู้ใช้")),
+      );
+    }
+
+    // ถ้า doc มีจริง ให้ไปทำงานตามเดิม
+    final data = snapshot.data!.data() as Map<String, dynamic>;
+    final username = data['username'] ?? "ไม่มีชื่อ";
+    String? profileUrl;
+    if (data['image'] != null) {
+      profileUrl = data['image']['profile'];
+    }
+    bool isGoogleLogin = FirebaseAuth.instance.currentUser?.providerData
+            .any((p) => p.providerId == 'google.com') ??
+        false;
+
+    // แสดง Drawer สำหรับผู้เช่าปกติ
+    return MyDrawerRenter(
+      username: username,
+      isGoogleLogin: isGoogleLogin,
+      profileUrl: profileUrl,
+    );
+  },
+),
+
+
       // ไล่เฉดสีพื้นหลังด้วย Palette
       body: Container(
         width: screenWidth,
