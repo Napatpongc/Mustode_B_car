@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'account_page.dart';
 import 'vertical_calendar_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MapDetailPage extends StatefulWidget {
   final DateTime? pickupDate;
@@ -79,55 +80,63 @@ class _MapDetailPageState extends State<MapDetailPage> {
   }
 
   Future<void> _fetchNearbyUsers() async {
-    if (_locationData == null) return;
+  if (_locationData == null) return;
 
-    try {
-      QuerySnapshot usersSnapshot =
-          await FirebaseFirestore.instance.collection('users').get();
-      print("🔍 Firestore returned ${usersSnapshot.docs.length} users");
+  try {
+    String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
-      List<Map<String, dynamic>> filteredUsers = [];
-      for (var doc in usersSnapshot.docs) {
-        var data = doc.data() as Map<String, dynamic>;
-        print("📄 Raw User Data: ${data}");
+    QuerySnapshot usersSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    print("🔍 Firestore returned ${usersSnapshot.docs.length} users");
 
-        if (data.containsKey('location') && data['location'] != null) {
-          double? userLat = data['location']['latitude']?.toDouble();
-          double? userLng = data['location']['longitude']?.toDouble();
+    List<Map<String, dynamic>> filteredUsers = [];
+    for (var doc in usersSnapshot.docs) {
+      var data = doc.data() as Map<String, dynamic>;
+      print("📄 Raw User Data: ${data}");
 
-          if (userLat != null && userLng != null) {
-            double distance = Geolocator.distanceBetween(
-              _locationData!.latitude!,
-              _locationData!.longitude!,
-              userLat,
-              userLng,
-            ) / 1000; // Convert meters to kilometers
-
-            print("📍 Checking ${data['username']} at ($userLat, $userLng) - Distance: ${distance.toStringAsFixed(2)} km");
-
-            if (distance <= 5) {
-              filteredUsers.add({
-                ...data,
-                'docId': doc.id,
-                'distance': distance, // Add distance to user data
-              });
-            }
-          } else {
-            print("⚠️ User ${data['username']} has invalid location data: $userLat, $userLng");
-          }
-        } else {
-          print("⚠️ Skipping user ${data['username']} - No location field");
-        }
+      // 🚨 ข้ามโปรไฟล์ของตัวเอง
+      if (doc.id == currentUserId) {
+        print("⏩ Skipping own profile: ${data['username']}");
+        continue;
       }
 
-      print("✅ Nearby users found: ${filteredUsers.length}");
-      setState(() {
-        nearbyUsers = filteredUsers;
-      });
-    } catch (e) {
-      print("❌ Error fetching users: $e");
+      if (data.containsKey('location') && data['location'] != null) {
+        double? userLat = data['location']['latitude']?.toDouble();
+        double? userLng = data['location']['longitude']?.toDouble();
+
+        if (userLat != null && userLng != null) {
+          double distance = Geolocator.distanceBetween(
+            _locationData!.latitude!,
+            _locationData!.longitude!,
+            userLat,
+            userLng,
+          ) / 1000; // Convert meters to kilometers
+
+          print("📍 Checking ${data['username']} at ($userLat, $userLng) - Distance: ${distance.toStringAsFixed(2)} km");
+
+          if (distance <= 5) {
+            filteredUsers.add({
+              ...data,
+              'docId': doc.id,
+              'distance': distance, // Add distance to user data
+            });
+          }
+        } else {
+          print("⚠️ User ${data['username']} has invalid location data: $userLat, $userLng");
+        }
+      } else {
+        print("⚠️ Skipping user ${data['username']} - No location field");
+      }
     }
+
+    print("✅ Nearby users found: ${filteredUsers.length}");
+    setState(() {
+      nearbyUsers = filteredUsers;
+    });
+  } catch (e) {
+    print("❌ Error fetching users: $e");
   }
+}
 
   void _updateLocation(LatLng newLocation) {
     setState(() {

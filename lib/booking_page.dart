@@ -192,7 +192,7 @@ class _BookingPageState extends State<BookingPage> {
                 final lessorLocation = ownerData?['location'] ??
                     {'latitude': 0.0, 'longitude': 0.0};
 
-                // สร้าง document ใน rentals collection พร้อมเพิ่ม field 'pendinguntil' และ 'cost'
+                // สร้าง document ใน rentals collection พร้อมเพิ่ม field 'pendinguntil', 'cost' และ 'deposit'
                 await FirebaseFirestore.instance.collection('rentals').add({
                   'renterId': renterId,
                   'lessorId': carData?['ownerId'] ?? '',
@@ -205,6 +205,7 @@ class _BookingPageState extends State<BookingPage> {
                   'lessorLocation': lessorLocation,
                   'pendinguntil': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 3))),
                   'cost': total, // เพิ่ม field cost เพื่อเก็บจำนวนเงินทั้งหมดที่ต้องจ่าย
+                  'deposit': deposit, // เพิ่ม field deposit เพื่อเก็บค่ามัดจำ
                 });
 
                 // Navigate ไปยัง ListPage
