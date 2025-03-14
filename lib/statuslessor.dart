@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'listLessor.dart'; // เพิ่ม import listLessor.dart เพื่อใช้ navigate ไป ListPage
 
 class StatusLessor extends StatefulWidget {
   final String rentalId;
@@ -243,7 +244,7 @@ class _StatusLessorState extends State<StatusLessor> {
         if (rentalSnap.hasError) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white),),
+              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white)),
               centerTitle: true,
               backgroundColor: const Color(0xFF00377E),
             ),
@@ -255,7 +256,7 @@ class _StatusLessorState extends State<StatusLessor> {
         if (!rentalSnap.hasData || !rentalSnap.data!.exists) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white),),
+              title: const Text("รายละเอียด / สถานะ", style: TextStyle(color: Colors.white)),
               centerTitle: true,
               backgroundColor: const Color(0xFF00377E),
             ),
@@ -266,6 +267,22 @@ class _StatusLessorState extends State<StatusLessor> {
         final rentalData =
             rentalSnap.data!.data() as Map<String, dynamic>? ?? {};
         final status = rentalData['status'] ?? 'pending';
+
+        // หาก status เป็น done ให้ navigate ไป ListPage (จาก listLessor.dart)
+        if (status == 'done') {
+          // ใช้ addPostFrameCallback เพื่อรอให้ widget build เสร็จแล้วค่อย navigate
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ListPage()),
+            );
+          });
+          // คืน widget เปล่าเพื่อไม่ให้ build UI ซ้ำ
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final renterId = rentalData['renterId'] ?? '';
         final steps = buildSteps(status);
 
@@ -350,7 +367,7 @@ class _StatusLessorState extends State<StatusLessor> {
     DateTime? rentalStart,
     DateTime? rentalEnd,
   }) {
-    final lessorName = rentalData['lessorName'] ?? '---'; // สมมติว่ามีข้อมูลผู้ให้เช่า
+    final lessorName = rentalData['lessorName'] ?? '---';
     final lessorEmail = rentalData['lessorEmail'] ?? '---';
     final lessorPhone = rentalData['lessorPhone'] ?? '---';
     final lessorProfile = rentalData['lessorProfile'];
@@ -368,7 +385,6 @@ class _StatusLessorState extends State<StatusLessor> {
     final baggage = detail['baggage'] ?? '---';
 
     final dailyPrice = carData['price'] ?? 0;
-    // คำนวณจำนวนวันโดยนับรวมวันเริ่มต้นและวันสิ้นสุด (+1)
     final days = (rentalStart != null && rentalEnd != null)
         ? rentalEnd.difference(rentalStart).inDays + 1
         : 1;
