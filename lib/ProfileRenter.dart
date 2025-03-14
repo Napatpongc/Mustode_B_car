@@ -376,15 +376,27 @@ class _ProfileRenterState extends State<ProfileRenter> {
                               fit: BoxFit.cover,
                             ),
                           )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.camera_alt, color: Colors.blueAccent),
-                              SizedBox(height: 4),
-                              Text('เลือกรูป',
-                                  style: TextStyle(color: Colors.blueAccent)),
-                            ],
-                          ),
+                        : (oldDrivingUrl != null && oldDrivingUrl != 'null'
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  oldDrivingUrl,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.camera_alt,
+                                      color: Colors.blueAccent),
+                                  SizedBox(height: 4),
+                                  Text('เลือกรูป',
+                                      style:
+                                          TextStyle(color: Colors.blueAccent)),
+                                ],
+                              )),
                   ),
                 ),
               ],

@@ -329,14 +329,24 @@ class _ProfileLessorState extends State<ProfileLessor> {
                                           fit: BoxFit.cover,
                                         ),
                                       )
-                                    : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: const [
-                                          Icon(Icons.camera_alt, color: Colors.blueAccent),
-                                          SizedBox(height: 4),
-                                          Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
-                                        ],
-                                      ),
+                                    : (oldIdCardUrl != null && oldIdCardUrl != 'null'
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              oldIdCardUrl,
+                                              width: 100,
+                                              height: 100,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: const [
+                                              Icon(Icons.camera_alt, color: Colors.blueAccent),
+                                              SizedBox(height: 4),
+                                              Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
+                                            ],
+                                          )),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -362,14 +372,24 @@ class _ProfileLessorState extends State<ProfileLessor> {
                                           fit: BoxFit.cover,
                                         ),
                                       )
-                                    : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: const [
-                                          Icon(Icons.camera_alt, color: Colors.blueAccent),
-                                          SizedBox(height: 4),
-                                          Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
-                                        ],
-                                      ),
+                                    : (oldRentalUrl != null && oldRentalUrl != 'null'
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              oldRentalUrl,
+                                              width: 100,
+                                              height: 100,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: const [
+                                              Icon(Icons.camera_alt, color: Colors.blueAccent),
+                                              SizedBox(height: 4),
+                                              Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
+                                            ],
+                                          )),
                               ),
                             ),
                             const SizedBox(height: 20),
