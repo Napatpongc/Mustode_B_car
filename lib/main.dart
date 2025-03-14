@@ -50,7 +50,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter OTP Authentication',
       theme: ThemeData(
-        primaryColor: const Color.fromARGB(255, 0, 0, 0),
+        // กำหนดฟอนต์ที่รองรับภาษาไทย (เช่น Sarabun)
+        fontFamily: 'Sarabun',
       ),
       home:  IntoApp(), // กำหนด navigation flow ของคุณ
       getPages: [

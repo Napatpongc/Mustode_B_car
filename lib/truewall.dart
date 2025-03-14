@@ -243,7 +243,7 @@ class _TrueWallState extends State<TrueWall> {
     print("[DEBUG] build => isLoading=$isLoading");
     return Scaffold(
       appBar: AppBar(
-        title: const Text("TrueWall"),
+        title: const Text("TrueMoney Wallet angpao"),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -281,12 +281,35 @@ class _TrueWallState extends State<TrueWall> {
                 ),
               ),
               const SizedBox(height: 16),
-              // แสดงยอดเงินที่ต้องชำระ ถ้ามีข้อมูล
-              if (_totalCost != null)
-                Text(
-                  "ยอดเงินที่ต้องชำระ: ${_totalCost!.toStringAsFixed(2)} บาท",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // แสดงยอดเงินที่ต้องชำระ พร้อมเพิ่มรูปให้อยู่ตรงกลางจอและขนาดใหญ่ขึ้น
+              if (_totalCost != null) ...[
+                Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "ยอดเงินที่ต้องชำระ: ${_totalCost!.toStringAsFixed(2)} บาท",
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Image(
+                          image: AssetImage('assets/image/truemoney.png'),
+                          width: 200, // ปรับขนาดให้ใหญ่ขึ้น
+                        ),
+                        const SizedBox(height: 8),
+                        Image(
+                          image: AssetImage('assets/image/true.png'),
+                          width: 136, 
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              ],
             ],
           ),
         ),

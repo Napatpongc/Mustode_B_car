@@ -94,7 +94,51 @@ flutter:
     - assets/icon/
     - assets/image/
     - assets/geography.json
-    
+  
+  
+  fonts:
+    - family: Sarabun
+      fonts:
+        - asset: assets/fonts/Sarabun-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Sarabun-ThinItalic.ttf
+          weight: 100
+          style: italic
+        - asset: assets/fonts/Sarabun-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Sarabun-ExtraLightItalic.ttf
+          weight: 200
+          style: italic
+        - asset: assets/fonts/Sarabun-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Sarabun-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/Sarabun-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Sarabun-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/Sarabun-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Sarabun-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/Sarabun-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Sarabun-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/Sarabun-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Sarabun-BoldItalic.ttf
+          weight: 700
+          style: italic
+        - asset: assets/fonts/Sarabun-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Sarabun-ExtraBoldItalic.ttf
+          weight: 800
+          style: italic
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
