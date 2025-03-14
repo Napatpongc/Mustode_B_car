@@ -13,7 +13,6 @@ import 'ProfileLessor.dart';
 import 'list.dart';
 import 'map_forsidebar.dart';
 
-
 // import AddressPicker (รองรับค่าตั้งต้น 4 พารามิเตอร์)
 import 'address_picker.dart';
 
@@ -54,20 +53,26 @@ class _ProfileRenterState extends State<ProfileRenter> {
         body: Center(child: Text("ไม่พบผู้ใช้ที่ login")),
       );
     }
-    bool isGoogleLogin = currentUser.providerData.any((p) => p.providerId == 'google.com');
+    bool isGoogleLogin =
+        currentUser.providerData.any((p) => p.providerId == 'google.com');
 
     // ใช้ StreamBuilder เพื่อดึงข้อมูลผู้ใช้แบบเรียลไทม์
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Scaffold(body: Center(child: Text("เกิดข้อผิดพลาด")));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         }
         if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")));
+          return const Scaffold(
+              body: Center(child: Text("ไม่พบข้อมูลผู้ใช้งาน")));
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -82,7 +87,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: const Color(0xFF00377E),
-            title: const Text("บัญชี (ผู้เช่า)", style: TextStyle(color: Colors.white)),
+            title: const Text("บัญชี (ผู้เช่า)",
+                style: TextStyle(color: Colors.white)),
             leading: Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -175,7 +181,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1),
                     ),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                    child:
+                        const Icon(Icons.edit, color: Colors.white, size: 16),
                   ),
                 ),
               ),
@@ -185,7 +192,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
           Expanded(
             child: Text(
               username ?? "ไม่มีชื่อ",
-              style: const TextStyle(fontSize: 28, color: Colors.black, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  fontSize: 28,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
@@ -219,26 +229,33 @@ class _ProfileRenterState extends State<ProfileRenter> {
             GestureDetector(
               onTap: () {},
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.blue,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text("ผู้เช่า", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text("ผู้เช่า",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
             // ปุ่มผู้ปล่อยเช่า (non-selected)
             GestureDetector(
               onTap: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileLessor()));
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => ProfileLessor()));
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text("ผู้ปล่อยเช่า", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                child: const Text("ผู้ปล่อยเช่า",
+                    style: TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -262,13 +279,17 @@ class _ProfileRenterState extends State<ProfileRenter> {
         color: const Color(0xFFB3E5FC),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("ข้อมูลส่วนตัว", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text("ข้อมูลส่วนตัว",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           // AddressPicker (ส่งค่าเริ่มต้นที่ดึงจาก Firestore)
           AddressPicker(
@@ -294,16 +315,21 @@ class _ProfileRenterState extends State<ProfileRenter> {
             Row(
               children: [
                 Expanded(
-                  child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}", style: const TextStyle(fontSize: 16)),
+                  child: Text("เบอร์โทรศัพท์: ${phone ?? "ไม่มีข้อมูล"}",
+                      style: const TextStyle(fontSize: 16)),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () async {
-                    final newVal = await _showEditDialog("เบอร์โทรศัพท์", phone);
+                    final newVal =
+                        await _showEditDialog("เบอร์โทรศัพท์", phone);
                     if (newVal != null && newVal.isNotEmpty) {
                       setState(() => phone = newVal);
                       // อัปเดท phone ลง Firestore
-                      FirebaseFirestore.instance.collection('users').doc(userId).update({
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .update({
                         'phone': newVal,
                       });
                     }
@@ -316,11 +342,14 @@ class _ProfileRenterState extends State<ProfileRenter> {
           _buildWhiteBox(
             Row(
               children: [
-                Expanded(child: Text("อีเมล: $email", style: const TextStyle(fontSize: 16))),
+                Expanded(
+                    child: Text("อีเมล: $email",
+                        style: const TextStyle(fontSize: 16))),
               ],
             ),
           ),
           const SizedBox(height: 20),
+
           // ส่วนอัปโหลดรูปใบขับขี่
           _buildWhiteBox(
             Column(
@@ -328,30 +357,40 @@ class _ProfileRenterState extends State<ProfileRenter> {
               children: [
                 const Text('รูปใบขับขี่', style: TextStyle(fontSize: 18)),
                 const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: _pickDrivingLicenseImage,
-                  icon: const Icon(Icons.upload),
-                  label: const Text('เลือกรูป'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                GestureDetector(
+                  onTap: _pickDrivingLicenseImage,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blueAccent, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _drivingLicenseFile != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              _drivingLicenseFile!,
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.camera_alt, color: Colors.blueAccent),
+                              SizedBox(height: 4),
+                              Text('เลือกรูป',
+                                  style: TextStyle(color: Colors.blueAccent)),
+                            ],
+                          ),
                   ),
                 ),
-                if (_drivingLicenseFile != null) ...[
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      _drivingLicenseFile!,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
+
           const SizedBox(height: 20),
           // ปุ่มบันทึก
           Align(
@@ -360,7 +399,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
               onPressed: () async {
                 try {
                   // อัปเดทข้อมูล top-level
-                  await FirebaseFirestore.instance.collection('users').doc(userId).update({
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(userId)
+                      .update({
                     'username': username,
                     'email': email,
                     'phone': phone,
@@ -392,7 +434,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                       newFile: _drivingLicenseFile!,
                       oldDeleteHash: oldDrivingDeleteHash,
                       firestoreField: 'image.driving_license',
-                      firestoreDeleteHashField: 'image.deletehash_driving_license',
+                      firestoreDeleteHashField:
+                          'image.deletehash_driving_license',
                     );
                   }
 
@@ -407,11 +450,13 @@ class _ProfileRenterState extends State<ProfileRenter> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                child: Text("บันทึก", style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: Text("บันทึก",
+                    style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ),
@@ -423,7 +468,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
   /// แสดงข้อมูล moreinfo (top-level) แบบเรียลไทม์ ด้วย StreamBuilder
   Widget _buildMoreInfoSection(String userId) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Center(child: Text("เกิดข้อผิดพลาดในการโหลดข้อมูล"));
@@ -448,7 +496,8 @@ class _ProfileRenterState extends State<ProfileRenter> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("รายละเอียดที่อยู่เพิ่มเติม", style: TextStyle(fontSize: 18)),
+                    const Text("รายละเอียดที่อยู่เพิ่มเติม",
+                        style: TextStyle(fontSize: 18)),
                     const SizedBox(height: 8),
                     Text(moreinfoFromDB, style: const TextStyle(fontSize: 16)),
                   ],
@@ -457,10 +506,14 @@ class _ProfileRenterState extends State<ProfileRenter> {
               IconButton(
                 icon: const Icon(Icons.edit, color: Colors.blue),
                 onPressed: () async {
-                  final newVal = await _showEditDialog("รายละเอียดเพิ่มเติม", moreinfoFromDB);
+                  final newVal = await _showEditDialog(
+                      "รายละเอียดเพิ่มเติม", moreinfoFromDB);
                   if (newVal != null) {
                     // อัปเดทค่าใน Firestore ทันที
-                    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(userId)
+                        .update({
                       'moreinfo': newVal,
                     });
                   }
@@ -486,8 +539,12 @@ class _ProfileRenterState extends State<ProfileRenter> {
           decoration: InputDecoration(hintText: "กรอก $fieldLabel"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("ยกเลิก")),
-          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text("บันทึก")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("ยกเลิก")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: const Text("บันทึก")),
         ],
       ),
     );
@@ -511,14 +568,16 @@ class _ProfileRenterState extends State<ProfileRenter> {
   }
 
   Future<void> _pickDrivingLicenseImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _drivingLicenseFile = File(pickedFile.path));
     }
   }
 
   Future<void> _pickProfileImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _profileFile = File(pickedFile.path));
     }
@@ -559,7 +618,10 @@ class _ProfileRenterState extends State<ProfileRenter> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5)),
         ],
       ),
       child: child,
@@ -604,7 +666,8 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('หน้าหลัก'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
           ),
           ListTile(
@@ -614,11 +677,9 @@ class MyDrawerRenter extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>  MapScreen(
-                            // ไม่จำเป็นต้องส่ง parameterอีกครั้งถ้าเรียกจาก Drawer
+                      builder: (context) => MapScreen(
+                          // ไม่จำเป็นต้องส่ง parameterอีกครั้งถ้าเรียกจาก Drawer
                           )));
-              
-              
             },
           ),
           ListTile(
@@ -634,19 +695,22 @@ class MyDrawerRenter extends StatelessWidget {
             title: const Text('การตั้งค่าบัญชี'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileRenter()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => ProfileRenter()));
             },
           ),
           const Spacer(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
+            title:
+                const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
             onTap: () async {
               if (isGoogleLogin) {
                 await GoogleSignIn().disconnect();
               }
               await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (_) => LoginPage()));
             },
           ),
         ],

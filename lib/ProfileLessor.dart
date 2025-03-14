@@ -128,7 +128,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
     }
 
     // moreinfo ไม่ได้อยู่ใน address => ดึงจาก data['moreinfo']
-    _moreInfo ??= data['moreinfo']; 
+    _moreInfo ??= data['moreinfo'];
   }
 
   @override
@@ -170,7 +170,7 @@ class _ProfileLessorState extends State<ProfileLessor> {
             backgroundColor: const Color(0xFF00377E),
             title: const Text(
               "บัญชี (ผู้ปล่อยเช่า)",
-              style: TextStyle(color: Colors.white), // เปลี่ยนสีข้อความเป็นสีขาว
+              style: TextStyle(color: Colors.white),
             ),
             leading: Builder(
               builder: (context) => IconButton(
@@ -307,29 +307,71 @@ class _ProfileLessorState extends State<ProfileLessor> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // รูปบัตรประชาชน
                             const Text('รูปบัตรประชาชน', style: TextStyle(fontSize: 18)),
                             const SizedBox(height: 5),
-                            ElevatedButton.icon(
-                              onPressed: _pickIdCardImage,
-                              icon: const Icon(Icons.upload),
-                              label: const Text('เลือกรูป'),
+                            GestureDetector(
+                              onTap: _pickIdCardImage,
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.blueAccent, width: 2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: _idCardFile != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          _idCardFile!,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.camera_alt, color: Colors.blueAccent),
+                                          SizedBox(height: 4),
+                                          Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
+                                        ],
+                                      ),
+                              ),
                             ),
-                            if (_idCardFile != null) ...[
-                              const SizedBox(height: 10),
-                              Image.file(_idCardFile!, width: 100, height: 100, fit: BoxFit.cover),
-                            ],
                             const SizedBox(height: 20),
+                            // สัญญาปล่อยเช่า (จำเป็น)
                             const Text('สัญญาปล่อยเช่า (จำเป็น)', style: TextStyle(fontSize: 18)),
                             const SizedBox(height: 5),
-                            ElevatedButton.icon(
-                              onPressed: _pickRentalContractImage,
-                              icon: const Icon(Icons.upload),
-                              label: const Text('เลือกรูป'),
+                            GestureDetector(
+                              onTap: _pickRentalContractImage,
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.blueAccent, width: 2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: _rentalContractFile != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          _rentalContractFile!,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.camera_alt, color: Colors.blueAccent),
+                                          SizedBox(height: 4),
+                                          Text('เลือกรูป', style: TextStyle(color: Colors.blueAccent)),
+                                        ],
+                                      ),
+                              ),
                             ),
-                            if (_rentalContractFile != null) ...[
-                              const SizedBox(height: 10),
-                              Image.file(_rentalContractFile!, width: 100, height: 100, fit: BoxFit.cover),
-                            ],
                             const SizedBox(height: 20),
                             // ปุ่มตำแหน่งที่ตั้ง
                             ElevatedButton.icon(
