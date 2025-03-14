@@ -11,7 +11,8 @@ class ListPage extends StatefulWidget {
   State<ListPage> createState() => _ListPageState();
 }
 
-class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin {
+class _ListPageState extends State<ListPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -33,7 +34,11 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
       // AppBar พร้อม TabBar
       // --------------------------------------
       appBar: AppBar(
-        title: const Text("รายการเช่า"),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "รายการเช่า",
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: const Color(0xFF00377E),
         bottom: PreferredSize(
@@ -43,11 +48,11 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             color: Colors.blue.shade100,
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.black,
+              labelColor: Colors.black, // ข้อความแท็บเป็นสีดำ
               unselectedLabelColor: Colors.black54,
               isScrollable: false,
               indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const _HalfBarIndicator(),
+              indicator: _HalfBarIndicator(),
               tabs: const [
                 Tab(text: "ล่าสุด"),
                 Tab(text: "ประวัติ"),
@@ -55,16 +60,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             ),
           ),
         ),
-        actions: [
-          // ปุ่มแจ้งเตือน
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // กำหนด action ของปุ่มนี้ได้ตามต้องการ
-            },
-          ),
-        ],
       ),
+
       // --------------------------------------
       // Drawer โดยใช้ MyDrawer จาก ProfileLessor.dart
       // --------------------------------------
@@ -81,7 +78,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
           }
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final username = data['username'] ?? 'ไม่มีชื่อ';
-          final profileUrl = (data['image'] != null) ? data['image']['profile'] : null;
+          final profileUrl =
+              (data['image'] != null) ? data['image']['profile'] : null;
           final isGoogleLogin = FirebaseAuth.instance.currentUser!.providerData
               .any((p) => p.providerId == 'google.com');
           return MyDrawer(
@@ -127,7 +125,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
         final docs = snapshot.data!.docs.where((doc) {
           final rentalData = doc.data() as Map<String, dynamic>;
           return rentalData['lessorId'] == uid &&
-              !(['canceled', 'successed', 'done'].contains(rentalData['status']));
+              !(['canceled', 'successed', 'done']
+                  .contains(rentalData['status']));
         }).toList();
 
         if (docs.isEmpty) {
@@ -149,13 +148,17 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             final renterId = rentalData['renterId'] ?? '';
 
             return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance.collection('users').doc(renterId).get(),
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(renterId)
+                  .get(),
               builder: (context, userSnapshot) {
                 if (userSnapshot.hasError) {
                   return Card(
                     margin: const EdgeInsets.all(16),
                     child: ListTile(
-                      title: Text("เกิดข้อผิดพลาดในการโหลดข้อมูลผู้เช่า: ${userSnapshot.error}"),
+                      title: Text(
+                          "เกิดข้อผิดพลาดในการโหลดข้อมูลผู้เช่า: ${userSnapshot.error}"),
                     ),
                   );
                 }
@@ -167,7 +170,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                     ),
                   );
                 }
-                final userData = userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final userData =
+                    userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
                 final renterName = userData['username'] ?? 'ไม่ระบุชื่อ';
                 final profileImage = userData['image']?['profile'];
 
@@ -189,7 +193,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(50),
                               ),
-                              child: (profileImage != null && profileImage != '')
+                              child: (profileImage != null &&
+                                      profileImage != '')
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(50),
                                       child: Image.network(
@@ -228,7 +233,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('รับรถ'),
-                                if (pickupLocation.isNotEmpty) Text(pickupLocation),
+                                if (pickupLocation.isNotEmpty)
+                                  Text(pickupLocation),
                                 if (rentalStart != null)
                                   Text(
                                     '${rentalStart.day.toString().padLeft(2, '0')}/${rentalStart.month.toString().padLeft(2, '0')}/${rentalStart.year} '
@@ -240,7 +246,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('คืนรถ'),
-                                if (returnLocation.isNotEmpty) Text(returnLocation),
+                                if (returnLocation.isNotEmpty)
+                                  Text(returnLocation),
                                 if (rentalEnd != null)
                                   Text(
                                     '${rentalEnd.day.toString().padLeft(2, '0')}/${rentalEnd.month.toString().padLeft(2, '0')}/${rentalEnd.year} '
@@ -260,7 +267,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => StatusLessor(rentalId: rentalDoc.id),
+                                  builder: (context) =>
+                                      StatusLessor(rentalId: rentalDoc.id),
                                 ),
                               );
                             },
@@ -308,7 +316,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
         final docs = snapshot.data!.docs.where((doc) {
           final rentalData = doc.data() as Map<String, dynamic>;
           return rentalData['lessorId'] == uid &&
-              (['canceled', 'successed', 'done'].contains(rentalData['status']));
+              (['canceled', 'successed', 'done']
+                  .contains(rentalData['status']));
         }).toList();
         if (docs.isEmpty) {
           return const Center(child: Text('ยังไม่มีประวัติการเช่า'));
@@ -329,13 +338,17 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
             final renterId = rentalData['renterId'] ?? '';
 
             return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance.collection('users').doc(renterId).get(),
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(renterId)
+                  .get(),
               builder: (context, userSnapshot) {
                 if (userSnapshot.hasError) {
                   return Card(
                     margin: const EdgeInsets.all(16),
                     child: ListTile(
-                      title: Text("เกิดข้อผิดพลาดในการโหลดข้อมูลผู้เช่า: ${userSnapshot.error}"),
+                      title: Text(
+                          "เกิดข้อผิดพลาดในการโหลดข้อมูลผู้เช่า: ${userSnapshot.error}"),
                     ),
                   );
                 }
@@ -347,7 +360,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                     ),
                   );
                 }
-                final userData = userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final userData =
+                    userSnapshot.data!.data() as Map<String, dynamic>? ?? {};
                 final renterName = userData['username'] ?? 'ไม่ระบุชื่อ';
                 final profileImage = userData['image']?['profile'];
 
@@ -368,7 +382,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(50),
                               ),
-                              child: (profileImage != null && profileImage != '')
+                              child: (profileImage != null &&
+                                      profileImage != '')
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(50),
                                       child: Image.network(
@@ -406,7 +421,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('รับรถ'),
-                                if (pickupLocation.isNotEmpty) Text(pickupLocation),
+                                if (pickupLocation.isNotEmpty)
+                                  Text(pickupLocation),
                                 if (rentalStart != null)
                                   Text(
                                     '${rentalStart.day.toString().padLeft(2, '0')}/${rentalStart.month.toString().padLeft(2, '0')}/${rentalStart.year} '
@@ -418,7 +434,8 @@ class _ListPageState extends State<ListPage> with SingleTickerProviderStateMixin
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('คืนรถ'),
-                                if (returnLocation.isNotEmpty) Text(returnLocation),
+                                if (returnLocation.isNotEmpty)
+                                  Text(returnLocation),
                                 if (rentalEnd != null)
                                   Text(
                                     '${rentalEnd.day.toString().padLeft(2, '0')}/${rentalEnd.month.toString().padLeft(2, '0')}/${rentalEnd.year} '

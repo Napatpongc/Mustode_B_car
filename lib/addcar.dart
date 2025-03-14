@@ -928,10 +928,10 @@ class _AddCarState extends State<AddCar> {
   Widget _buildStep1() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("เพิ่มรถ"),
+        title: const Text("เพิ่มรถ", style: TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF00377E),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, color: Colors.white),
           onPressed: _goBackToMyCar,
         ),
       ),

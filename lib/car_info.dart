@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart'; // ใช้ format วันที่
 
 // เพิ่มไฟล์ booking_page.dart และ signup_page.dart
 import 'booking_page.dart';
@@ -87,9 +88,14 @@ class _CarInfoState extends State<CarInfo> {
           currentImageIndex = 0;
         }
 
+        // ดึง ownerId เพื่อใช้ค้นหาร้านรถเช่า
+        String ownerId = data["ownerId"] ?? "";
+
         return Scaffold(
+          // ทำให้ปุ่มย้อนกลับ (back arrow) เป็นสีขาว
           appBar: AppBar(
             backgroundColor: kDarkBlue,
+            iconTheme: const IconThemeData(color: Colors.white),
             title: Text(
               "$brand $model",
               style: const TextStyle(color: Colors.white),
@@ -126,7 +132,7 @@ class _CarInfoState extends State<CarInfo> {
                       ),
                     ],
                   ),
-                  // ปุ่ม "เช่ารถ" ที่ปรับปรุงให้ดูน่ากดมากขึ้น
+                  // ปุ่ม "เช่ารถ"
                   ElevatedButton(
                     onPressed: () {
                       if (FirebaseAuth.instance.currentUser?.isAnonymous ??
@@ -135,8 +141,8 @@ class _CarInfoState extends State<CarInfo> {
                           context: context,
                           builder: (ctx) {
                             return AlertDialog(
-                              title: const Text(
-                                  "กรุณาสมัครบัญชีเพื่อไปรายการต่อไป"),
+                              title:
+                                  const Text("กรุณาสมัครบัญชีเพื่อไปรายการต่อไป"),
                               actions: [
                                 TextButton(
                                   onPressed: () {
@@ -169,7 +175,6 @@ class _CarInfoState extends State<CarInfo> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      // เปลี่ยนพื้นหลังเป็นสีที่ดูน่ากดจาก Palette
                       backgroundColor: kLightBlue, // สีสว่างตาม Palette
                       foregroundColor: kDarkBlue, // สีข้อความ
                       padding: const EdgeInsets.symmetric(
@@ -213,14 +218,17 @@ class _CarInfoState extends State<CarInfo> {
                               left: 10,
                               top: 100,
                               child: IconButton(
-                                icon: const Icon(Icons.arrow_left,
-                                    size: 40, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.arrow_left,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   setState(() {
-                                    currentImageIndex = (currentImageIndex -
-                                            1 +
-                                            carImages.length) %
-                                        carImages.length;
+                                    currentImageIndex =
+                                        (currentImageIndex - 1 +
+                                                carImages.length) %
+                                            carImages.length;
                                   });
                                 },
                               ),
@@ -230,8 +238,11 @@ class _CarInfoState extends State<CarInfo> {
                               right: 10,
                               top: 100,
                               child: IconButton(
-                                icon: const Icon(Icons.arrow_right,
-                                    size: 40, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.arrow_right,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     currentImageIndex =
@@ -271,7 +282,9 @@ class _CarInfoState extends State<CarInfo> {
                             const Text(
                               "รายละเอียดรถ",
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             // แถวที่ 1: ประเภทรถ / ระบบเกียร์
@@ -360,6 +373,77 @@ class _CarInfoState extends State<CarInfo> {
                         ),
                       ),
 
+                      // ร้านรถเช่า
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "ร้านรถเช่า",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(ownerId)
+                                  .get(),
+                              builder: (context, userSnapshot) {
+                                if (userSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (!userSnapshot.hasData ||
+                                    !userSnapshot.data!.exists) {
+                                  return const Text("ไม่พบข้อมูลร้านรถเช่า");
+                                }
+                                var userData = userSnapshot.data!.data()
+                                    as Map<String, dynamic>;
+                                String username = userData["username"] ?? "";
+                                String profileImage =
+                                    userData["image"]?["profile"] ?? "";
+
+                                return Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: profileImage.isNotEmpty
+                                          ? NetworkImage(profileImage)
+                                          : null,
+                                      child: profileImage.isEmpty
+                                          ? const Icon(Icons.person)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Text(
+                                      username,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // เส้นกั้นหมวด
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
+                        child: Divider(color: Colors.grey),
+                      ),
+
                       // ส่วนแสดง "รีวิวรถ" + คะแนนเฉลี่ยดาว และคะแนนเฉลี่ยความสะอาด
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -369,7 +453,9 @@ class _CarInfoState extends State<CarInfo> {
                             const Text(
                               "รีวิวรถ",
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             FutureBuilder<QuerySnapshot>(
@@ -411,8 +497,7 @@ class _CarInfoState extends State<CarInfo> {
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 16),
                                         decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.grey),
+                                          border: Border.all(color: Colors.grey),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),
@@ -437,8 +522,9 @@ class _CarInfoState extends State<CarInfo> {
                                             const SizedBox(height: 4),
                                             const Text(
                                               "ดาว",
-                                              style:
-                                                  TextStyle(color: Colors.grey),
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -450,8 +536,7 @@ class _CarInfoState extends State<CarInfo> {
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 16),
                                         decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.grey),
+                                          border: Border.all(color: Colors.grey),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),
@@ -462,8 +547,9 @@ class _CarInfoState extends State<CarInfo> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 const Icon(
-                                                    Icons.cleaning_services,
-                                                    color: Colors.blue),
+                                                  Icons.cleaning_services,
+                                                  color: Colors.blue,
+                                                ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   avgCleanliness
@@ -478,8 +564,9 @@ class _CarInfoState extends State<CarInfo> {
                                             const SizedBox(height: 4),
                                             const Text(
                                               "สะอาด",
-                                              style:
-                                                  TextStyle(color: Colors.grey),
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -492,6 +579,247 @@ class _CarInfoState extends State<CarInfo> {
                           ],
                         ),
                       ),
+
+                      // เว้นช่องว่างก่อนเข้าสู่หมวด "รีวิวจากผู้ใช้งาน"
+                      const SizedBox(height: 16),
+
+                      // ---------------------- รีวิวจากผู้ใช้งาน (List) ----------------------
+                      // พื้นหลังสีฟ้าอ่อนกว่าสีเดิม + ขอบโค้ง
+                      Container(
+                        decoration: BoxDecoration(
+                          color: kLighterBlue, // สีฟ้าอ่อน
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "รีวิวจากผู้ใช้งาน",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // จำกัดความสูงให้เห็น ~3 รายการ จากนั้นเลื่อนดูที่เหลือ
+                            FutureBuilder<QuerySnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('cars')
+                                  .doc(widget.carId)
+                                  .collection('carComments')
+                                  .orderBy('createdAt', descending: true)
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (!snapshot.hasData ||
+                                    snapshot.data!.docs.isEmpty) {
+                                  return const Text("ยังไม่มีรีวิว");
+                                }
+
+                                final reviews = snapshot.data!.docs;
+
+                                return SizedBox(
+                                  height: 360, // ให้แสดงประมาณ 3 รีวิว จากนั้นเลื่อน
+                                  child: ListView.builder(
+                                    itemCount: reviews.length,
+                                    itemBuilder: (context, index) {
+                                      var commentDoc = reviews[index];
+                                      var commentData = commentDoc.data()
+                                          as Map<String, dynamic>;
+
+                                      double rating =
+                                          (commentData['rating'] ?? 0)
+                                              .toDouble();
+                                      double cleanliness =
+                                          (commentData['cleanliness'] ?? 0)
+                                              .toDouble();
+                                      String comment =
+                                          commentData['comment'] ?? "";
+                                      Timestamp? createdAt =
+                                          commentData['createdAt'];
+                                      DateTime? commentDate =
+                                          createdAt?.toDate();
+                                      String formattedDate = commentDate != null
+                                          ? DateFormat('dd/MM/yyyy HH:mm')
+                                              .format(commentDate)
+                                          : "";
+
+                                      String userId =
+                                          commentData['userId'] ?? "";
+
+                                      // ดึงข้อมูล user จาก userId
+                                      return FutureBuilder<DocumentSnapshot>(
+                                        future: FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(userId)
+                                            .get(),
+                                        builder: (context, userSnapshot) {
+                                          if (userSnapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            );
+                                          }
+                                          if (!userSnapshot.hasData ||
+                                              !userSnapshot.data!.exists) {
+                                            return Container(
+                                              margin: const EdgeInsets.only(
+                                                  bottom: 8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                    color: Colors.black),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: const Text(
+                                                  "ไม่พบข้อมูลผู้ใช้"),
+                                            );
+                                          }
+
+                                          var userData = userSnapshot.data!
+                                                  .data()
+                                              as Map<String, dynamic>;
+                                          String username =
+                                              userData["username"] ?? "";
+                                          String profileImage =
+                                              userData["image"]?["profile"] ??
+                                                  "";
+
+                                          return Container(
+                                            margin:
+                                                const EdgeInsets.only(bottom: 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                  color: Colors.black),
+                                            ),
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // ด้านซ้าย: Avatar + ชื่อ + คะแนน
+                                                CircleAvatar(
+                                                  backgroundImage: profileImage
+                                                          .isNotEmpty
+                                                      ? NetworkImage(
+                                                          profileImage)
+                                                      : null,
+                                                  child: profileImage.isEmpty
+                                                      ? const Icon(
+                                                          Icons.person)
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    // ชื่อผู้ใช้
+                                                    Text(
+                                                      username,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    // คะแนนดาว + คะแนนความสะอาด
+                                                    Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.star,
+                                                          color: Colors.amber,
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          rating.toString(),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        const Icon(
+                                                          Icons
+                                                              .cleaning_services,
+                                                          color: Colors.blue,
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          cleanliness.toString(),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                                // ด้านขวา: คอมเมนต์ + วันที่
+                                                Expanded(
+                                                  child: Container(
+                                                    alignment:
+                                                        Alignment.centerRight,
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 8.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.end,
+                                                      children: [
+                                                        // คอมเมนต์ ตัวใหญ่ขึ้นและตัวหนา
+                                                        Text(
+                                                          comment,
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 4),
+                                                        // วันที่ (สีดำ)
+                                                        Text(
+                                                          "วันที่ $formattedDate",
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.black,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      // -------------------------------------------------------------
                     ],
                   ),
                 ),

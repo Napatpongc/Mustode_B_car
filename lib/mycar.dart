@@ -77,7 +77,7 @@ class MyCar extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('รถฉัน'),
+            title: const Text('รถฉัน', style: TextStyle(color: Colors.white),),
             backgroundColor: const Color(0xFF00377E),
             leading: Builder(
               builder: (context) => IconButton(

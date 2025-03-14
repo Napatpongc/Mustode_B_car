@@ -35,7 +35,11 @@ class _ListPageState extends State<ListPage>
       // AppBar + side bar (Drawer)
       // --------------------------------------
       appBar: AppBar(
-        title: const Text("รายการเช่า"),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "รายการเช่า",
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: const Color(0xFF00377E),
         bottom: PreferredSize(
@@ -45,11 +49,11 @@ class _ListPageState extends State<ListPage>
             color: Colors.blue.shade100,
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.black,
+              labelColor: Colors.black, // ข้อความแท็บเป็นสีดำ
               unselectedLabelColor: Colors.black54,
               isScrollable: false,
               indicatorSize: TabBarIndicatorSize.tab,
-              indicator: _HalfBarIndicator(), // ใช้ custom Indicator
+              indicator: _HalfBarIndicator(),
               tabs: const [
                 Tab(text: "ล่าสุด"),
                 Tab(text: "ประวัติ"),
@@ -58,6 +62,7 @@ class _ListPageState extends State<ListPage>
           ),
         ),
       ),
+
       drawer: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -103,8 +108,14 @@ class _ListPageState extends State<ListPage>
       stream: FirebaseFirestore.instance
           .collection('rentals')
           .where('renterId', isEqualTo: uid)
-          .where('status',
-              whereIn: ['pending', 'waitpayment', 'release','recieve', 'ongoing', 'end']).snapshots(),
+          .where('status', whereIn: [
+        'pending',
+        'waitpayment',
+        'release',
+        'recieve',
+        'ongoing',
+        'end'
+      ]).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'));
